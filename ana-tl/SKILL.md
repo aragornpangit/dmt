@@ -36,9 +36,9 @@ ana-tl 是 **`ana-m` 的下属组长**，实例以 tab label 区分：`ana-tl1`�
 ## 产物
 
 - 不新建目录、不写 `docs/`；证据随回报落 `inbox/ana-m/`，由 ana-m 收口进报告。
-- 其它部门产物路径**只读不改**：`docs/research/`（ana-m 的报告）、`docs/pd/spec/`、`docs/pd/prd/`、`docs/dev/tickets/`、`docs/user/`。
+- 其它部门产物路径**只读不改**：`docs/analyst/`（ana-m 的报告）、`docs/pd/spec/`、`docs/pd/prd/`、`docs/dev/tickets/`、`docs/human/`。
 
 ## 指针
 
-- 上游：ana-m 的派题（`inbox/ana-tl{n}/`）；下游产物：ana-m 收口的 `docs/research/`
+- 上游：ana-m 的派题（`inbox/ana-tl{n}/`）；下游产物：ana-m 收口的 `docs/analyst/`
 - 技能：`herdr`（pane/tab 控制）、`research`、REA（`/rea`、`reverse-engineer-anything`）、`grilling`

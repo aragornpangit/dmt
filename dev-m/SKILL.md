@@ -38,7 +38,7 @@ dev-m 是 dmt 的**开发部门经理**：**唯一上级是 `director`**，**唯
 
 ## 产物
 
-ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其它子目录、`docs/pd/` 或其它任何位置，不得自建新的文档目录）；`dev-e` 的产出证据经组长回报后随 ticket 归档进 `docs/dev/tickets/`，不另建目录。其它部门产物路径只读不改：director 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，用户架构与用户计划在 `docs/user/user-arch/`、`docs/user/user-plan/`，ana-m 的报告在 `docs/research/`。`docs/handoff/dev-m-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
+ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其它子目录、`docs/pd/` 或其它任何位置，不得自建新的文档目录）；`dev-e` 的产出证据经组长回报后随 ticket 归档进 `docs/dev/tickets/`，不另建目录。其它部门产物路径只读不改：director 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，人类架构与人类计划在 `docs/human/human-arch/`、`docs/human/human-plan/`，ana-m 的报告在 `docs/analyst/`。`docs/handoff/dev-m-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
 
 ## 通信（收件箱文件 + herdr 门铃）
 
@@ -46,7 +46,7 @@ ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其�
 
 - 写：`inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根下，**不在 `docs/`**；`mkdir -p` 兜底）
 - 铃：`你有新消息 {文件名}，在 inbox/<收件角色>/`
-- 收：读文件 → 回执「{文件名} 已经收到」＋ 一句话结论 → **读毕即删**
+- 收：收到门铃提醒后读 `inbox/<自己>/` 新文件 → **读入 context window** → **不回执** → **读毕即删**
 
 本角色差异：
 

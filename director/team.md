@@ -13,7 +13,7 @@ dmt/
 │   ├── SKILL.md                          # 角色技能
 │   ├── team.md                           # 团队契约（本文件，唯一权威）
 │   ├── README.md                         # 仓库说明与安装
-│   └── scripts/check-pda-doc-paths.sh    # 产物落盘路径机检
+│   └── scripts/check-dmt-doc-paths.sh    # 产物落盘路径机检
 ├── dev-m/SKILL.md                        # 开发部经理（dev-m）
 ├── ana-m/SKILL.md                        # 分析部经理（ana-m）
 ├── dev-tl/SKILL.md                       # 开发组长（dev-tl{n}）
@@ -60,6 +60,7 @@ director            总监（团队领导 + 产品经理，label director）
 ### 1.2 运行环境与 tab 生命周期
 
 - 所有角色运行在 **Herdr**（终端多智能体复用器）中，各自占一个 tab。
+- 一个 tab 只含一个 pane（对应一个 agent）：不要在一个 tab 里开多个 pane 当多个角色用，也不要跨 tab 复用同一个 pane id。
 - 识别伙伴**一律按 tab label**（`herdr tab list`），**不按 pane id 记忆**：pane id 会随重启/移动变化。
 - 团队启动顺序：先用用户会话（或 director 会话外部）备好 `director` tab；**director 负责创建 `dev-m`、`ana-m` 两个 tab**，并请用户在各 tab 内启动自己的 harness。
 - **组长按需生成，不预建**：`dev-m` 用 `dev-tl{n}`、`ana-m` 用 `ana-tl{n}` 现场建 tab，编号自 1 单调递增、**已关闭编号不复用**。
@@ -122,11 +123,12 @@ HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --la
 
 **第四步 收件方处理**
 
-1. 读 `inbox/<自己>/` 下的新文件，读完**立刻回执**给发送方：`{文件名} 已经收到` ＋ 一句话结论或下一步（回执走 herdr 消息，不另写文件）；
-2. **读毕即删**该文件（收件箱里只允许存在未读消息）；
-3. 需要回正文时，按同样规则反向写文件 + 门铃，不把长正文塞进回执。
+1. 收到门铃提醒（收件箱有新邮件）后，读取 `inbox/<自己>/` 下的新文件，**读入自己的 context window** 处理；
+2. **不发送回执**：收件方读完即处理，**不回** `{文件名} 已经收到`、不发任何确认消息；
+3. **读毕即删**该文件（收件箱里只允许存在未读消息）；
+4. 需要回正文时，按同样规则反向写文件 + 门铃，不把长正文塞进门铃消息。
 
-**送达判定**：以**对方回执**为准。`agent prompt` 返回 `"type":"agent_prompted"`、`send-text + send-keys` 返回 exit 0 只算「已投递」，不算「已收到」；无回执时**问**，不重复投递。
+**送达判定**：发送方以 herdr 门铃成功投递（`agent prompt` 返回 `"type":"agent_prompted"`、`send-text + send-keys` 返回 exit 0）为「已送达」；**收件方不回执**，故不再以回执判定。发送方不确定是否已被读取时，**口头问用户**，不重复投递。
 
 **不入库**：收件箱是运行时通道，不是交付物；被服务项目的 `.gitignore` 必须含 `inbox/*/`。
 
@@ -148,16 +150,16 @@ git clone https://github.com/mattpocock/skills.git
 
 ## 2. 文件命名规范（权威）
 
-序号按产物类别各自独立、类别内自累计（001 起）：`{prd-seq}`（PRD）、`{research-seq}`（调研报告）、`{user-arch-seq}`（用户架构）、`{user-plan-seq}`（用户计划）、`{spec-seq}`（SPEC 与 ticket 共用）；收件箱消息另用 `{seq}` 消息流水号。`{slug}` 简短语义（英文小写短横线，不超过 5 个词），`{YYMMDD-HHMM}` 年月日与时刻，`v{N}` 同一文件原地升级的版本号。
+序号按产物类别各自独立、类别内自累计（001 起）：`{prd-seq}`（PRD）、`{research-seq}`（调研报告）、`{human-arch-seq}`（人类架构）、`{human-plan-seq}`（人类计划）、`{spec-seq}`（SPEC 与 ticket 共用）；收件箱消息另用 `{seq}` 消息流水号。`{slug}` 简短语义（英文小写短横线，不超过 5 个词），`{YYMMDD-HHMM}` 年月日与时刻，`v{N}` 同一文件原地升级的版本号。
 
 | 产物 | 目录 | 文件名 |
 |---|---|---|
-| 调研报告 | `docs/research/` | `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md` |
+| 调研报告 | `docs/analyst/` | `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md` |
 | 产品需求文档 PRD | `docs/pd/prd/` | `{prd-seq}-prd-{slug}-{YYMMDD}-v{N}.md` |
 | 规格书 SPEC | `docs/pd/spec/` | `{spec-seq}-spec-{slug}-{YYMMDD-HHMM}--v{N}.md` |
 | 开发工单 ticket | `docs/dev/tickets/` | `{spec-seq}-ticket-{slug}-{YYMMDD-HHMM}--v{N}.md` |
-| 用户架构 | `docs/user/user-arch/` | `{user-arch-seq}-arch-{slug}-{YYMMDD-HHMM}--v{N}.md` |
-| 用户计划 | `docs/user/user-plan/` | `{user-plan-seq}-plan-{slug}-{YYMMDD-HHMM}--v{N}.md` |
+| 人类架构 | `docs/human/human-arch/` | `{human-arch-seq}-arch-{slug}-{YYMMDD-HHMM}--v{N}.md` |
+| 人类计划 | `docs/human/human-plan/` | `{human-plan-seq}-plan-{slug}-{YYMMDD-HHMM}--v{N}.md` |
 | 收件箱消息 | `inbox/<收件角色>/` | `{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（无版本号，读毕即删） |
 
 规则：
@@ -165,7 +167,7 @@ git clone https://github.com/mattpocock/skills.git
 1. **spec 与 ticket 必须对齐 `spec-seq`**：同一需求的 SPEC 与其 ticket 用同一个 `spec-seq` 前缀。
 2. **版本语义**：版本内小步更新**就地改同一文件**；实质修订**另立新版本号文件**（新时间戳、`v{N+1}`），并在旧文件头部就地标注「已被 v N+1 取代」。
 3. PRD 按需求方给定的格式只有日期（`YYMMDD`），无时刻；其余产物一律带时刻。
-4. **独立编号**：`{prd-seq}` / `{research-seq}` / `{user-arch-seq}` / `{user-plan-seq}` / `{spec-seq}` 各自独立、类别内自累计；只有 SPEC 与 ticket 必须共用同一个 `spec-seq`。
+4. **独立编号**：`{prd-seq}` / `{research-seq}` / `{human-arch-seq}` / `{human-plan-seq}` / `{spec-seq}` 各自独立、类别内自累计；只有 SPEC 与 ticket 必须共用同一个 `spec-seq`。
 5. **组长编号**：`dev-tl{n}` / `ana-tl{n}` 的 `{n}` 与 tab label、收件箱目录（`inbox/dev-tl{n}`、`inbox/ana-tl{n}`）**三处同名**，自 1 递增，已关闭编号不复用。
 6. 历史笔误留痕：需求原文的 `ver{seq}`、`YYMMDD-v{seq}` 写法**已作废**，一律以本表为准，历史文件不改名。
 
@@ -178,17 +180,17 @@ git clone https://github.com/mattpocock/skills.git
 | `docs/pd/prd/` | director | 产品需求文档（PRD） | `{prd-seq}` 独立编号 |
 | `docs/pd/spec/` | director | 产品规格书（SPEC，含验收标准） | 与 ticket 共用 `spec-seq` |
 | `docs/dev/tickets/` | dev-m（`dev-e` 证据经组长回报、由 dev-m 归档） | 开发工单（ticket） | 与 SPEC 共用 `spec-seq` |
-| `docs/research/` | ana-m | 市场调研与竞品逆向报告 | 无 |
-| `docs/user/user-arch/` | director | 用户架构文档 | 无 |
-| `docs/user/user-plan/` | director | 用户计划文档 | 无 |
+| `docs/analyst/` | ana-m | 市场调研与竞品逆向报告 | 无 |
+| `docs/human/human-arch/` | director | 人类架构文档 | 无 |
+| `docs/human/human-plan/` | director | 人类计划文档 | 无 |
 | `docs/team.md` | director | 团队契约（本文件） | 无 |
 | `docs/handoff/` | director / dev-m | 交接说明（`{director,dev-m}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 §1.3 |
 
-1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/user/`（除 `user-arch/`、`user-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
+1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/human/`（除 `human-arch/`、`human-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
 2. 各部门的产物目录**互不越界**：只读引用可以，移动/改名不可以。
 3. **组长不写 `docs/`**：`dev-tl{n}` / `ana-tl{n}` 的回报与证据只落 `inbox/<上级>/`（或由上级并入票面/报告），`docs/` 内的产物一律由经理落笔。
-4. 旧体系（`docs/pd/` 除 `prd/`、`spec/` 外，`docs/dev/` 除 `tickets/` 外，`docs/test/`）只保留历史，**不再接收新产物**；历史文件不改名、不搬迁（历史事实留痕）。**现行口径（2026-10-21 用户裁定·第二次修订）**：① PRD 落 `docs/pd/prd/`；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/user/user-arch/`（用户架构）与 `docs/user/user-plan/`（用户计划），均由 director 落盘；⑤ `docs/dev/arch/` **作废**，不再单独设架构目录；⑥ 收件箱由 `docs/<角色>/inbox/` 移到项目根 `inbox/<角色>/`。
+4. 旧体系（`docs/pd/` 除 `prd/`、`spec/` 外，`docs/dev/` 除 `tickets/` 外，`docs/test/`）只保留历史，**不再接收新产物**；历史文件不改名、不搬迁（历史事实留痕）。**现行口径（2026-10-21 用户裁定·第二次修订）**：① PRD 落 `docs/pd/prd/`；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/human/human-arch/`（人类架构）与 `docs/human/human-plan/`（人类计划），均由 director 落盘；⑤ `docs/dev/arch/` **作废**，不再单独设架构目录；⑥ 收件箱由 `docs/<角色>/inbox/` 移到项目根 `inbox/<角色>/`。
 5. **目录初始化由 director 负责**：director 接手一个项目时先检查再补齐（见 §3.1），产物目录不由 ana-m / dev-m 自建。
 6. 机检口径：§7 的脚本只校验「六个产物目录与根 `inbox/` 存在、五个技能各自指向自己的目录、契约登记齐全、负样本被拒绝」；它**不校验单个文件的落盘路径**，新产物靠本表与评审把关。
 
@@ -198,9 +200,9 @@ director 接手项目的**第一件事**：检查目录，缺什么建什么。�
 
 ```bash
 cd <项目根>
-mkdir -p docs/{pd/{prd,spec},dev/tickets,research,user/{user-arch,user-plan}} inbox/{director,dev-m,ana-m}
+mkdir -p docs/{pd/{prd,spec},dev/tickets,analyst,human/{human-arch,human-plan}} inbox/{director,dev-m,ana-m}
 grep -qxF 'inbox/*/' .gitignore 2>/dev/null || echo 'inbox/*/' >> .gitignore   # 收件箱不入库
-bash director/scripts/check-pda-doc-paths.sh .
+bash director/scripts/check-dmt-doc-paths.sh .
 ```
 
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
@@ -210,7 +212,7 @@ bash director/scripts/check-pda-doc-paths.sh .
 
 ## 4. 工作流程
 
-1. **ana-m 调研**：ana-m 按需生成 `ana-tl{n}`，由组长派 `ana-e` 取证；ana-m 复核并收口成调研报告，**经 director 评审后落盘** `docs/research/`。
+1. **ana-m 调研**：ana-m 按需生成 `ana-tl{n}`，由组长派 `ana-e` 取证；ana-m 复核并收口成调研报告，**经 director 评审后落盘** `docs/analyst/`。
 2. **director 出 PRD 与 SPEC**：director 基于调研报告与用户交流，输出 PRD 与 SPEC（含验收标准），**经 dev-m 评审后落盘** `docs/pd/prd/`、`docs/pd/spec/`。
 3. **dev-m 拆 ticket**：dev-m 基于 SPEC，用 `/to-tickets` 拆成与 SPEC 对应的开发工单，落盘 `docs/dev/tickets/`；dev-m 负责汇总、评审、整合本部门结果。
 4. **dev-m 生成开发组长并派票**：dev-m 按批次建 `dev-tl{n}`，把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给组长；组长建 worktree、派 `dev-e` 实施并做实施层初检，回报 dev-m。
@@ -247,10 +249,10 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 
 | 门禁 | 提交方 | 评审方 | 通过条件 |
 |---|---|---|---|
-| 调研报告 | ana-m | director | director 认可结论与证据来源，落盘 `docs/research/` |
+| 调研报告 | ana-m | director | director 认可结论与证据来源，落盘 `docs/analyst/` |
 | PRD 与 SPEC | director | dev-m | dev-m 认可可实施性与切片粒度，落盘 `docs/pd/prd/`、`docs/pd/spec/` |
 | 实施初检 | dev-tl | dev-m | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
-| 用户架构 / 用户计划 | director | 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/user/user-arch/`、`docs/user/user-plan/` |
+| 人类架构 / 人类计划 | director | 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
 | ticket 代码 | dev-m | director | 逐条对照 SPEC 验收标准全部通过；director 通知 dev-m 后方可 push |
 | 跨部门分歧 | dev-m / ana-m | director | director 裁决并回结论 |
 
@@ -261,15 +263,17 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 ## 7. 机检
 
 ```bash
-bash director/scripts/check-pda-doc-paths.sh
+bash director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查四件事：六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/research`、`docs/user/user-arch`、`docs/user/user-plan`）＋ 根目录 `inbox/` 存在、五个技能（`director` / `dev-m` / `ana-m` / `dev-tl` / `ana-tl`）各自指向自己的唯一目录、本契约登记齐全、负样本能被正确拒绝。**改路径规范后必须重跑**。
+检查四件事：六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在、五个技能（`director` / `dev-m` / `ana-m` / `dev-tl` / `ana-tl`）各自指向自己的唯一目录、本契约登记齐全、负样本能被正确拒绝。**改路径规范后必须重跑**。
 
 ## 8. 变更记录
 
 - **2026-10-22（用户裁定·组织调整）**：项目定名 **dmt**，组织固定为**四层层级** `director → 部门经理 → 组长 → 工程师` —— ① 顶层 `director`（总监，兼产品经理），直属下级只有 `dev-m` 与 `ana-m`；② 开发部经理 `dev-m`，下辖 n 个开发组长 `dev-tl{n}`（label 同名，由 dev-m 用 `herdr tab create --label` 按需生成），组长下辖开发工程师 `dev-e`；③ 分析部经理 `ana-m`，下辖 n 个分析组长 `ana-tl{n}`，组长下辖分析工程师 `ana-e`；④ 任何角色只与直属上下级通信，跨部门经 director 转派。
 - **2026-10-21（用户裁定）**：① PRD 类别**复活**，落盘路径由 `docs/prd/` 改为 `docs/pd/prd/`（`docs/prd/` 作废）；② 新增 `docs/dev/arch/`——**软件设计架构**落点，dev-m 落盘、director 评审，命名 `{seq}-arch-{slug}-{YYMMDD-HHMM}--v{N}.md`。
-- **2026-10-21（用户裁定·第二次）**：目录结构重排 —— ① 收件箱移到项目根 `inbox/<director|dev-m|ana-m>/`，不再进 `docs/`（`.gitignore` 用 `inbox/*/`）；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/user/user-arch/`、`docs/user/user-plan/`（均 director 落盘），`docs/dev/arch/` 作废。
-- **2026-10-21（用户裁定·第三次）**：序号按产物类别拆分 —— PRD `{prd-seq}`、调研报告 `{research-seq}`、用户架构 `{user-arch-seq}`、用户计划 `{user-plan-seq}`，各自独立、类别内自累计；SPEC 与 ticket 仍共用 `{spec-seq}`；收件箱消息保留 `{seq}` 消息流水号。
+- **2026-10-21（用户裁定·第二次）**：目录结构重排 —— ① 收件箱移到项目根 `inbox/<director|dev-m|ana-m>/`，不再进 `docs/`（`.gitignore` 用 `inbox/*/`）；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/human/human-arch/`、`docs/human/human-plan/`（均 director 落盘），`docs/dev/arch/` 作废。
+- **2026-10-21（用户裁定·第三次）**：序号按产物类别拆分 —— PRD `{prd-seq}`、调研报告 `{research-seq}`、人类架构 `{human-arch-seq}`、人类计划 `{human-plan-seq}`，各自独立、类别内自累计；SPEC 与 ticket 仍共用 `{spec-seq}`；收件箱消息保留 `{seq}` 消息流水号。
 - **2026-10-21（用户裁定·第四次）**：目录由 **director 初始化时检查并补齐**（新增 §3.1，幂等命令 + 完成判据 `ALL_PASS`）；ana-m / dev-m 不自建产物目录，缺失时回报 director。
+- **2026-10-22（用户裁定·第五次）**：目录重命名 —— ① 调研报告目录 `docs/research/` 改为 `docs/analyst/`（仍属 ana-m）；② `docs/user/` 改为 `docs/human/`，其下 `user-arch/`→`human-arch/`、`user-plan/`→`human-plan/`（仍属 director）；③ 机检脚本 `check-pda-doc-paths.sh` 改名为 `check-dmt-doc-paths.sh`，内部 `PDA_SKILLS_DIR`→`DMT_SKILLS_DIR`、负样本 `docs/not-a-pda-output-dir/`→`docs/not-a-dmt-output-dir/`。
+- **2026-10-22（用户裁定·第六次）**：收件箱协议简化 —— 收件方收到门铃提醒后读入 context window、**不发送回执**、读毕即删；送达以门铃成功投递为准，不再以回执判定；并明确一个 herdr tab 只含一个 pane（一个 agent）。

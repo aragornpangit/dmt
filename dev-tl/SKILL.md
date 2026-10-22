@@ -43,7 +43,7 @@ dev-tl 是 **`dev-m` 的下属组长**，实例以 tab label 区分：`dev-tl1`�
 ## 产物
 
 - 不新建目录、不写 `docs/`；证据随回报落 `inbox/dev-m/`，由 dev-m 归档进票面。
-- 其它部门产物路径**只读不改**：`docs/dev/tickets/`（票面）、`docs/pd/spec/`（SPEC）、`docs/pd/prd/`（PRD）、`docs/research/`（ana-m）、`docs/user/`（用户）。
+- 其它部门产物路径**只读不改**：`docs/dev/tickets/`（票面）、`docs/pd/spec/`（SPEC）、`docs/pd/prd/`（PRD）、`docs/analyst/`（ana-m）、`docs/human/`（人类）。
 
 ## 指针
 
