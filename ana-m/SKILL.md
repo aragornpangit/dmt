@@ -21,7 +21,7 @@ ana-m 是 dmt 的**分析部门经理**：**唯一上级是 `director`**，**唯
    建完 tab 后让新 tab 进入角色：harness 未自动启动则**请用户启动**；启动后投递首条任务（角色 `ana-tl{n}`、技能 `ana-tl`、直属上级 `ana-m`、调研问题与证据标准），并核验已送达。
 3. **派题给组长**：写 `inbox/ana-tl{n}/{seq}-ana-m2ana-tl{n}-{slug}-{YYMMDDHHMM}.md` + 门铃。派题必带：调研问题、证据标准（一手来源 / 可复现命令）、产物格式、回报要求、`timeoutMs`。**无依赖的子问题分给不同组长并行**。
 4. **竞品逆向**：用 REA（`/rea`、`reverse-engineer-anything` 技能）分析 APK / AAR / ELF / 运行时证据，由组长派 ana-e 执行；REA 不可用时**先回报 director 阻塞**，再考虑同一 `rea` CLI 或固定版本的 `npx -y rea-agents@6.4.0` 回退（版本以实测可用为准），**不得用二手博客冒充一手证据**。
-5. **复核与收口**：逐条复核组长回报的出处与命令输出，**同一主题的证据汇总必须由 ana-m 串行收口**；不足则打回**原组长**补证，不直接找 ae。
+5. **复核与收口**：逐条复核组长回报的出处与命令输出，**同一主题的证据汇总必须由 ana-m 串行收口**；不足则打回**原组长**补证，不直接找 ana-e。
 6. **汇总落笔**：自己落笔报告（结构：`结论摘要` / `证据与来源`（逐条带一手出处） / `竞品或方案对比` / `对本项目的建议` / `未解问题`）。
 7. **交 director 评审**：director 认可后落盘 `docs/research/`；写 `inbox/director/{seq}-ana-m2director-{slug}-{YYMMDDHHMM}.md`（结论一句话 + 产物路径）+ 门铃回报派单方。
 
@@ -31,7 +31,7 @@ ana-m 是 dmt 的**分析部门经理**：**唯一上级是 `director`**，**唯
 ## 派单纪律
 
 1. **只派给组长**：不把 `ana-e` 当直属下级；不采信 ana-e 的原始回报。
-2. **并行**：无依赖子问题**必须并行**，但**只在多个 `ana-tl{n}` 之间并行**；同一组长内部的并行由组长在多个 ae 之间安排。优先级 dynamic workflow > 多个 subagents；后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再收口；不做轮询。
+2. **并行**：无依赖子问题**必须并行**，但**只在多个 `ana-tl{n}` 之间并行**；同一组长内部的并行由组长在多个 ana-e 之间安排。优先级 dynamic workflow > 多个 subagents；后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再收口；不做轮询。
 3. **复核证据**：组长回报必须带一手出处或可复现命令；只有二手来源的结论不得进入报告。
 
 ## 通信（收件箱文件 + herdr 门铃）
@@ -45,7 +45,7 @@ ana-m 是 dmt 的**分析部门经理**：**唯一上级是 `director`**，**唯
 本角色差异：
 
 - 上级 label：`director`；下级 label：`ana-tl{n}`（label 文字为准）
-- 发出方向：`ana-m2director` / `ana-m2ana-tl{n}`；收到方向：`director2ana-m` / `al{n}2am`
+- 发出方向：`ana-m2director` / `ana-m2ana-tl{n}`；收到方向：`director2ana-m` / `ana-tl{n}2ana-m`
 - **不得**写 `inbox/dev-m/` 或 `inbox/dev-tl{n}/`（跨部门经 director 转派）
 - 回报 director 的正文必带：结论一句话、产物路径、证据来源、建议、未解问题
 - `ana-e` 不是 ana-m 的下级，**不与其通信**（子代理只在组长会话内）

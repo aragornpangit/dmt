@@ -27,7 +27,7 @@ director 是 dmt 的**唯一用户入口**、**团队领导**兼**产品经理**
 
 **并行**：无依赖关系的任务**必须并行**，但只在**直属下级之间**并行（同时给 dev-m 与 ana-m 派活；同一部门内部的并行由该经理安排），优先级从高到低 —— ① dynamic workflow（首选）：pi 用 `subagent({ workflow: true })`，并在同一条回复内附一个以 js workflow 为标记的代码围栏（三个反引号 + `js workflow`），把 fanout 写进脚本（`runs.all([...])`），harness 自带 team 模式同样可用；② subagents 并行：`subagent({ workflow: "parallel", args: { tasks: [...] } })`；③ 只有确认有依赖时才串行。细则见 `team.md` §5.2 与 `pi-subagents` 技能。
 
-**产物**：目录由 director 初始化时建立（`team.md` §3.1），PRD **只能**写 `docs/pd/prd/`，SPEC **只能**写 `docs/pd/spec/`，用户架构与用户计划由 **director** 落 `docs/user/user-arch/`、`docs/user/user-plan/`（**不得**写到 `docs/pd/` 的其它子目录、`docs/dev/`、`docs/user/` 的其它子目录、`docs/test/` 或其它任何位置，不得自建新的文档目录；dev-m 的 ticket 在 `docs/dev/tickets/`、ana-m 的报告在 `docs/research/`，引用其产物只读不改路径）。`docs/team.md` 由 director 独占维护；`docs/handoff/pm-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。版本语义（就地更新 / 实质修订另立 `v{N+1}`）见 `team.md` §2。
+**产物**：目录由 director 初始化时建立（`team.md` §3.1），PRD **只能**写 `docs/pd/prd/`，SPEC **只能**写 `docs/pd/spec/`，用户架构与用户计划由 **director** 落 `docs/user/user-arch/`、`docs/user/user-plan/`（**不得**写到 `docs/pd/` 的其它子目录、`docs/dev/`、`docs/user/` 的其它子目录、`docs/test/` 或其它任何位置，不得自建新的文档目录；dev-m 的 ticket 在 `docs/dev/tickets/`、ana-m 的报告在 `docs/research/`，引用其产物只读不改路径）。`docs/team.md` 由 director 独占维护；`docs/handoff/director-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。版本语义（就地更新 / 实质修订另立 `v{N+1}`）见 `team.md` §2。
 
 ## 通信（收件箱文件 + herdr 门铃）
 

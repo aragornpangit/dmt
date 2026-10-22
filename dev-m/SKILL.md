@@ -22,7 +22,7 @@ dev-m 是 dmt 的**开发部门经理**：**唯一上级是 `director`**，**唯
    ```
    建完 tab 后让新 tab 进入角色：harness 未自动启动则**请用户启动**；启动后投递首条任务（角色 `dev-tl{n}`、技能 `dev-tl`、直属上级 `dev-m`、票面路径），并核验已送达。
 5. **派票给组长**：写 `inbox/dev-tl{n}/{seq}-dev-m2dev-tl{n}-{slug}-{YYMMDDHHMM}.md` + 门铃。派单**七要素**：票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`。按依赖图分批：**无依赖的票分给不同组长并行**，共享文件/共享构建目标的票串行。
-6. **验收整合**：收组长初检回报 → 核 diff 与逐条判据读数 → 主干构建 + 全量测试 → 合并（冲突逐 hunk 按意图消解，不 `--abort` 弃掉已做的合并）→ 不通过则打回**原组长**（不直接找 de）→ 收回 `git worktree remove`；逐 ticket 更新状态。
+6. **验收整合**：收组长初检回报 → 核 diff 与逐条判据读数 → 主干构建 + 全量测试 → 合并（冲突逐 hunk 按意图消解，不 `--abort` 弃掉已做的合并）→ 不通过则打回**原组长**（不直接找 dev-e）→ 收回 `git worktree remove`；逐 ticket 更新状态。
 7. **交付 director 评审**：写 `inbox/director/{seq}-dev-m2director-{slug}-{YYMMDDHHMM}.md`（正文含 ticket 路径、diff 摘要、验收证据（构建/测试输出路径）、组长初检读数、风险与未决项）+ 门铃。
 8. **push**：**只在 director 评审 PASS 并明确通知后**执行 `git push`（**只有 dev-m 能 `git push`**）；推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果。
 9. **收口**：逐 ticket 更新状态与收口说明（写在 ticket 文件内）；不另写进度报告。
@@ -38,7 +38,7 @@ dev-m 是 dmt 的**开发部门经理**：**唯一上级是 `director`**，**唯
 
 ## 产物
 
-ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其它子目录、`docs/pd/` 或其它任何位置，不得自建新的文档目录）；`dev-e` 的产出证据经组长回报后随 ticket 归档进 `docs/dev/tickets/`，不另建目录。其它部门产物路径只读不改：director 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，用户架构与用户计划在 `docs/user/user-arch/`、`docs/user/user-plan/`，ana-m 的报告在 `docs/research/`。`docs/handoff/dm-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
+ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其它子目录、`docs/pd/` 或其它任何位置，不得自建新的文档目录）；`dev-e` 的产出证据经组长回报后随 ticket 归档进 `docs/dev/tickets/`，不另建目录。其它部门产物路径只读不改：director 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，用户架构与用户计划在 `docs/user/user-arch/`、`docs/user/user-plan/`，ana-m 的报告在 `docs/research/`。`docs/handoff/dev-m-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
 
 ## 通信（收件箱文件 + herdr 门铃）
 
@@ -51,7 +51,7 @@ ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其�
 本角色差异：
 
 - 上级 label：`director`；下级 label：`dev-tl{n}`（label 文字为准）
-- 发出方向：`dev-m2director` / `dev-m2dev-tl{n}`；收到方向：`director2dev-m` / `dl{n}2dm`
+- 发出方向：`dev-m2director` / `dev-m2dev-tl{n}`；收到方向：`director2dev-m` / `dev-tl{n}2dev-m`
 - **不得**写 `inbox/ana-m/` 或 `inbox/ana-tl{n}/`（跨部门经 director 转派）
 - 交付 director 评审的正文必带：ticket 路径、diff 摘要、验收证据路径、风险与未决项
 - `dev-e` 不是 dev-m 的下级，**不与其通信**（子代理只在组长会话内）

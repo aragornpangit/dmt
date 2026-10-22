@@ -96,17 +96,17 @@ HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --la
 | `director` | `dev-m` / `ana-m` | `director2dev-m` / `director2ana-m` |
 | `dev-m` / `ana-m` | `director` | `dev-m2director` / `ana-m2director` |
 | `dev-m` | `dev-tl{n}` | `dev-m2dev-tl{n}` |
-| `dev-tl{n}` | `dev-m` | `dl{n}2dm` |
+| `dev-tl{n}` | `dev-m` | `dev-tl{n}2dev-m` |
 | `ana-m` | `ana-tl{n}` | `ana-m2ana-tl{n}` |
-| `ana-tl{n}` | `ana-m` | `al{n}2am` |
+| `ana-tl{n}` | `ana-m` | `ana-tl{n}2ana-m` |
 
 **第一步 定位伙伴**（每次重跑，禁止复用上一次的 pane id）：`herdr tab list` 按 label 找到 `tab_id` → `herdr pane list` 按该 `tab_id` 取**当前** pane id。label 不在列表里 ⇒ **停下问用户**，不猜 pane id。
 
 **第二步 写收件箱文件**
 
-- 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `pm` / `dm` / `am` / `dl{n}` / `al{n}`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
+- 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `director` / `dev-m` / `ana-m` / `dev-tl{n}` / `ana-tl{n}`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
 - `{seq}`：自累计流水号，001 起，一条消息一个号（与 SPEC 的 `spec-seq` 无关）
-- `{方向}`：见上表；跨部门事项由 director 转派，不出现 `dm2am` / `dl2al` 之类
+- `{方向}`：见上表；跨部门事项由 director 转派，不出现 `dev-m2ana-m` / `dev-tl2ana-tl` 之类
 - `{slug}`：英文小写短横线，不超过 5 个词
 - `{YYMMDDHHMM}`：落盘时刻，两位年 + 月 + 日 + 时 + 分，无分隔符（例 `2610201430`）
 - 正文**自包含**：一句话摘要 / 权威文档路径 / 请求动作 / 期望产物 / 回报要求
@@ -182,7 +182,7 @@ git clone https://github.com/mattpocock/skills.git
 | `docs/user/user-arch/` | director | 用户架构文档 | 无 |
 | `docs/user/user-plan/` | director | 用户计划文档 | 无 |
 | `docs/team.md` | director | 团队契约（本文件） | 无 |
-| `docs/handoff/` | director / dev-m | 交接说明（`{pm,dm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
+| `docs/handoff/` | director / dev-m | 交接说明（`{director,dev-m}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 §1.3 |
 
 1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/user/`（除 `user-arch/`、`user-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
@@ -270,6 +270,6 @@ bash director/scripts/check-pda-doc-paths.sh
 
 - **2026-10-22（用户裁定·组织调整）**：项目定名 **dmt**，组织固定为**四层层级** `director → 部门经理 → 组长 → 工程师` —— ① 顶层 `director`（总监，兼产品经理），直属下级只有 `dev-m` 与 `ana-m`；② 开发部经理 `dev-m`，下辖 n 个开发组长 `dev-tl{n}`（label 同名，由 dev-m 用 `herdr tab create --label` 按需生成），组长下辖开发工程师 `dev-e`；③ 分析部经理 `ana-m`，下辖 n 个分析组长 `ana-tl{n}`，组长下辖分析工程师 `ana-e`；④ 任何角色只与直属上下级通信，跨部门经 director 转派。
 - **2026-10-21（用户裁定）**：① PRD 类别**复活**，落盘路径由 `docs/prd/` 改为 `docs/pd/prd/`（`docs/prd/` 作废）；② 新增 `docs/dev/arch/`——**软件设计架构**落点，dev-m 落盘、director 评审，命名 `{seq}-arch-{slug}-{YYMMDD-HHMM}--v{N}.md`。
-- **2026-10-21（用户裁定·第二次）**：目录结构重排 —— ① 收件箱移到项目根 `inbox/<pm|dm|am>/`，不再进 `docs/`（`.gitignore` 用 `inbox/*/`）；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/user/user-arch/`、`docs/user/user-plan/`（均 director 落盘），`docs/dev/arch/` 作废。
+- **2026-10-21（用户裁定·第二次）**：目录结构重排 —— ① 收件箱移到项目根 `inbox/<director|dev-m|ana-m>/`，不再进 `docs/`（`.gitignore` 用 `inbox/*/`）；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/user/user-arch/`、`docs/user/user-plan/`（均 director 落盘），`docs/dev/arch/` 作废。
 - **2026-10-21（用户裁定·第三次）**：序号按产物类别拆分 —— PRD `{prd-seq}`、调研报告 `{research-seq}`、用户架构 `{user-arch-seq}`、用户计划 `{user-plan-seq}`，各自独立、类别内自累计；SPEC 与 ticket 仍共用 `{spec-seq}`；收件箱消息保留 `{seq}` 消息流水号。
 - **2026-10-21（用户裁定·第四次）**：目录由 **director 初始化时检查并补齐**（新增 §3.1，幂等命令 + 完成判据 `ALL_PASS`）；ana-m / dev-m 不自建产物目录，缺失时回报 director。
