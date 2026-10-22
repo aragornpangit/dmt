@@ -44,9 +44,9 @@ director            总监（团队领导 + 产品经理，label director）
 | 角色 | 全称 | 技能 / 实例名 | tab label | 直属上级 | 直属下级 | 职责 |
 |---|---|---|---|---|---|---|
 | 总监（团队领导兼产品经理） | TeamLeader + ProductManager | `director` | `director` | 用户 | `dev-m`、`ana-m` | 唯一用户入口；接需求、出验收标准、落笔 PRD 与 SPEC、评审调研报告与 ticket 代码、跨部门裁决 |
-| 开发部经理 | DevelopManager | `dev-m` | `dev-m` | `director` | `dev-tl{n}` | 由 SPEC 拆 ticket、按需生成开发组长、验收整合、director 评审通过后 push |
-| 分析部经理 | AnalystManager | `ana-m` | `ana-m` | `director` | `ana-tl{n}` | 接调研诉求、按需生成分析组长、收口调研报告 |
-| 开发组长 | DevelopLeader | `dev-tl{n}` | `dev-tl{n}` | `dev-m` | `dev-e`（子代理） | 建 worktree、派开发工程师、收 diff 做实施层初检、回报 dev-m |
+| 开发部经理 | DevelopManager | `dev-m` | `dev-m` | `director` | `dev-tl{n}` | 由 SPEC 拆 ticket、按需生成并收回开发组长、验收整合、director 评审通过后 push |
+| 分析部经理 | AnalystManager | `ana-m` | `ana-m` | `director` | `ana-tl{n}` | 接调研诉求、按需生成并收回分析组长、收口调研报告 |
+| 开发组长 | DevelopLeader | `dev-tl{n}` | `dev-tl{n}` | `dev-m` | `dev-e`（子代理） | 建 worktree、并发派开发工程师、收 diff 做实施层初检、回报 dev-m |
 | 分析组长 | AnalystLeader | `ana-tl{n}` | `ana-tl{n}` | `ana-m` | `ana-e`（子代理） | 拆子问题、派分析工程师并行取证、复核一手出处、汇总回报 ana-m |
 
 **单线指挥（硬约束，任何角色不得越级或横向直连）：**
@@ -63,7 +63,7 @@ director            总监（团队领导 + 产品经理，label director）
 - 一个 tab 只含一个 pane（对应一个 agent）：不要在一个 tab 里开多个 pane 当多个角色用，也不要跨 tab 复用同一个 pane id。
 - 识别伙伴**一律按 tab label**（`herdr tab list`），**不按 pane id 记忆**：pane id 会随重启/移动变化。
 - 团队启动顺序：先用用户会话（或 director 会话外部）备好 `director` tab；**director 负责创建 `dev-m`、`ana-m` 两个 tab**，并请用户在各 tab 内启动自己的 harness。
-- **组长按需生成，不预建**：`dev-m` 用 `dev-tl{n}`、`ana-m` 用 `ana-tl{n}` 现场建 tab，编号自 1 单调递增、**已关闭编号不复用**。
+- **组长按需生成、用完即关**：`dev-m` 用 `dev-tl{n}`、`ana-m` 用 `ana-tl{n}` 现场建 tab，编号自 1 单调递增、**已关闭编号不复用**；关闭规则见本节末「组长实例的关闭（用完即关）」。
 
 ```bash
 # 1) 查 label（按 label 文字匹配，不抄历史 id）
@@ -85,6 +85,25 @@ HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --la
 ```
 
 建完 tab 后，创建者必须让新 tab 进入角色：harness 未自动启动时**请用户启动**；启动后由创建者把首条任务（角色名、技能名、直属上级 label、任务文件路径）投递到该 tab，并核验已送达。
+
+#### 组长实例的关闭（用完即关）
+
+只有组长是「**按需实例**」；`dev-m` / `ana-m` 自己的 tab **常驻**，不随批次关闭。
+
+- **责任人**：**创建者本人** —— `dev-m` 关 `dev-tl{n}`、`ana-m` 关 `ana-tl{n}`。herdr 的安全规则是「不关闭非自己创建的 tab」，故 director 与其它角色**不得代关**。
+- **时机**：该组长**本批任务全部收口**，且创建者**确认无下一批可派**之后。**同一批内可复用**（同批多票/多题仍可分给同一组长，不必每票新建），**跨批不保留** —— 批结束即关；下一批用新编号新建。
+- **关闭前置三件事（顺序固定，缺一不可）**：① 该组长的回报（含逐条判据读数 / 一手出处）已并入票面或报告；② 该组长名下 worktree（如有）已 `git worktree remove`，无遗留工作区；③ `inbox/<创建者>/` 中无该组长的未读消息。
+- **命令与成功判据**：
+
+```bash
+# 1) 按 label 解析出当次 tab_id（禁止抄历史 id）
+HERDR_ENV=1 herdr tab list --workspace "$HERDR_WORKSPACE_ID"
+# 2) 关闭；成功判据＝该 label 已从 tab list 消失
+HERDR_ENV=1 herdr tab close <tab_id>
+```
+
+- **风险条款**：关闭 tab 会终止其中 agent 的会话，**context 不可恢复、动作不可逆** ⇒ **禁止先关后收**；关闭必须发生在回报入账与 worktree 回收**之后**。
+- **编号**：已关闭编号**不复用**（§2 规则 5）；关闭后向用户一句话报告（关了哪个实例、原因）。
 
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
@@ -212,11 +231,11 @@ bash director/scripts/check-dmt-doc-paths.sh .
 
 ## 4. 工作流程
 
-1. **ana-m 调研**：ana-m 按需生成 `ana-tl{n}`，由组长派 `ana-e` 取证；ana-m 复核并收口成调研报告，**经 director 评审后落盘** `docs/analyst/`。
+1. **ana-m 调研**：ana-m 按需生成 `ana-tl{n}`，由组长派 `ana-e` 取证；ana-m 复核并收口成调研报告，**经 director 评审后落盘** `docs/analyst/`；**本批收口且确认无下一批可派后，ana-m 关闭该批 `ana-tl{n}`（§1.2）**。
 2. **director 出 PRD 与 SPEC**：director 基于调研报告与用户交流，输出 PRD 与 SPEC（含验收标准），**经 dev-m 评审后落盘** `docs/pd/prd/`、`docs/pd/spec/`。
 3. **dev-m 拆 ticket**：dev-m 基于 SPEC，用 `/to-tickets` 拆成与 SPEC 对应的开发工单，落盘 `docs/dev/tickets/`；dev-m 负责汇总、评审、整合本部门结果。
 4. **dev-m 生成开发组长并派票**：dev-m 按批次建 `dev-tl{n}`，把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给组长；组长建 worktree、派 `dev-e` 实施并做实施层初检，回报 dev-m。
-5. **dev-m 验收整合**：核 diff 与初检读数 → 构建与测试 → 合并（冲突逐 hunk 按意图消解）→ 不合格打回原组长 → 逐票更新状态。
+5. **dev-m 验收整合**：核 diff 与初检读数 → 构建与测试 → 合并（冲突逐 hunk 按意图消解）→ 不合格打回原组长 → 逐票更新状态；**本批全部收口且确认无下一批可派后，关闭该批 `dev-tl{n}`（§1.2）**。
 6. **交付 director 评审**：dev-m 把代码提交给 director **部门**评审；一个 ticket 对应一个 SPEC。链路：director 亲自对照 SPEC 验收标准核验 → director 给结论 → **director 通知 dev-m** → dev-m 才执行 `git push`。
 7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 dev-m/ana-m 之间；dev-m 在多个 `dev-tl{n}` 之间；ana-m 在多个 `ana-tl{n}` 之间；组长在多个工程师之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。
 
@@ -240,10 +259,11 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 ### 5.2 并行子代理
 
 1. 派发前先做**依赖分析**：只有无依赖任务可并行；共享文件、共享构建目标、有顺序验收关系的任务必须串行。
-2. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）。
-3. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
-4. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
-5. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
+2. **组长层可测判据**：无依赖单元（票 / 取证单元）**≥2 ⇒ 必须并发派发**；**仅在回报中给出串行理由时可例外**（理由限：依赖 / 共享文件 / 共享构建目标 / 顺序验收关系）。手段优先级：dynamic workflow `runs.all` > 多个 subagents 并行。
+3. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）。
+4. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
+5. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
+6. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
 
 ### 5.3 评审门禁
 
@@ -252,6 +272,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 | 调研报告 | ana-m | director | director 认可结论与证据来源，落盘 `docs/analyst/` |
 | PRD 与 SPEC | director | dev-m | dev-m 认可可实施性与切片粒度，落盘 `docs/pd/prd/`、`docs/pd/spec/` |
 | 实施初检 | dev-tl | dev-m | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
+| 组长实例关闭 | dev-m / ana-m（创建者） | 创建者本人自检 | 回报已入账、worktree 已 `git worktree remove`、收件箱无该组长未读；关闭后 `herdr tab list` 无该 label |
 | 人类架构 / 人类计划 | director | 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
 | ticket 代码 | dev-m | director | 逐条对照 SPEC 验收标准全部通过；director 通知 dev-m 后方可 push |
 | 跨部门分歧 | dev-m / ana-m | director | director 裁决并回结论 |
@@ -266,7 +287,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 bash director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查四件事：六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在、五个技能（`director` / `dev-m` / `ana-m` / `dev-tl` / `ana-tl`）各自指向自己的唯一目录、本契约登记齐全、负样本能被正确拒绝。**改路径规范后必须重跑**。
+检查六件事：六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在、五个技能（`director` / `dev-m` / `ana-m` / `dev-tl` / `ana-tl`）各自指向自己的唯一目录、**组长实例关闭动作已登记**（契约与 `dev-m` / `ana-m` 技能含 `herdr tab close`，契约含「禁止先关后收」）、**组长层并行判据已登记**（`dev-tl` / `ana-tl` 含「必须并行」，契约含「≥2 ⇒ 必须并发派发」）、本契约登记齐全、负样本能被正确拒绝（**只看 §3 落盘登记表**，§8 变更记录里的历史留痕不算登记）。**改路径规范、tab 生命周期或并行口径后必须重跑**。
 
 ## 8. 变更记录
 
@@ -277,3 +298,6 @@ bash director/scripts/check-dmt-doc-paths.sh
 - **2026-10-21（用户裁定·第四次）**：目录由 **director 初始化时检查并补齐**（新增 §3.1，幂等命令 + 完成判据 `ALL_PASS`）；ana-m / dev-m 不自建产物目录，缺失时回报 director。
 - **2026-10-22（用户裁定·第五次）**：目录重命名 —— ① 调研报告目录 `docs/research/` 改为 `docs/analyst/`（仍属 ana-m）；② `docs/user/` 改为 `docs/human/`，其下 `user-arch/`→`human-arch/`、`user-plan/`→`human-plan/`（仍属 director）；③ 机检脚本 `check-pda-doc-paths.sh` 改名为 `check-dmt-doc-paths.sh`，内部 `PDA_SKILLS_DIR`→`DMT_SKILLS_DIR`、负样本 `docs/not-a-pda-output-dir/`→`docs/not-a-dmt-output-dir/`。
 - **2026-10-22（用户裁定·第六次）**：收件箱协议简化 —— 收件方收到门铃提醒后读入 context window、**不发送回执**、读毕即删；送达以门铃成功投递为准，不再以回执判定；并明确一个 herdr tab 只含一个 pane（一个 agent）。
+- **2026-10-22（用户裁定·第七次）**：**组长 tab 实例生命周期补齐收尾——「用完即关」**（此前只定义了「按需生成」这一半）。① **责任人**＝创建者本人（`dev-m` 关 `dev-tl{n}`、`ana-m` 关 `ana-tl{n}`），非创建者不得代关（对齐 herdr「不关非自己创建的 tab」）；② **时机**＝本批全部收口且创建者确认无下一批可派，**批内可复用、批间不保留**（若采「空闲超时自动关」型判据，必须先定义观测窗口与运行时长）；③ **关闭前置三件事**（回报入账、worktree 已 remove、收件箱无该组长未读）**顺序固定、缺一不可**；④ **命令** `herdr tab close <tab_id>`（`tab_id` 由当次 `herdr tab list` 按 label 解析），**成功判据**＝该 label 从 `tab list` 消失；⑤ **禁止先关后收** —— 关闭 tab 即终止该 agent 会话、context 不可恢复、动作不可逆；⑥ 部门经理 `dev-m` / `ana-m` 的 tab **常驻**，不随批次关闭（在本裁定范围外）。同步改动：`dev-m` / `ana-m` 技能各新增「收回组长实例（用完即关）」步骤，`README.md` 口径改为「按需生成、用完即关」，机检脚本新增两条静态断言。
+- **2026-10-22（用户裁定·第八次）**：**组长层并行口径统一并加可测判据**。此前 `dev-tl` 写「**可**多票并行」、`ana-tl` 写「**必须并行**」，两层口径不一致，且最该有资源约束的组长层反而没写。① `dev-tl` / `ana-tl` 第 3 步统一为同一句式：**无依赖单元必须并行、尽量铺满**（同一回复内并发派发，dynamic workflow `runs.all` 首选，其次多个 subagents；派完立即结束本轮、不轮询）；**只有**依赖 / 共享文件 / 共享构建目标 / 顺序验收关系才串行，**串行须在回报里写明理由**；并发度受资源约束（开发组长：**同一 worktree 内禁并发构建**；分析组长：同一输入文件 / 同一设备 / 同一 REA 会话不得并发）。② `team.md` §5.2 新增**组长层可测判据**「无依赖单元 ≥2 ⇒ 必须并发派发，仅在回报中给出串行理由时可例外」。③ 机检新增三条静态断言。
+- **2026-10-22（机检修正，非用户裁定）**：修正 §7 负样本断言的自相矛盾 —— 原脚本用 `grep 'docs/not-a-dmt-output-dir/' "$CONTRACT"` 判「坏路径是否被误判为存在」，而 §8 变更记录（第五次）**必须**留痕该负样本名 ⇒ 断言恒红（改动前的 `HEAD` 版本同样 `HAS_FAIL`，为**既有缺陷**）。现改为**只查 §3「落盘唯一位置」登记表**（限定表格行 `grep -E '^\|'`），历史留痕不再误伤，判据牙仍在（把坏路径写进登记表即报 FAIL）。

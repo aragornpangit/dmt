@@ -16,7 +16,7 @@ dev-tl 是 **`dev-m` 的下属组长**，实例以 tab label 区分：`dev-tl1`�
 1. **接令**：dev-m 的命令必须含 —— 票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、`timeoutMs`、回报格式。缺任一项 ⇒ **先回问 dev-m**，不自行补全。
 2. **建 worktree**：`git worktree add .worktrees/{ticket-id} -b feat/{ticket-id} <票基>`；主工作树只读。
    - 被 `.gitignore` 忽略的本地依赖不会随 worktree 带出（如 `local.properties`、vendored 的 SDK/库目录），跑构建前先补齐（软链到主工作树同名路径）。
-3. **派 dev-e**：一票一 worktree；用 `Agent` 子代理（可多票并行时同一回复内并发派发，**派完立即结束本轮**，由完成通知唤醒，不轮询）。prompt 写清：票面路径、票基、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`，路径一律用 worktree 的**绝对路径**前缀。
+3. **派 dev-e**：一票一 worktree。**无依赖票必须并行、尽量铺满**：同一回复内并发派发（**dynamic workflow `runs.all` 首选**，其次多个 subagents），**派完立即结束本轮**，由完成通知唤醒，不轮询；**只有**依赖 / 共享文件 / 共享构建目标 / 顺序验收关系才串行，**串行须在回报里写明理由**。并发度受 worktree 与构建资源约束（**同一 worktree 内禁并发构建**）。prompt 写清：票面路径、票基、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`，路径一律用 worktree 的**绝对路径**前缀。
 4. **收 diff ＋ 初检**：读 `git diff <票基> <tip>` 核 Files 边界与判据 → 跑该票门/单测/构建 → **逐条核「门红是真回归还是基线错」**（stale base 假红必须先用 master 复跑证否，再下结论）。
 5. **回报 dev-m**：正文写文件 `inbox/dev-m/{seq}-dev-tl{n}2dev-m-{slug}-{YYMMDDHHMM}.md`，pane 只发门铃；正文必带：票面路径、dev-e 提交链（基点→tip）、**逐条判据读数**、**门 rc 与反例牙是否命中**、构建结论（ABI 数）、风险与偏离、未决项。**不写 `docs/`**。
 

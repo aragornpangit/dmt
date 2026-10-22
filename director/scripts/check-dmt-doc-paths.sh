@@ -40,10 +40,10 @@ fi
 echo
 echo "== 2) 五个角色技能必须指向各自唯一目录 =="
 check() {
-  local file="$1" want="$2" who
-  who="$(basename "$(dirname "$file")")"
+  local file="$1" want="$2" who="${3:-}"
+  [ -n "$who" ] || who="$(basename "$(dirname "$file")")"
   if [ ! -f "$file" ]; then
-    echo "FAIL 技能未安装          $who（$file）"
+    echo "FAIL 未找到              $who（$file）"
     fail=1
     return
   fi
@@ -64,7 +64,20 @@ check "$SKILLS_DIR/dev-tl/SKILL.md" 'docs/dev/tickets/'
 check "$SKILLS_DIR/ana-tl/SKILL.md" 'docs/analyst/'
 
 echo
-echo "== 3) 团队契约必须登记六个唯一目录与收件箱根 =="
+echo "== 3) 组长实例关闭动作必须登记（用完即关；只有创建者能关） =="
+check "$CONTRACT" 'herdr tab close' '团队契约'
+check "$CONTRACT" '禁止先关后收' '团队契约'
+check "$SKILLS_DIR/dev-m/SKILL.md" 'herdr tab close' 'dev-m'
+check "$SKILLS_DIR/ana-m/SKILL.md" 'herdr tab close' 'ana-m'
+
+echo
+echo "== 4) 组长层并行判据必须登记（无依赖 ≥2 ⇒ 并发派发） =="
+check "$SKILLS_DIR/dev-tl/SKILL.md" '必须并行' 'dev-tl'
+check "$SKILLS_DIR/ana-tl/SKILL.md" '必须并行' 'ana-tl'
+check "$CONTRACT" '≥2 ⇒ 必须并发派发' '团队契约'
+
+echo
+echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then
   for d in 'docs/pd/prd/' 'docs/pd/spec/' 'docs/dev/tickets/' 'docs/analyst/' 'docs/human/human-arch/' 'docs/human/human-plan/' 'inbox/'; do
     if grep -q -- "$d" "$CONTRACT"; then
@@ -80,12 +93,13 @@ else
 fi
 
 echo
-echo "== 4) 负样本：判据必须能拒绝坏路径（期望 rc=1） =="
-if grep -q -- 'docs/not-a-dmt-output-dir/' "$CONTRACT"; then
-  echo "FAIL 坏路径被误判为存在"
+echo "== 6) 负样本：判据必须能拒绝坏路径（期望 rc=1） =="
+# 只查「落盘唯一位置」登记表（§3 表格行）—— §8 变更记录里的历史留痕不算登记
+if grep -E '^\|' "$CONTRACT" | grep -q -- 'not-a-dmt-output-dir'; then
+  echo "FAIL 坏路径被登记为产物目录"
   fail=1
 else
-  echo "OK   坏路径被正确拒绝（grep rc=1）"
+  echo "OK   坏路径未被登记为产物目录（表格命中 rc=1）"
 fi
 
 echo "---"

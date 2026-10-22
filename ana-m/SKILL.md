@@ -14,7 +14,7 @@ ana-m 是 dmt 的**分析部门经理**：**唯一上级是 `director`**，**唯
 ## 工作流
 
 1. **接调研诉求**：只从 director 接单（`inbox/ana-m/{seq}-director2ana-m-*`）；把诉求拆成**互不依赖的子问题**，标清每个子问题的证据标准。
-2. **按需生成分析组长**：编号 `{n}` 自 1 单调递增、**已关闭编号不复用**；空闲组长可继续接下一批。
+2. **按需生成分析组长**：编号 `{n}` 自 1 单调递增、**已关闭编号不复用**；**同一批内可复用**，**跨批不保留** —— 批收口即关闭（见第 7 步）。
    ```bash
    HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label ana-tl{n}
    ```
@@ -23,7 +23,13 @@ ana-m 是 dmt 的**分析部门经理**：**唯一上级是 `director`**，**唯
 4. **竞品逆向**：用 REA（`/rea`、`reverse-engineer-anything` 技能）分析 APK / AAR / ELF / 运行时证据，由组长派 ana-e 执行；REA 不可用时**先回报 director 阻塞**，再考虑同一 `rea` CLI 或固定版本的 `npx -y rea-agents@6.4.0` 回退（版本以实测可用为准），**不得用二手博客冒充一手证据**。
 5. **复核与收口**：逐条复核组长回报的出处与命令输出，**同一主题的证据汇总必须由 ana-m 串行收口**；不足则打回**原组长**补证，不直接找 ana-e。
 6. **汇总落笔**：自己落笔报告（结构：`结论摘要` / `证据与来源`（逐条带一手出处） / `竞品或方案对比` / `对本项目的建议` / `未解问题`）。
-7. **交 director 评审**：director 认可后落盘 `docs/analyst/`；写 `inbox/director/{seq}-ana-m2director-{slug}-{YYMMDDHHMM}.md`（结论一句话 + 产物路径）+ 门铃回报派单方。
+7. **收回组长实例（用完即关）**：本批**全部子问题收口、且确认无下一批可派**后，由 **ana-m 本人**（创建者）关闭该组长 tab。关闭前按顺序完成三件事：① 组长回报（含一手出处／可复现命令）已并入报告；② 该组长名下 worktree（如有）已 `git worktree remove`、临时工作区已清、无遗留产物；③ `inbox/ana-m/` 中无该组长未读消息。
+   ```bash
+   HERDR_ENV=1 herdr tab list --workspace "$HERDR_WORKSPACE_ID"   # 按 label 解析当次 tab_id（禁止抄旧 id）
+   HERDR_ENV=1 herdr tab close <tab_id>                          # 成功判据＝该 label 已从 tab list 消失
+   ```
+   **禁止先关后收**（关闭 tab 即终止该 agent 会话、context 不可恢复）；**编号不复用**；非创建者**不得代关**（director 不代关）。细则见 `team.md` §1.2。
+8. **交 director 评审**：director 认可后落盘 `docs/analyst/`；写 `inbox/director/{seq}-ana-m2director-{slug}-{YYMMDDHHMM}.md`（结论一句话 + 产物路径）+ 门铃回报派单方。
 
 **产物**：调研报告 **只能**写 `docs/analyst/`（缺失先 `mkdir -p`）（**不得**写到 `docs/pd/`、`docs/dev/`、`docs/human/`、`docs/test/` 或其它任何位置，不得自建新的文档目录；其它部门的产物路径只读不改）。文件名 `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md`（`{research-seq}` 自累计流水号、001 起；`{slug}` 英文小写短横线、不超过 5 个词）。版本语义见 `team.md` §2。
 结论分级（本团队约定）：`[OBS]` 直接观测、`[INF]` 推断、`[UNK]` 未知。**不复制专有代码或反编译文本**。

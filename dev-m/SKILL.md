@@ -16,16 +16,22 @@ dev-m 是 dmt 的**开发部门经理**：**唯一上级是 `director`**，**唯
 1. **读 SPEC**：`docs/pd/spec/{spec-seq}-spec-*.md`；确认 dev-m 已在 SPEC 评审环节给出 PASS。
 2. **拆 ticket**：用 mattpocock `/to-tickets`，按 tracer-bullet 纵向切片（贯穿各层、可独立验证、单上下文可完成）；编号按依赖序；**发布前把清单交用户与 director 过一遍**。
 3. **落盘**：`docs/dev/tickets/{spec-seq}-ticket-{slug}-{YYMMDD-HHMM}--v{N}.md`，**`spec-seq` 与对应 SPEC 对齐**；每张 ticket 写清：目标、输入 SPEC 小节、验收判据、Files 范围、依赖、`timeoutMs`。版本语义见 `team.md` §2。
-4. **按需生成开发组长**（每批一次）：编号 `{n}` 自 1 单调递增、**已关闭编号不复用**；空闲组长可继续接下一批，不必为每张票新建。
+4. **按需生成开发组长**（每批一次）：编号 `{n}` 自 1 单调递增、**已关闭编号不复用**；**同一批内可复用**（不必为每张票新建），**跨批不保留** —— 批收口即关闭（见第 7 步）。
    ```bash
    HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dev-tl{n}
    ```
    建完 tab 后让新 tab 进入角色：harness 未自动启动则**请用户启动**；启动后投递首条任务（角色 `dev-tl{n}`、技能 `dev-tl`、直属上级 `dev-m`、票面路径），并核验已送达。
 5. **派票给组长**：写 `inbox/dev-tl{n}/{seq}-dev-m2dev-tl{n}-{slug}-{YYMMDDHHMM}.md` + 门铃。派单**七要素**：票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`。按依赖图分批：**无依赖的票分给不同组长并行**，共享文件/共享构建目标的票串行。
 6. **验收整合**：收组长初检回报 → 核 diff 与逐条判据读数 → 主干构建 + 全量测试 → 合并（冲突逐 hunk 按意图消解，不 `--abort` 弃掉已做的合并）→ 不通过则打回**原组长**（不直接找 dev-e）→ 收回 `git worktree remove`；逐 ticket 更新状态。
-7. **交付 director 评审**：写 `inbox/director/{seq}-dev-m2director-{slug}-{YYMMDDHHMM}.md`（正文含 ticket 路径、diff 摘要、验收证据（构建/测试输出路径）、组长初检读数、风险与未决项）+ 门铃。
-8. **push**：**只在 director 评审 PASS 并明确通知后**执行 `git push`（**只有 dev-m 能 `git push`**）；推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果。
-9. **收口**：逐 ticket 更新状态与收口说明（写在 ticket 文件内）；不另写进度报告。
+7. **收回组长实例（用完即关）**：本批**全部票收口、且确认无下一批可派**后，由 **dev-m 本人**（创建者）关闭该组长 tab。关闭前按顺序完成三件事：① 组长回报（含逐条判据读数）已并入票面；② 该组长名下 worktree 已 `git worktree remove`、无遗留工作区；③ `inbox/dev-m/` 中无该组长未读消息。
+   ```bash
+   HERDR_ENV=1 herdr tab list --workspace "$HERDR_WORKSPACE_ID"   # 按 label 解析当次 tab_id（禁止抄旧 id）
+   HERDR_ENV=1 herdr tab close <tab_id>                          # 成功判据＝该 label 已从 tab list 消失
+   ```
+   **禁止先关后收**（关闭 tab 即终止该 agent 会话、context 不可恢复）；**编号不复用**；非创建者**不得代关**（director 不代关）。细则见 `team.md` §1.2。
+8. **交付 director 评审**：写 `inbox/director/{seq}-dev-m2director-{slug}-{YYMMDDHHMM}.md`（正文含 ticket 路径、diff 摘要、验收证据（构建/测试输出路径）、组长初检读数、风险与未决项）+ 门铃。
+9. **push**：**只在 director 评审 PASS 并明确通知后**执行 `git push`（**只有 dev-m 能 `git push`**）；推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果。
+10. **收口**：逐 ticket 更新状态与收口说明（写在 ticket 文件内）；不另写进度报告。
 
 ## 派单纪律
 
