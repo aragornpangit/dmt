@@ -1,21 +1,22 @@
 # dmt
 
 dmt 团队的角色技能仓：**团队定义与五个角色技能的唯一维护地**。四层层级：`director` → 部门经理（`dev-m` / `ana-m`）→ 组长（`dev-tl{n}` / `ana-tl{n}`）→ 工程师（`dev-e` / `ana-e`）。
+**组长层是按需的**：经理每批自选**自营**（在自己 session 内直接开满工程师子代理）或**分包**（建组长 tab，组长接单后再开工程师子代理），两者等价合法、可同批混用。
 
 | 角色 | 技能 | tab label | 直属上级 | 直属下级 | 职责摘要 |
 |---|---|---|---|---|---|
 | 总监（团队领导兼产品经理） | `director` | `director` | 用户 | `dev-m`、`ana-m` | 接需求、输出验收标准、落笔 PRD 与 SPEC、评审调研报告与 ticket 代码、跨部门裁决 |
-| 开发部经理 | `dev-m` | `dev-m` | `director` | `dev-tl{n}` | 由 SPEC 拆 ticket、按需生成并收回开发组长、验收整合、director 通过后才 push |
-| 分析部经理 | `ana-m` | `ana-m` | `director` | `ana-tl{n}` | 接调研诉求、按需生成并收回分析组长、收口调研报告 |
-| 开发组长 | `dev-tl`（实例 `dev-tl{n}`） | `dev-tl1`、`dev-tl2` … | `dev-m` | `dev-e`（子代理） | 建 worktree、并发派开发工程师、收 diff 做初检、回报 dev-m |
-| 分析组长 | `ana-tl`（实例 `ana-tl{n}`） | `ana-tl1`、`ana-tl2` … | `ana-m` | `ana-e`（子代理） | 拆子问题、派分析工程师并行取证、复核出处、回报 ana-m |
+| 开发经理（devM） | `dev-m` | `dev-m` | `director` | **自营**：`dev-e`（子代理）／**分包**：`dev-tl{n}` | 由 SPEC 拆 ticket；按批选自营或分包（自营时直接开满 dev-e、自己出初检读数）；验收整合、director 通过后才 push |
+| 调研分析经理（anaM） | `ana-m` | `ana-m` | `director` | **自营**：`ana-e`（子代理）／**分包**：`ana-tl{n}` | 接调研诉求；按批选自营或分包（自营时直接开满 ana-e）；复核出处、收口调研报告 |
+| 开发组长（devTl） | `dev-tl`（实例 `dev-tl{n}`） | `dev-tl1`、`dev-tl2` … | `dev-m` | `dev-e`（子代理） | 只在经理分包时生成；建 worktree、并发派开发工程师、收 diff 做初检、回报 dev-m |
+| 调研分析组长（anaTl） | `ana-tl`（实例 `ana-tl{n}`） | `ana-tl1`、`ana-tl2` … | `ana-m` | `ana-e`（子代理） | 只在经理分包时生成；拆子问题、派分析工程师并行取证、复核出处、回报 ana-m |
 
-**单线指挥**：每个角色只与直属上下级通信；director 不越级指挥组长与工程师，经理不直接给工程师派活，组长之间、经理之间不横向直连，跨部门一律经 director 转派。
-组长**按需生成、用完即关**：dev-m 用 `herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dev-tl{n}` 建开发组长，ana-m 用同样的命令建 `ana-tl{n}`；本批收口且确认无下一批可派后，由**创建者本人**用 `herdr tab close <tab_id>` 关闭（`tab_id` 按 `herdr tab list` 的 label 解析）。**关闭前置三件事**（回报已入账、worktree 已 `git worktree remove`、收件箱无该组长未读）顺序固定、缺一不可；**禁止先关后收**（关 tab 即终止该 agent 会话、context 不可恢复）；**批内可复用、批间不保留**；非创建者不得代关。细则见 `team.md` §1.2。
+**单线指挥**：每个角色只与直属上下级通信；director 不越级指挥组长与工程师，组长之间、经理之间不横向直连，跨部门一律经 director 转派。**工程师永远是子代理**（不占 tab、不走跨 tab 通信）：分包时由组长开，自营时由经理在自己 session 内开 —— 经理与工程师之间没有 tab 级通道，只有父子代理关系。
+组长**按需生成、用完即关**（**仅分包路径**；经理选**自营**时本批不建组长、无 `herdr tab close`、也不产生 `inbox/dev-tl{n}/` 消息）：dev-m 用 `herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dev-tl{n}` 建开发组长，ana-m 用同样的命令建 `ana-tl{n}`；本批收口且确认无下一批可派后，由**创建者本人**用 `herdr tab close <tab_id>` 关闭（`tab_id` 按 `herdr tab list` 的 label 解析）。**关闭前置三件事**（回报已入账、worktree 已 `git worktree remove`、收件箱无该组长未读）顺序固定、缺一不可；**禁止先关后收**（关 tab 即终止该 agent 会话、context 不可恢复）；**批内可复用、批间不保留**；非创建者不得代关。细则见 `team.md` §1.2。
 
 成员运行在 Herdr（终端多智能体复用器）中，**按 tab label 识别伙伴**，pane id 每次发送前重查。
 **角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**、读入 context window 并删掉文件（详见 `team.md` §1.3）。
-工作流一句话：ana-m 派分析组长调研（director 评审）→ director 出 PRD 与 SPEC（dev-m 评审）→ dev-m 拆 ticket 并生成开发组长 → 组长派 dev-e 实施并初检 → dev-m 验收整合 → director 评审通过 → dev-m `git push`。
+工作流一句话：ana-m 选自营/分包做调研（director 评审）→ director 出 PRD 与 SPEC（dev-m 评审）→ dev-m 拆 ticket 并选自营/分包 → 自营由 dev-m 直接开 dev-e、分包由组长开 dev-e，实施并初检 → dev-m 验收整合 → director 评审通过 → dev-m `git push`。
 
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`team.md`](team.md)。**
 
@@ -27,8 +28,8 @@ dmt/                              # 一个角色一个文件夹
 │   ├── team.md                         # 团队契约（唯一权威）
 │   ├── README.md                       # 指针：根目录 README.md
 │   └── scripts/check-dmt-doc-paths.sh  # 产物落盘路径机检
-├── dev-m/SKILL.md                      # 开发部经理（dev-m）
-├── ana-m/SKILL.md                      # 分析部经理（ana-m）
+├── dev-m/SKILL.md                      # 开发经理（dev-m）
+├── ana-m/SKILL.md                      # 调研分析经理（ana-m）
 ├── dev-tl/SKILL.md                     # 开发组长（dev-tl{n}）
 └── ana-tl/SKILL.md                     # 分析组长（ana-tl{n}）
 ```

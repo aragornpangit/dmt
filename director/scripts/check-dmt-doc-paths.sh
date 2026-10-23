@@ -77,6 +77,12 @@ check "$SKILLS_DIR/ana-tl/SKILL.md" '必须并行' 'ana-tl'
 check "$CONTRACT" '≥2 ⇒ 必须并发派发' '团队契约'
 
 echo
+echo "== 4b) 经理层用工方式必须登记（自营 / 分包 双路径） =="
+check "$SKILLS_DIR/dev-m/SKILL.md" '自营' 'dev-m'
+check "$SKILLS_DIR/ana-m/SKILL.md" '自营' 'ana-m'
+check "$CONTRACT" '用工方式' '团队契约'
+
+echo
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then
   for d in 'docs/pd/prd/' 'docs/pd/spec/' 'docs/dev/tickets/' 'docs/analyst/' 'docs/human/human-arch/' 'docs/human/human-plan/' 'inbox/'; do
