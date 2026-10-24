@@ -75,7 +75,7 @@ bash dmt-director/scripts/install-skills.sh <项目根>
 bash dmt-director/scripts/install-skills.sh <项目根> --copy
 ```
 
-脚本做五件事：建 `.agents/skills/` 与 `scripts/`；软链或复制六个技能目录；把 `team.md` 复制到 `docs/team.md`；把 `scripts/*.sh` 复制到项目 `scripts/`；调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做五件事：建 `.agents/skills/` 与 `<项目根>/dmt-director/`；软链或复制六个技能目录；把 `team.md` 复制到 `docs/team.md`；把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness（codebuddy / codex / opencode 等）的用户级技能目录时，规则同样是**目录名即技能名**。
@@ -87,7 +87,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖（默认值见脚本第 9 行）
 ```
 
-判据**十七项**：① 六个产物目录 + 根目录 `inbox/` 存在（**缺则由 director 初始化时补齐**，见 `team.md` §3.1）；② 六个技能（`dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-pm`）；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `close-leader.sh`、契约含「只许关 pane」）；④ **身份识别已登记**（契约与六个技能含 `pane label`）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」、契约含「≥2 ⇒ 必须并发派发」）；⑥ **经理层路径判据与饱和派发已登记**（`dmt-dm` 含「≤4」「>4」、`dmt-am` 含「≤4」「>4」、契约含「≤4 ⇒ 自己派生 `dev-e`」与「≤4 ⇒ 自己派生 `ana-e`」，以及「并发数 = 单元数」；`dmt-dm` / `dmt-am` 含「开满」与 `teammate`）；⑦ **装机与推送归属已登记**（契约含「只由 director」、`dmt-director` 含 `git push`、`dmt-dm` 含「不得 push」、契约含「每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表，六个技能各含自己的强制技能名）；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，六个角色技能各含 `file-claim`，脚本存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-pm` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（六个 pane 角色技能各含 `cbc-herdr`）；⑫ **技能链接与上游一致**（契约与六个技能都含 `raw.githubusercontent.com`）；⑬ **确定性动作已脚本化**（十四个脚本存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/` 与 `.seq`、六个技能各含 `msg-take.sh`）；⑮ **先派后干与并发账已登记**（契约与 `dmt-pm` / `dmt-dm` / `dmt-am` 含「先派后干」「并发账」）；⑯ 本契约登记齐全；⑰ 负样本能被正确拒绝（**只查 §3 落盘登记表**，§8 历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
+判据**十八项**：① 六个产物目录 + 根目录 `inbox/` 存在（**缺则由 director 初始化时补齐**，见 `team.md` §3.1）；② 六个技能（`dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-pm`）；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `close-leader.sh`、契约含「只许关 pane」）；④ **身份识别已登记**（契约与六个技能含 `pane label`）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」、契约含「≥2 ⇒ 必须并发派发」）；⑥ **经理层路径判据与饱和派发已登记**（`dmt-dm` 含「≤4」「>4」、`dmt-am` 含「≤4」「>4」、契约含「≤4 ⇒ 自己派生 `dev-e`」与「≤4 ⇒ 自己派生 `ana-e`」，以及「并发数 = 单元数」；`dmt-dm` / `dmt-am` 含「开满」与 `teammate`）；⑦ **装机与推送归属已登记**（契约含「只由 director」、`dmt-director` 含 `git push`、`dmt-dm` 含「不得 push」、契约含「每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表，六个技能各含自己的强制技能名）；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，六个角色技能各含 `file-claim`，脚本存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-pm` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（六个 pane 角色技能各含 `cbc-herdr`）；⑫ **技能链接与上游一致**（契约与六个技能都含 `raw.githubusercontent.com`）；⑬ **确定性动作已脚本化**（十四个脚本存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/` 与 `.seq`、六个技能各含 `msg-take.sh`）；⑮ **先派后干与并发账已登记**（契约与 `dmt-pm` / `dmt-dm` / `dmt-am` 含「先派后干」「并发账」）；⑯ 本契约登记齐全；⑰ **契约头部带版本号与日期且与六个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，六份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只查 §3 落盘登记表**，§8 历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
 
 ## 维护
 

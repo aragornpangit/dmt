@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 4.0.0
+version: 4.1.0
 description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director。接 pm 落盘的开发工单（ticket），安排开发团队干活：排队任务 ≤4 时自己派生 dev-e 子代理，>4 时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 devtl{n}，优先 cbc + /dmt-dtl），队长接单后再开 dev-e 子代理；**代码门禁**：负责评审（逐条判据 PASS/FAIL）、整合开发部门交付物并收口队长 pane，不拆票、不 push（装机与 push 归 director）。当需要接单排期、派发与验收 ticket、或修复缺陷时使用。触发词：dmt、devm、开发经理、接单、ticket、工单、排期、验收、整合、worktree、devtl、dev-e、队长 pane、pane label。
 ---
 

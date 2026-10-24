@@ -18,11 +18,16 @@ mkdir -p "$BOX/.doing"
 
 # 扫描自愈：根目录与 .doing/ 里的现有最大号（.seq 丢失或被拷贝时兜底）
 scan_max="$(find "$BOX" -maxdepth 2 -name '[0-9]*-*' -printf '%f\n' 2>/dev/null \
-            | sed -n 's/^\([0-9]\{1,\}\)-.*/\1/p' | sort -n | tail -1 || true)"
+            | sed -n 's/^0*\([0-9]\{1,\}\)-.*/\1/p' | sort -n | tail -1 || true)"
 # 高水位：已发出的最大号，不随消息删除而回退（内容必须是无前导零的十进制整数）
 file_max="$(cat "$BOX/.seq" 2>/dev/null || echo 0)"
 case "$file_max" in ''|*[!0-9]*) file_max=0 ;; esac
+# 关键：文件名带前导零（077），.seq 可能是旧版写下的带零值；
+# bash 的算术把 077 当八进制（=63），会把序号打回 64 造成撞号。
+# 一律用 10# 强制十进制，再比较与自增。
 [ -n "${scan_max:-}" ] || scan_max=0
+scan_max=$((10#$scan_max))
+file_max=$((10#$file_max))
 if [ "$scan_max" -gt "$file_max" ]; then file_max="$scan_max"; fi
 seq_num=$(( file_max + 1 ))
 seq="$(printf '%03d' "$seq_num")"

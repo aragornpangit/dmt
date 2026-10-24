@@ -205,6 +205,35 @@ done
 check "$SKILLS_DIR/dmt-director/SKILL.md" '并发账' 'director'
 
 echo
+echo "== 4m) 团队契约必须带版本号与日期，且与六个技能同号 =="
+ver_skill="$(sed -n 's/^version: *//p' "$SKILLS_DIR/dmt-director/SKILL.md" 2>/dev/null | head -1)"
+if [ -n "$ver_skill" ]; then echo "OK   director 技能版本      $ver_skill"; else echo "FAIL director 技能缺 version"; fail=1; fi
+ver_doc="$(head -10 "$CONTRACT" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+if [ -n "$ver_doc" ]; then echo "OK   契约头部版本          $ver_doc"; else echo "FAIL 契约头部缺版本号（抽查时无法判断装载版本）"; fail=1; fi
+if [ -n "$ver_skill" ] && [ "$ver_doc" = "$ver_skill" ]; then
+  echo "OK   契约与技能同号        $ver_doc"
+else
+  echo "FAIL 契约与技能不同号      doc=${ver_doc:-none} skill=${ver_skill:-none}"; fail=1
+fi
+if head -10 "$CONTRACT" 2>/dev/null | grep -qE '[0-9]{4}-[0-9]{2}-[0-9]{2}'; then
+  echo "OK   契约头部带日期"
+else
+  echo "FAIL 契约头部缺日期"; fail=1
+fi
+for role in dmt-pm dmt-dm dmt-am dmt-dtl dmt-atl; do
+  v="$(sed -n 's/^version: *//p' "$SKILLS_DIR/$role/SKILL.md" 2>/dev/null | head -1)"
+  if [ -n "$v" ] && [ "$v" = "$ver_skill" ]; then echo "OK   $role 版本同号"; else echo "FAIL $role 版本不同号（${v:-none}）"; fail=1; fi
+done
+
+# 从项目根执行时 scripts/ 不存在（脚本装在 dmt-director/scripts/）；契约里只允许带前缀的写法
+# 只查正文（§0–§7）；§8 变更记录里的历史写法不算
+if sed -n '1,/^## 8\./p' "$CONTRACT" 2>/dev/null | grep -q '`scripts/'; then
+  echo "FAIL 契约里有不带 dmt-director/ 前缀的脚本路径（从项目根执行会 rc=127）"; fail=1
+else
+  echo "OK   契约脚本路径均带 dmt-director/ 前缀"
+fi
+
+echo
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then
   for d in 'docs/pd/prd/' 'docs/pd/spec/' 'docs/dev/tickets/' 'docs/analyst/' 'docs/human/human-arch/' 'docs/human/human-plan/' 'inbox/'; do

@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 4.0.0
+version: 4.1.0
 description: 团队领导(director)，dmt 唯一用户入口，直属下级只有 pm（产品部经理）、devm（开发经理）与 anam（分析经理）。当用户提出需求/变更/问题反馈、需要把需求交给 pm 落成 PRD 与 SPEC、需要评审 pm 的产品文档或 anam 的调研报告或 devm 交付的 ticket 代码、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、团队领导、需求、验收标准、PRD、SPEC、评审、pm、devm、anam。
 ---
 
@@ -44,7 +44,7 @@ bash dmt-director/scripts/setup-team.sh --no-start
 - **顺序**：先正名自己（tab 再 pane），再建 pm，再建 devm / anam；**pm 的 pane 在 director 自己的 tab 内、director pane 右侧**，不单独占 tab。
 - **维护**：每次开工前巡检 `pm` / `devm` / `anam` 三个 label；label 缺失或漂移 ⇒ `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」；**pane 已死则重建**，不要让下级自己找位置。
 - **禁止 `herdr tab close`**：director 的 tab 里有 pm，关 tab 会连带杀掉 pm 与自己；只许关 pane。
-- 就绪判据一律 `wait-output --source visible --match 'auto mode on'`；投递首条任务后用 `pane read` 核验输入框已清空。
+- 就绪判据一律轮询 `herdr pane get <pane>` 的 `.result.pane.agent_status` 直到不再是 `unknown`（`unknown` = 该 pane 没有 agent 在跑）；**不要用 `wait-output --match` 匹配屏幕文字** —— 对已在跑的 pane 它会立刻命中历史输出，等于没有判据。投递首条任务后用 `pane read` 核验输入框已清空。
 
 ## 并行（director 自己也要用子代理）
 

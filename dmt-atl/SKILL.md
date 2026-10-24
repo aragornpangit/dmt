@@ -1,6 +1,6 @@
 ---
 name: dmt-atl
-version: 4.0.0
+version: 4.1.0
 description: 分析队长(anatl{n})，anam 的下属队长，pane label 为 anatl1、anatl2 …（pane 开在 anam 的 tab 内），下辖 ana-e 分析工程师（子代理）。仅在 anam 排队子问题 >4 时生成；接单后自己拆取证动作、开子代理（工程师）并行取证。当 anam 已把调研问题拆成子问题并派给本队长、需要派 ana-e 并行取证、复核一手出处并汇总回报 anam 时使用。触发词：anatl、anatl1、anatl2、TL、分析队长、派 ana-e、取证、一手出处、回报 anam。
 ---
 
