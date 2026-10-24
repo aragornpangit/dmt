@@ -414,6 +414,8 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh
 
 ## 8. 变更记录
 
+- **2026-10-24（实测修正·第三十三次：hook 真实链路验证通过）**：在真实 codebuddy 会话（`-p` 模式、`DMT_ROLE=devm`）里跑通全链路，并修掉五处会导致「装了不生效」的问题：① **matcher 改为通配 `*`**，由脚本按 `tool_name` / 文件路径自行过滤 —— 原先 `Edit|Write|MultiEdit` 在部分工具名下不命中；② `inc` 读 stdin 的 `tool_name`，只有 `Agent|Task|Teammate` 才计一个单元（否则通配会把任何工具调用都记成派发）；③ `self-work-guard` 从 stdin JSON 取 `.tool_input.file_path`（hook 不保证设置 `CLAUDE_FILE_PATH`）；④ 所有 stdin 读取加 `timeout 1`，手工调用不再挂住；⑤ Stop hook 识别 `stop_hook_active`，**同一轮只弹回一次**，避免死循环。实测证据：PreToolUse 三次 rc=2 拦住真实 Write（callId 可查）、Stop 两次 rc=2 拦住收工并打印「单元 3 → 已派 1，未派 T1 T2」、模型被弹回后**真的派了一个 Agent**（ledger 出现 `auto dispatched`）。
+
 - **2026-10-24（用户裁定·第三十二次：派发合规进评审门禁）**：① §5.3 门禁表新增「**派发合规（并发账）**」一行 —— 提交方 pm / devm / anam，评审方 director，**在既有评审点内看，不另设事前审批**；缺失、算术不成立、理由不在白名单 ⇒ 打回不进评审；同一经理同一批次被打回 2 次 ⇒ **升级用户裁决**。② §5.2 第 10 条补「不做事前审批 + 每小时巡检 `locks/dispatch-*.tsv`，未派超 30 分钟发门铃」。③ 机检 4l 增加「派发合规」断言。**Why**：事前审批会把每个小任务变成往返，经理只会批量来问；hook 已在 Stop 挡住绝大多数情况，director 只需处理 hook 挡不住的两类 —— 把 N 声明成 1、干脆不 plan 直接干。
 
 - **2026-10-24（用户裁定·第三十一次：给总监与三个经理装上 hook）**：① `install-hooks.sh` 增加 `--user` 模式，装到 `~/.codebuddy/settings.json`（自动备份 `settings.json.bak-<时间戳>`，保留既有 hook）。② **治理范围收窄为 `director` / `pm` / `devm` / `anam`**，队长与工程师不装（需要时 `DMT_DISPATCH_ALL=1` 放开）。③ 角色解析：参数 `-` ⇒ `DMT_ROLE` ⇒ herdr pane label，解析不到即 `exit 0`，**不影响非 dmt 会话**。④ `check` 对超过 24h 的旧账不再阻断，避免历史批次卡住新会话。⑤ 修 `report` 算术：未派 K = N − M（原先只数 excused，导致 M+K≠N）。
