@@ -1,5 +1,5 @@
 ---
-name: anam
+name: dmt-anam
 version: 3.0.0
 description: 分析经理(anam)，dmt 分析部门负责人，直属上级 director，直属下级只有分析队长 anatl{n}。接调研诉求后拆子问题；需要并行取证时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 anatl{n}），队长接单后再开 ana-e 子代理；负责复核出处、收口报告与收回队长 pane。当需要市场信息调研、竞品逆向分析、开源方案对标、技术选型取证、APK/AAR/ELF 等二进制证据分析，或需要产出调研报告时使用。触发词：dmt、anam、分析经理、分析经理、调研、anatl、ana-e、竞品分析、逆向、REA、research、队长 pane、pane label。
 ---
@@ -8,7 +8,7 @@ description: 分析经理(anam)，dmt 分析部门负责人，直属上级 direc
 
 anam 是 dmt 的**分析经理**：**唯一上级是 `director`**，**唯一下级是分析队长 `anatl{n}`**（按需生成，pane 开在 anam 自己的 tab 内）。
 分析工程师 `ana-e` **永远是队长的子代理**：不占 pane、不装技能、不与 anam 跨 pane 通信；anam **不得**直接给 ana-e 派活或收活。
-团队口径、命名规范与门禁见 `director/team.md`（本仓；装到项目后即该项目 `docs/team.md`，**唯一权威**，本文件不重复）。
+团队口径、命名规范与门禁见 `dmt-director/team.md`（本仓；装到项目后即该项目 `docs/team.md`，**唯一权威**，本文件不重复）。
 
 **单线指挥（硬约束）**：跨会话只与 `director`（上）和 `anatl{n}`（下）通信；**不越过 director 与 devm 横向联系**；**不指挥 `devtl{n}`**。
 
@@ -64,7 +64,7 @@ anam 是 dmt 的**分析经理**：**唯一上级是 `director`**，**唯一下�
 
 ## 通信（收件箱文件 + herdr 门铃）
 
-全文见 `director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
+全文见 `dmt-director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
 
 - 写：`inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根下，**不在 `docs/`**；`mkdir -p` 兜底）
 - 铃：`你有新消息 {文件名}，在 inbox/<收件角色>/`，用 `herdr pane send-text <pane> '<短句>'` 紧跟 `herdr pane send-keys <pane> enter`
@@ -82,6 +82,6 @@ anam 是 dmt 的**分析经理**：**唯一上级是 `director`**，**唯一下�
 
 ## 指针
 
-- 团队契约（唯一权威）：`director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
+- 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 产物：`docs/analyst/`
 - 技能：`herdr`（pane 控制与 label 识别）、`pi-subagents`（workflow 与并行）、mattpocock `/research`、REA（`/rea`、`reverse-engineer-anything`）

@@ -5,19 +5,19 @@
 
 ## 0. 仓库结构
 
-本仓根目录按角色分文件夹，一个角色一个目录；团队契约、仓库说明与机检脚本随团队领导放在 `director/` 内，不散落根目录：
+本仓根目录按角色分文件夹，一个角色一个目录；团队契约、仓库说明与机检脚本随团队领导放在 `dmt-director/` 内，不散落根目录：
 
 ```
 dmt/
-├── director/                                   # 总监兼产品经理（技能 director）
+├── dmt-director/                         # 总监兼产品经理（技能 dmt-director）
 │   ├── SKILL.md                          # 角色技能
 │   ├── team.md                           # 团队契约（本文件，唯一权威）
 │   ├── README.md                         # 仓库说明与安装
 │   └── scripts/check-dmt-doc-paths.sh    # 产物落盘路径机检
-├── devm/SKILL.md                        # 开发经理
-├── anam/SKILL.md                        # 分析经理
-├── devtl/SKILL.md                       # 开发队长（devtl{n}）
-└── anatl/SKILL.md                       # 分析队长（anatl{n}）
+├── dmt-devm/SKILL.md                        # 开发经理
+├── dmt-anam/SKILL.md                        # 分析经理
+├── dmt-devtl/SKILL.md                       # 开发队长（devtl{n}）
+└── dmt-anatl/SKILL.md                       # 分析队长（anatl{n}）
 ```
 
 ## 1. 团队定义
@@ -41,25 +41,25 @@ director            总监（团队领导 + 产品经理，label director）
     └── anatl{n}
 ```
 
-| 角色 | 全称 | 技能 / 实例名 | pane label | 直属上级 | 直属下级 | 职责 |
+| 角色 | 全称 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责 |
 |---|---|---|---|---|---|---|
-| 总监（团队领导兼产品经理） | TeamLeader + ProductManager | `director` | `director` | 用户 | `devm`、`anam` | 唯一用户入口；接需求、出验收标准、落笔 PRD 与 SPEC、评审调研报告与 ticket 代码、跨部门裁决 |
-| 开发经理 | DevelopManager | `devm` | `devm` | `director` | `devtl{n}` | 由 SPEC 拆 ticket、按需生成并收回开发队长、验收整合、director 评审通过后 push |
-| 分析经理 | AnalystManager | `anam` | `anam` | `director` | `anatl{n}` | 接调研诉求、按需生成并收回分析队长、收口调研报告 |
-| 开发队长 | DevelopLeader | `devtl{n}` | `devtl{n}` | `devm` | `dev-e`（子代理） | 建 worktree、并发派开发工程师、收 diff 做实施层初检、回报 devm |
-| 分析队长 | AnalystLeader | `anatl{n}` | `anatl{n}` | `anam` | `ana-e`（子代理） | 拆子问题、派分析工程师并行取证、复核一手出处、汇总回报 anam |
+| 总监（团队领导兼产品经理） | TeamLeader + ProductManager | `dmt-director` | `director` | 用户 | `devm`、`anam` | 唯一用户入口；接需求、出验收标准、落笔 PRD 与 SPEC、评审调研报告与 ticket 代码、跨部门裁决 |
+| 开发经理 | DevelopManager | `dmt-devm` | `devm` | `director` | `devtl{n}` | 由 SPEC 拆 ticket、按需生成并收回开发队长、验收整合、director 评审通过后 push |
+| 分析经理 | AnalystManager | `dmt-anam` | `anam` | `director` | `anatl{n}` | 接调研诉求、按需生成并收回分析队长、收口调研报告 |
+| 开发队长 | DevelopLeader | `dmt-devtl` | `devtl{n}` | `devm` | `dev-e`（子代理） | 建 worktree、并发派开发工程师、收 diff 做实施层初检、回报 devm |
+| 分析队长 | AnalystLeader | `dmt-anatl` | `anatl{n}` | `anam` | `ana-e`（子代理） | 拆子问题、派分析工程师并行取证、复核一手出处、汇总回报 anam |
 
-**称呼（正文用）**：**id 只用于 pane label、收件箱目录、方向码与命令**；正文、汇报、日志一律用**称呼**，两者不混写。例：路径写 `inbox/devtl1/`，正文写「队长1 回报：…」。
+**三层命名（不得混写）**：① **技能名** `dmt-devm` —— 技能注册表、安装目录与 `/dmt-devm` 命令用；② **运行 id** `devm` —— pane label、收件箱目录、方向码与实例号用；③ **称呼** 开发经理 —— 正文、汇报、日志用。例：命令写 `/dmt-devtl`，路径写 `inbox/devtl1/`，正文写「队长1 回报：…」。
 
-| id | 称呼 | 实例称呼 |
-|---|---|---|
-| `director` | 总监 | — |
-| `devm` | 开发经理 | — |
-| `anam` | 分析经理 | — |
-| `devtl{n}` | 开发队长 | 队长1、队长2 … |
-| `anatl{n}` | 分析队长 | 队长1、队长2 …（同批按部门区分：开发队长1 / 分析队长1） |
-| `dev-e` | 开发工程师 | 按序号，如「工程师3」 |
-| `ana-e` | 分析工程师 | 按序号，如「工程师3」 |
+| 技能名 | 运行 id | 称呼 | 实例称呼 |
+|---|---|---|---|
+| `dmt-director` | `director` | 总监 | — |
+| `dmt-devm` | `devm` | 开发经理 | — |
+| `dmt-anam` | `anam` | 分析经理 | — |
+| `dmt-devtl` | `devtl{n}` | 开发队长 | 队长1、队长2 … |
+| `dmt-anatl` | `anatl{n}` | 分析队长 | 队长1、队长2 …（同批按部门区分：开发队长1 / 分析队长1） |
+| — | `dev-e` | 开发工程师 | 按序号，如「工程师3」 |
+| — | `ana-e` | 分析工程师 | 按序号，如「工程师3」 |
 
 **单线指挥（硬约束，任何角色不得越级或横向直连）：**
 
@@ -270,7 +270,7 @@ director 接手项目的**第一件事**：检查目录，缺什么建什么。�
 cd <项目根>
 mkdir -p docs/{pd/{prd,spec},dev/tickets,analyst,human/{human-arch,human-plan}} inbox/{director,devm,anam}
 grep -qxF 'inbox/*/' .gitignore 2>/dev/null || echo 'inbox/*/' >> .gitignore   # 收件箱不入库
-bash director/scripts/check-dmt-doc-paths.sh .
+bash dmt-director/scripts/check-dmt-doc-paths.sh .
 ```
 
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
@@ -286,7 +286,7 @@ bash director/scripts/check-dmt-doc-paths.sh .
 4. **devm 生成开发队长并派票**：devm 按批次建 `devtl{n}`，把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给队长；队长建 worktree、派 `dev-e` 实施并做实施层初检，回报 devm。
 5. **devm 验收整合**：核 diff 与初检读数 → 构建与测试 → 合并（冲突逐 hunk 按意图消解）→ 不合格打回原队长 → 逐票更新状态；**本批全部收口且确认无下一批可派后，关闭该批 `devtl{n}`（§1.2）**。
 6. **交付 director 评审**：devm 把代码提交给 director **部门**评审；一个 ticket 对应一个 SPEC。链路：director 亲自对照 SPEC 验收标准核验 → director 给结论 → **director 通知 devm** → devm 才执行 `git push`。
-7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 devm/anam 之间；devm 在多个 `devtl{n}` 之间；anam 在多个 `anatl{n}` 之间；队长在多个工程师之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。
+7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 dmt-devm/anam 之间；devm 在多个 `devtl{n}` 之间；anam 在多个 `anatl{n}` 之间；队长在多个工程师之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。
 
 ### 4.1 PRD 模板（director）
 
@@ -339,7 +339,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 ## 7. 机检
 
 ```bash
-bash director/scripts/check-dmt-doc-paths.sh
+bash dmt-director/scripts/check-dmt-doc-paths.sh
 ```
 
 检查六件事：六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在、五个技能（`director` / `devm` / `anam` / `devtl` / `anatl`）各自指向自己的唯一目录、**队长实例关闭动作已登记**（契约与 `devm` / `anam` 技能含 `herdr pane close`，契约含「禁止先关后收」与「禁止 `herdr tab close`」）、**身份识别已登记**（契约与五个技能含 `pane label`，契约含「不按 tab 内位置」）、**队长层并行判据已登记**（`devtl` / `anatl` 含「必须并行」，契约含「≥2 ⇒ 必须并发派发」）、本契约登记齐全、负样本能被正确拒绝（**只看 §3 落盘登记表**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期或并行口径后必须重跑**。

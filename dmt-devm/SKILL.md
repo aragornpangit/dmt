@@ -1,5 +1,5 @@
 ---
-name: devm
+name: dmt-devm
 version: 3.0.0
 description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director，直属下级只有开发队长 devtl{n}。按 SPEC 拆开发工单；需要并行铺开时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 devtl{n}），队长接单后再开 dev-e 子代理；负责验收整合、收口队长 pane 与 push。当 SPEC 需要拆开发工单、需要派发与验收 ticket、需要修复缺陷、或需要推送已评审通过的代码时使用。触发词：dmt、devm、开发经理、ticket、工单、to-tickets、worktree、devtl、dev-e、队长 pane、pane label。
 ---
@@ -8,7 +8,7 @@ description: 开发经理(devm)，dmt 开发部门负责人，直属上级 direc
 
 devm 是 dmt 的**开发经理**：**唯一上级是 `director`**，**唯一下级是开发队长 `devtl{n}`**（按需生成，pane 开在 devm 自己的 tab 内）。
 开发工程师 `dev-e` **永远是队长的子代理**：不占 pane、不装技能、不与 devm 跨 pane 通信；devm **不得**直接给 dev-e 派活或收活。
-团队口径、命名规范与门禁见 `director/team.md`（本仓；装到项目后即该项目 `docs/team.md`，**唯一权威**，本文件不重复）。
+团队口径、命名规范与门禁见 `dmt-director/team.md`（本仓；装到项目后即该项目 `docs/team.md`，**唯一权威**，本文件不重复）。
 
 **单线指挥（硬约束）**：跨会话只与 `director`（上）和 `devtl{n}`（下）通信；**不越过 director 与 anam 横向联系**；**不指挥 `anatl{n}`**。
 
@@ -70,7 +70,7 @@ ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其�
 
 ## 通信（收件箱文件 + herdr 门铃）
 
-全文见 `director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
+全文见 `dmt-director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
 
 - 写：`inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根下，**不在 `docs/`**；`mkdir -p` 兜底）
 - 铃：`你有新消息 {文件名}，在 inbox/<收件角色>/`，用 `herdr pane send-text <pane> '<短句>'` 紧跟 `herdr pane send-keys <pane> enter`
@@ -88,6 +88,6 @@ ticket **只能**写 `docs/dev/tickets/`（**不得**写到 `docs/dev/` 的其�
 
 ## 指针
 
-- 团队契约（唯一权威）：`director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
+- 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 输入：`docs/pd/spec/`（director 的 SPEC）；产物：`docs/dev/tickets/`
 - 技能：`herdr`（pane 控制与 label 识别）、`pi-subagents`（workflow 与并行）、mattpocock `/to-tickets`、`/code-review`、`/diagnosing-bugs`、`/improve-codebase-architecture`
