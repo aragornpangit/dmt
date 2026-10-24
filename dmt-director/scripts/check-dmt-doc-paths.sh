@@ -67,7 +67,7 @@ echo
 echo "== 3) 队长实例关闭动作必须登记（用完即关；只有创建者能关；只关 pane 不关 tab） =="
 check "$CONTRACT" 'herdr pane close' '团队契约'
 check "$CONTRACT" '禁止先关后收' '团队契约'
-check "$CONTRACT" 'herdr tab close' '团队契约'   # 以「禁止 ...」的形式登记，出现即说明禁则未丢
+check "$CONTRACT" '只许关 pane' '团队契约'   # 禁则本体：只许关 pane（'herdr tab close' 在 §8 历史里也会出现，不能拿它当判据）
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'herdr pane close' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'herdr pane close' 'anam'
 

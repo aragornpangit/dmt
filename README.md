@@ -20,7 +20,7 @@ dmt 团队的角色技能仓：**团队定义与五个角色技能的唯一维�
 **角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**、读入 context window 并删掉文件（详见 `team.md` §1.3）。
 工作流一句话：anam 开队长 pane 做调研（director 评审）→ director 出 PRD 与 SPEC（devm 评审）→ devm 拆 ticket 并开队长 pane → 队长开 dev-e 实施并初检 → devm 验收整合 → director 评审通过 → devm `git push`。
 
-**团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`team.md`](team.md)。**
+**团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
 
 ```
 dmt/                              # 一个角色一个文件夹
@@ -73,7 +73,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖（默认值见脚本第 9 行）
 ```
 
-判据六项：六个产物目录 + 根目录 `inbox/` 存在（**缺则由 director 初始化时补齐**，见 `team.md` §3.1）、五个角色技能各自指向自己的唯一目录、**队长实例关闭动作已登记**（契约与 `devm` / `anam` 技能含 `herdr pane close`、契约含「禁止 `herdr tab close`」）、**身份识别已登记**（契约与五个技能含 `pane label`）、**队长层并行判据已登记**（`devtl` / `anatl` 含「必须并行」、契约含「≥2 ⇒ 必须并发派发」）、本契约登记齐全、负样本能被正确拒绝（**只查 §3 落盘登记表**，§8 历史留痕不算登记）。**改路径规范、pane 生命周期或并行口径后必须重跑。**
+判据**七项**：① 六个产物目录 + 根目录 `inbox/` 存在（**缺则由 director 初始化时补齐**，见 `team.md` §3.1）；② 五个技能（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `herdr pane close`、契约含「只许关 pane」）；④ **身份识别已登记**（契约与五个技能含 `pane label`）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」、契约含「≥2 ⇒ 必须并发派发」）；⑥ 本契约登记齐全；⑦ 负样本能被正确拒绝（**只查 §3 落盘登记表**，§8 历史留痕不算登记）。**改路径规范、pane 生命周期或并行口径后必须重跑。**
 
 ## 维护
 
