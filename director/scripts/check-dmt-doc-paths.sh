@@ -64,11 +64,20 @@ check "$SKILLS_DIR/dev-tl/SKILL.md" 'docs/dev/tickets/'
 check "$SKILLS_DIR/ana-tl/SKILL.md" 'docs/analyst/'
 
 echo
-echo "== 3) 组长实例关闭动作必须登记（用完即关；只有创建者能关） =="
-check "$CONTRACT" 'herdr tab close' '团队契约'
+echo "== 3) 组长实例关闭动作必须登记（用完即关；只有创建者能关；只关 pane 不关 tab） =="
+check "$CONTRACT" 'herdr pane close' '团队契约'
 check "$CONTRACT" '禁止先关后收' '团队契约'
-check "$SKILLS_DIR/dev-m/SKILL.md" 'herdr tab close' 'dev-m'
-check "$SKILLS_DIR/ana-m/SKILL.md" 'herdr tab close' 'ana-m'
+check "$CONTRACT" 'herdr tab close' '团队契约'   # 以「禁止 ...」的形式登记，出现即说明禁则未丢
+check "$SKILLS_DIR/dev-m/SKILL.md" 'herdr pane close' 'dev-m'
+check "$SKILLS_DIR/ana-m/SKILL.md" 'herdr pane close' 'ana-m'
+
+echo
+echo "== 3b) 身份识别必须按 pane label（不得按 tab 内位置） =="
+check "$CONTRACT" 'pane label' '团队契约'
+check "$CONTRACT" '不按 tab 内位置' '团队契约'
+for role in director dev-m ana-m dev-tl ana-tl; do
+  check "$SKILLS_DIR/$role/SKILL.md" 'pane label' "$role"
+done
 
 echo
 echo "== 4) 组长层并行判据必须登记（无依赖 ≥2 ⇒ 并发派发） =="
@@ -77,11 +86,6 @@ check "$SKILLS_DIR/ana-tl/SKILL.md" '必须并行' 'ana-tl'
 check "$CONTRACT" '≥2 ⇒ 必须并发派发' '团队契约'
 
 echo
-echo "== 4b) 经理层用工方式必须登记（自营 / 分包 双路径） =="
-check "$SKILLS_DIR/dev-m/SKILL.md" '自营' 'dev-m'
-check "$SKILLS_DIR/ana-m/SKILL.md" '自营' 'ana-m'
-check "$CONTRACT" '用工方式' '团队契约'
-
 echo
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then
