@@ -178,7 +178,7 @@ done
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh msg-take.sh msg-done.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done
@@ -192,6 +192,16 @@ check "$CONTRACT" 'msg-done.sh' '团队契约'
 for role in dmt-director dmt-pm dmt-dm dmt-am dmt-dtl dmt-atl; do
   check "$SKILLS_DIR/$role/SKILL.md" 'msg-take.sh' "$role"
 done
+
+echo
+echo "== 4l) 先派后干与并发账必须登记 =="
+check "$CONTRACT" '先派后干' '团队契约'
+check "$CONTRACT" '并发账' '团队契约'
+for role in dmt-pm dmt-dm dmt-am; do
+  check "$SKILLS_DIR/$role/SKILL.md" '先派后干' "$role"
+  check "$SKILLS_DIR/$role/SKILL.md" '并发账' "$role"
+done
+check "$SKILLS_DIR/dmt-director/SKILL.md" '并发账' 'director'
 
 echo
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="

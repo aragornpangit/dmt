@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# 派发账本：把「无依赖单元必须派满」变成可机器校验的硬约束
+# 用法：
+#   plan   <role> <unit...>        开工前声明本批无依赖单元（重置账本）
+#   inc    <role> [unit]           记一次派发（PostToolUse hook 在 Agent 调用后自动调）
+#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea|atomic
+#   done   <role> <unit>           记一个单元收口
+#   check  <role>                  合规 rc=0；有未派单元 rc=2（Stop hook 用 rc=2 阻断本轮）
+#   report <role>                  打印可粘贴的「并发账」一行
+#   status <role>
+set -eu
+CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status> <role> ...}"
+ROLE="${2:?missing role}"
+shift 2 || true
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+LEDGER="$ROOT/locks/dispatch-$ROLE.tsv"
+mkdir -p "$ROOT/locks"
+
+case "$CMD" in
+  plan)
+    [ $# -ge 1 ] || { echo "plan needs at least one unit" >&2; exit 2; }
+    : > "$LEDGER"
+    for u in "$@"; do printf '%s\tplanned\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"; done
+    echo "planned $# unit(s) for $ROLE"
+    ;;
+  inc)
+    u="${1:-auto}"
+    if grep -q "^$u	planned	-	" "$LEDGER" 2>/dev/null; then
+      sed -i "s/^$u	planned	-	/$u	dispatched	-	/" "$LEDGER"
+    else
+      printf '%s\tdispatched\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"
+    fi
+    echo "dispatched $u"
+    ;;
+  excuse)
+    u="${1:?missing unit}"; code="${2:?missing code}"
+    case "$code" in dep|files|build|order|device|rea|atomic) ;; *) echo "bad code: $code" >&2; exit 2 ;; esac
+    if grep -q "^$u	planned	-	" "$LEDGER" 2>/dev/null; then
+      sed -i "s/^$u	planned	-	/$u	excused	$code	/" "$LEDGER"
+    else
+      printf '%s\texcused\t%s\t%s\n' "$u" "$code" "$(date +%H%M%S)" >> "$LEDGER"
+    fi
+    echo "excused $u ($code)"
+    ;;
+  done)
+    u="${1:?missing unit}"
+    sed -i "s/^$u	dispatched	/$u	done	-	/" "$LEDGER" 2>/dev/null || true
+    echo "done $u"
+    ;;
+  check)
+    [ -f "$LEDGER" ] || exit 0
+    left="$(awk -F'\t' '$2=="planned"{printf "%s ", $1}' "$LEDGER")"
+    [ -n "$left" ] || exit 0
+    n="$(awk -F'\t' 'END{print NR}' "$LEDGER")"
+    d="$(awk -F'\t' '$2!="planned"{c++} END{print c+0}' "$LEDGER")"
+    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left" >&2
+    echo "[dispatch] 先派后干：把未派单元派出去，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
+    exit 2
+    ;;
+  report)
+    n="$(awk -F'\t' 'END{print NR}' "$LEDGER" 2>/dev/null || echo 0)"
+    units="$(awk -F'\t' '{printf "%s ", $1}' "$LEDGER" 2>/dev/null)"
+    m="$(awk -F'\t' '$2=="dispatched"||$2=="done"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
+    k="$(awk -F'\t' '$2=="excused"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
+    codes="$(awk -F'\t' '$2=="excused"{printf "%s:%s ", $1, $3}' "$LEDGER" 2>/dev/null)"
+    echo "并发账：单元 $n（$units）→ 派 $m ＋ 未派 $k（${codes:-无}）"
+    ;;
+  status)
+    if [ -f "$LEDGER" ]; then column -t -s "$(printf '\t')" "$LEDGER"; else echo "(no ledger for $ROLE)"; fi
+    ;;
+  *) echo "unknown cmd: $CMD" >&2; exit 2 ;;
+esac

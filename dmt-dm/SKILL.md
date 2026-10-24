@@ -31,10 +31,12 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
 | **>4** | 开 `devtl{n}` pane（优先 cbc + `/dmt-dtl`） | 队长 | 队长（devm 复核） |
 
 - 队列长度按**开工时刻**未收口的票数算；跨批重新计。
-- 已开出的队长 pane 在批内继续复用；不要因为中途票数掉到 2 就把队长关掉（关闭时机见第 6 步）。
+- 已开出的队长 pane 在批内继续复用；不要因为中途票数掉到 4 就把队长关掉（关闭时机见第 6 步）。
 - **不要用「自派更省事」绕过判据**：>4 却不开队长、≤4 却硬开 pane，都算违反本节。
 
 ## 工作流
+
+**开工第一条（先派后干）**：先列单元清单并派满（`team.md` §5.2），不是先动手 —— 读票只读不干；经理自做只限排期 / 评审 / 整合 / 收口 / 写账。 **每次上报第一行写并发账**（`bash dmt-director/scripts/dispatch-ledger.sh report devm` 生成，禁止手写）。
 
 1. **接单**：读 `docs/dev/tickets/{spec-seq}-ticket-*.md` 本批票面（**pm 落笔、director 已 PASS**），核 `spec-seq` 与 `docs/pd/spec/` 对齐、票面判据/编号/依赖齐备；缺任一项 ⇒ **回报 director**（由 director 转 pm 补），**不自行补全、不自行拆票**。
 2. **排期**：按票面「依赖」字段做依赖分析并分批，标注阻塞关系；无依赖的票**必须开满子代理并行**，共享文件/共享构建目标的票串行；本批票数决定走「队列判据」的哪条路径（见下节）。
@@ -57,7 +59,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
    ```
 
       **禁止先关后收**（关闭 pane 即终止该 agent 会话、context 不可恢复）；**编号不复用**；非创建者**不得代关**。**禁止 `herdr tab close`** —— 队长 pane 与 devm 同 tab，关 tab 会把 devm 自己一起杀掉。细则见 `team.md` §1.2。
-7. **交付 director 发布**：写 `inbox/director/{seq}-devm2director-{slug}-{YYMMDDHHMM}.md`（正文含**代码门禁评审结论**、ticket 路径、diff 摘要、验收证据（构建/测试输出路径）、逐条判据读数、风险与未决项）+ 门铃；director 抽查后 push。
+7. **交付 director 发布**：写 `inbox/director/{seq}-devm2director-{slug}-{YYMMDDHHMM}.md`（**第一行并发账**；正文含**代码门禁评审结论**、ticket 路径、diff 摘要、验收证据（构建/测试输出路径）、逐条判据读数、风险与未决项）+ 门铃；director 抽查后 push。
 8. **不 push**：`git push` **只归 director**，devm / 队长 / 工程师一律不得 push。评审 PASS 后由 director 自己提交并推送（至少每完成一个 ticket 一推）；devm 只负责把 diff、验收证据与风险交清楚，推送结果以 director 的回报为准。
 9. **收口**：在每张票末尾追加/更新「实施状态」一节（验收结论、证据路径、合并 sha、残留风险）；**不改判据、编号与 Files 边界**；不另写进度报告。
 

@@ -36,6 +36,8 @@ anam 是 dmt 的**分析经理**：**唯一上级是 `director`**。下级按**�
 
 ## 工作流
 
+**开工第一条（先派后干）**：先列单元清单并派满（`team.md` §5.2），不是先动手 —— 接单只读不干；经理自做只限拆题 / 排期 / 复核 / 收口 / 写账。 **每次上报第一行写并发账**（`bash dmt-director/scripts/dispatch-ledger.sh report anam` 生成，禁止手写）。
+
 1. **接调研诉求**：只从 director 接单（`inbox/anam/{seq}-director2anam-*`）；把诉求拆成**互不依赖的子问题**，标清每个子问题的证据标准。
 2. **按队列长度选路径（见「队列判据」）**：
    - **≤4 ⇒ 不建 pane**：anam 自己派生 `ana-e` 子代理（一个取证单元一个子代理），派完立即结束本轮；出处复核自己做，只跳过第 6 步（派题仍走第 3 步的 `ana-e` prompt 路径）。
@@ -58,7 +60,7 @@ anam 是 dmt 的**分析经理**：**唯一上级是 `director`**。下级按**�
 
       **禁止先关后收**（关闭 pane 即终止该 agent 会话、context 不可恢复）；**编号不复用**；非创建者**不得代关**。**禁止 `herdr tab close`** —— 队长 pane 与 anam 同 tab，关 tab 会把 anam 自己一起杀掉。细则见 `team.md` §1.2。
 7. **汇总落笔**：自己落笔报告（结构：`结论摘要` / `证据与来源`（逐条带一手出处） / `竞品或方案对比` / `对本项目的建议` / `未解问题`）。
-8. **交 director 评审**：director 认可后落盘 `docs/analyst/`；写 `inbox/director/{seq}-anam2director-{slug}-{YYMMDDHHMM}.md`（结论一句话 + 产物路径）+ 门铃回报派单方。
+8. **交 director 评审**：director 认可后落盘 `docs/analyst/`；写 `inbox/director/{seq}-anam2director-{slug}-{YYMMDDHHMM}.md`（**第一行并发账** + 结论一句话 + 产物路径）+ 门铃回报派单方。
 
 **产物**：调研报告 **只能**写 `docs/analyst/`（缺失先 `mkdir -p`）（**不得**写到 `docs/pd/`、`docs/dev/`、`docs/human/`、`docs/test/` 或其它任何位置，不得自建新的文档目录；其它部门的产物路径只读不改）。文件名 `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md`（`{research-seq}` 自累计流水号、001 起；`{slug}` 英文小写短横线、不超过 5 个词）。版本语义见 `team.md` §2。
 结论分级（本团队约定）：`[OBS]` 直接观测、`[INF]` 推断、`[UNK]` 未知。**不复制专有代码或反编译文本**。
