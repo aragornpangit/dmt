@@ -58,31 +58,31 @@ check "$SKILLS_DIR/director/SKILL.md" 'docs/pd/prd/'
 check "$SKILLS_DIR/director/SKILL.md" 'docs/pd/spec/'
 check "$SKILLS_DIR/director/SKILL.md" 'docs/human/human-arch/'
 check "$SKILLS_DIR/director/SKILL.md" 'docs/human/human-plan/'
-check "$SKILLS_DIR/dev-m/SKILL.md" 'docs/dev/tickets/'
-check "$SKILLS_DIR/ana-m/SKILL.md" 'docs/analyst/'
-check "$SKILLS_DIR/dev-tl/SKILL.md" 'docs/dev/tickets/'
-check "$SKILLS_DIR/ana-tl/SKILL.md" 'docs/analyst/'
+check "$SKILLS_DIR/devm/SKILL.md" 'docs/dev/tickets/'
+check "$SKILLS_DIR/anam/SKILL.md" 'docs/analyst/'
+check "$SKILLS_DIR/devtl/SKILL.md" 'docs/dev/tickets/'
+check "$SKILLS_DIR/anatl/SKILL.md" 'docs/analyst/'
 
 echo
-echo "== 3) 组长实例关闭动作必须登记（用完即关；只有创建者能关；只关 pane 不关 tab） =="
+echo "== 3) 队长实例关闭动作必须登记（用完即关；只有创建者能关；只关 pane 不关 tab） =="
 check "$CONTRACT" 'herdr pane close' '团队契约'
 check "$CONTRACT" '禁止先关后收' '团队契约'
 check "$CONTRACT" 'herdr tab close' '团队契约'   # 以「禁止 ...」的形式登记，出现即说明禁则未丢
-check "$SKILLS_DIR/dev-m/SKILL.md" 'herdr pane close' 'dev-m'
-check "$SKILLS_DIR/ana-m/SKILL.md" 'herdr pane close' 'ana-m'
+check "$SKILLS_DIR/devm/SKILL.md" 'herdr pane close' 'devm'
+check "$SKILLS_DIR/anam/SKILL.md" 'herdr pane close' 'anam'
 
 echo
 echo "== 3b) 身份识别必须按 pane label（不得按 tab 内位置） =="
 check "$CONTRACT" 'pane label' '团队契约'
 check "$CONTRACT" '不按 tab 内位置' '团队契约'
-for role in director dev-m ana-m dev-tl ana-tl; do
+for role in director devm anam devtl anatl; do
   check "$SKILLS_DIR/$role/SKILL.md" 'pane label' "$role"
 done
 
 echo
-echo "== 4) 组长层并行判据必须登记（无依赖 ≥2 ⇒ 并发派发） =="
-check "$SKILLS_DIR/dev-tl/SKILL.md" '必须并行' 'dev-tl'
-check "$SKILLS_DIR/ana-tl/SKILL.md" '必须并行' 'ana-tl'
+echo "== 4) 队长层并行判据必须登记（无依赖 ≥2 ⇒ 并发派发） =="
+check "$SKILLS_DIR/devtl/SKILL.md" '必须并行' 'devtl'
+check "$SKILLS_DIR/anatl/SKILL.md" '必须并行' 'anatl'
 check "$CONTRACT" '≥2 ⇒ 必须并发派发' '团队契约'
 
 echo
