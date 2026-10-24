@@ -197,6 +197,7 @@ echo
 echo "== 4l) 先派后干与并发账必须登记 =="
 check "$CONTRACT" '先派后干' '团队契约'
 check "$CONTRACT" '并发账' '团队契约'
+check "$CONTRACT" '派发合规' '团队契约'
 for role in dmt-pm dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" '先派后干' "$role"
   check "$SKILLS_DIR/$role/SKILL.md" '并发账' "$role"

@@ -373,7 +373,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 9. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
 10. **并发账（每次上报第一行，硬格式）**：给上级的每份正文**第一行**必须是
     `并发账：单元 N（<清单>）→ 派 M ＋ 未派 K（<理由码>）`
-    **M + K = N**（自做计入 K）。缺失、算术不成立、或理由码不在白名单 ⇒ **director 直接打回，不进评审**。`dispatch-ledger.sh report <角色>` 直接生成这一行，不要手写。派发 prompt 照骨架填空，不要现编：
+    **M + K = N**（自做计入 K）。缺失、算术不成立、或理由码不在白名单 ⇒ **director 直接打回，不进评审**；**同一经理同一批次被打回 2 次 ⇒ 升级用户裁决**。**不做事前审批**：开工不需要总监点头，但必须 `plan` 落账；director **每小时巡检** `locks/dispatch-*.tsv`，发现「有未派单元且超 30 分钟」就发门铃问一句，不打断执行。`dispatch-ledger.sh report <角色>` 直接生成这一行，不要手写。派发 prompt 照骨架填空，不要现编：
     `你是 <角色> 的子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。`
 
 ### 5.3 评审门禁
@@ -387,6 +387,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 | 人类架构 / 人类计划 | pm | **pm（文档门禁）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
 | ticket 代码 | 开发部门（>4 经 `devtl{n}`、≤4 由 devm 自派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后合并并写「实施状态」 |
 | 发布 | devm | director | 抽查评审结论与证据后 `git push`（每 ticket 一推；**不替代 devm 的代码评审**） |
+| **派发合规（并发账）** | pm / devm / anam | **director**（在既有评审点内看，不另设审批） | 报告第一行有并发账、**M + K = N**、未派理由在白名单；**缺失 / 算术不成立 / 理由不在白名单 ⇒ 打回，不进评审**；同一经理同一批次被打回 2 次 ⇒ **升级用户裁决**，director 只记录不裁定 |
 | 跨部门分歧 | pm / devm / anam | director | director 裁决并回结论 |
 
 ### 5.4 读数纪律（性能窗）
@@ -412,6 +413,8 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh
 检查**十七项**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 六个技能（`dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-pm`）；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `close-leader.sh`，契约含「禁止先关后收」与「只许关 pane」）；④ **身份识别已登记**（契约与六个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」，契约含「≥2 ⇒ 必须并发派发」）；⑥ **经理层路径判据与饱和派发已登记**（`dmt-dm` 含「≤4」「>4」、`dmt-am` 含「≤4」「>4」，契约含「≤4 ⇒ 自己派生 `dev-e`」与「≤4 ⇒ 自己派生 `ana-e`」；契约含「并发数 = 单元数」，`dmt-dm` / `dmt-am` 含「开满」与 `teammate`）；⑦ **装机与推送归属已登记**（契约含「只有 director 能执行」与「只许 director 执行」、`dmt-director` 含 `git push`、`dmt-dm` 含「不得 push」、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；`dmt-director` 含 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)+[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、`dmt-pm` 含 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)+[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、`dmt-dm` 含 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、`dmt-dtl` 含 [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、`dmt-atl` 含 [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)）；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，六个技能各含 `file-claim`，脚本 `scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-pm` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（六个 pane 角色技能各含 `cbc-herdr`）；⑫ **技能链接与上游一致**（契约与六个技能都含 `raw.githubusercontent.com`，技能名与 `mattpocock/skills` 目录名逐字一致）；⑬ **确定性动作已脚本化**（`init-project.sh` / `setup-team.sh` / `spawn-leader.sh` / `close-leader.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `dispatch-ledger.sh` / `self-work-guard.sh` / `install-hooks.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` 存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，六个角色技能各含 `msg-take.sh`）；⑮ **先派后干与并发账已登记**（契约含「先派后干」与「并发账」；`dmt-pm` / `dmt-dm` / `dmt-am` 各含「先派后干」与「并发账」，`dmt-director` 含「并发账」）；⑯ 本契约登记齐全；⑰ 负样本能被正确拒绝（**只看 §3 落盘登记表**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
 
 ## 8. 变更记录
+
+- **2026-10-24（用户裁定·第三十二次：派发合规进评审门禁）**：① §5.3 门禁表新增「**派发合规（并发账）**」一行 —— 提交方 pm / devm / anam，评审方 director，**在既有评审点内看，不另设事前审批**；缺失、算术不成立、理由不在白名单 ⇒ 打回不进评审；同一经理同一批次被打回 2 次 ⇒ **升级用户裁决**。② §5.2 第 10 条补「不做事前审批 + 每小时巡检 `locks/dispatch-*.tsv`，未派超 30 分钟发门铃」。③ 机检 4l 增加「派发合规」断言。**Why**：事前审批会把每个小任务变成往返，经理只会批量来问；hook 已在 Stop 挡住绝大多数情况，director 只需处理 hook 挡不住的两类 —— 把 N 声明成 1、干脆不 plan 直接干。
 
 - **2026-10-24（用户裁定·第三十一次：给总监与三个经理装上 hook）**：① `install-hooks.sh` 增加 `--user` 模式，装到 `~/.codebuddy/settings.json`（自动备份 `settings.json.bak-<时间戳>`，保留既有 hook）。② **治理范围收窄为 `director` / `pm` / `devm` / `anam`**，队长与工程师不装（需要时 `DMT_DISPATCH_ALL=1` 放开）。③ 角色解析：参数 `-` ⇒ `DMT_ROLE` ⇒ herdr pane label，解析不到即 `exit 0`，**不影响非 dmt 会话**。④ `check` 对超过 24h 的旧账不再阻断，避免历史批次卡住新会话。⑤ 修 `report` 算术：未派 K = N − M（原先只数 excused，导致 M+K≠N）。
 
