@@ -1,5 +1,5 @@
 ---
-name: dmt-anam
+name: dmt-am
 version: 3.0.0
 description: 分析经理(anam)，dmt 分析部门负责人，直属上级 director，直属下级只有分析队长 anatl{n}。接调研诉求后拆子问题；需要并行取证时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 anatl{n}），队长接单后再开 ana-e 子代理；负责复核出处、收口报告与收回队长 pane。当需要市场信息调研、竞品逆向分析、开源方案对标、技术选型取证、APK/AAR/ELF 等二进制证据分析，或需要产出调研报告时使用。触发词：dmt、anam、分析经理、分析经理、调研、anatl、ana-e、竞品分析、逆向、REA、research、队长 pane、pane label。
 ---

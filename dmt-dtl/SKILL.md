@@ -1,5 +1,5 @@
 ---
-name: dmt-devtl
+name: dmt-dtl
 version: 3.0.0
 description: 开发队长(devtl{n})，devm 的下属队长，pane label 为 devtl1、devtl2 …（pane 开在 devm 的 tab 内），下辖 dev-e 开发工程师（子代理）。由 devm 按需生成；接单后自己建 worktree、开子代理（工程师）干活。当 devm 已把 SPEC 拆成票面并派给本队长、需要建 worktree 并派 dev-e 实施、收 diff 与门读数、做实施层初检并回报 devm 时使用。触发词：devtl、devtl1、devtl2、TL、开发队长、派 dev-e、worktree、收 diff、初检、回报 devm。
 ---
