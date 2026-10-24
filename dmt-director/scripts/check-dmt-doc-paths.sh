@@ -96,13 +96,18 @@ check "$SKILLS_DIR/dmt-atl/SKILL.md" '必须并行' 'anatl'
 check "$CONTRACT" '≥2 ⇒ 必须并发派发' '团队契约'
 
 echo
-echo "== 4b) 经理层路径判据必须登记（devm ≤4 / anam ≤4） =="
+echo "== 4b) 经理层路径判据与饱和派发必须登记（devm ≤4 / anam ≤4） =="
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '≤4' 'devm'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '>4' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '≤4' 'anam'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '>4' 'anam'
 check "$CONTRACT" '≤4 ⇒ 自己派生 `dev-e`' '团队契约'
 check "$CONTRACT" '≤4 ⇒ 自己派生 `ana-e`' '团队契约'
+check "$CONTRACT" '并发数 = 单元数' '团队契约'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '开满' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" '开满' 'anam'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate' 'anam'
 
 echo
 echo "== 4c) 门铃通道必须登记（五种 harness 优先 agent prompt，其余回退） =="
