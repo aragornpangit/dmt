@@ -32,7 +32,7 @@ anatl 是 **`anam` 的下属队长**，实例以 **pane label** 区分：`anatl1
 ## 通信
 
 - **本人身份**：pane label ＝ `anatl{n}`（`$HERDR_PANE_ID`），**不是** tab label。
-- **anam → 本人**：pane 消息（按 label `anatl{n}` 解析 pane，不记 pane id）。
+- **anam → 本人**：正文落 `inbox/anatl{n}/` ＋ 门铃（按 label `anatl{n}` 解析 pane，不记 pane id）。**收到后先认领**：`bash dmt-director/scripts/msg-take.sh anatl{n} <文件>` 移到 `.doing/` 再读入；**办完** `msg-done.sh anatl{n} <文件>` 删除。
 - **本人 → anam**：正文落 `inbox/anam/{seq}-anatl{n}2anam-{slug}-{YYMMDDHHMM}.md`（`inbox/` 在仓根、已被 gitignore）＋ 向 `anam` 的 pane 发门铃：`herdr agent prompt <pane> '<短句>'`（自带 Enter，返回 `agent_prompted` 即送达；codebuddy 面板同样适用，2026-10-24 实测）；失败才回退 `herdr pane send-text` + `send-keys enter` 并 `pane read` 核验输入框已清空。
 - **用脚本**：`bash dmt-director/scripts/send-msg.sh anam anatl{n} <slug> <正文文件>`（自动算 seq/时刻/方向，门铃失败自动回退 `send-text` + `send-keys`）。
 - **投递引号纪律**：单引号包整段、**禁反引号与 `$()`**。

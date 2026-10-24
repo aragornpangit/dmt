@@ -47,7 +47,7 @@ pm 是 dmt 的**产品部经理**：**唯一上级是 `director`**，**没有队
 - 写：`inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根下，**不在 `docs/`**；`mkdir -p` 兜底）
 - 用脚本：`bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文件>`（自动算 `{seq}`/时刻/方向，写文件后发门铃；label 缺失只写文件并告警）
 - 铃（对端 harness ∈ codebuddy / pi-coding-agent / codex / opencode2 / opencode）：`herdr agent prompt <pane> '<短句>'`，返回 `"type":"agent_prompted"` 即送达；**返回非 `agent_prompted` 或对端是其它 harness 时**回退 `herdr pane send-text <pane> '<短句>'` + `herdr pane send-keys <pane> enter`，并 `pane read` 核验输入框已清空
-- 收：读 `inbox/pm/` 新文件 → **读入 context window** → **不回执** → **读毕即删**
+- 收：读 `inbox/pm/` 新文件 → **`msg-take.sh` 移到 `.doing/`**（认领，认领在前读入在后）→ **读入 context window** → **不回执** → **办完 `msg-done.sh` 从 `.doing/` 删除**
 
 本角色差异：
 

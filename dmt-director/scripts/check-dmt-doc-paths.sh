@@ -178,9 +178,19 @@ done
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh msg-take.sh msg-done.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
+done
+
+echo
+echo "== 4k) 收件箱三态必须登记（认领 .doing/、收口删除、.seq 高水位） =="
+check "$CONTRACT" '.doing/' '团队契约'
+check "$CONTRACT" '.seq' '团队契约'
+check "$CONTRACT" 'msg-take.sh' '团队契约'
+check "$CONTRACT" 'msg-done.sh' '团队契约'
+for role in dmt-director dmt-pm dmt-dm dmt-am dmt-dtl dmt-atl; do
+  check "$SKILLS_DIR/$role/SKILL.md" 'msg-take.sh' "$role"
 done
 
 echo
