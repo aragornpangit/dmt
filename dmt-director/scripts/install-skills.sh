@@ -16,6 +16,8 @@ for s in $SKILLS; do
     rm -rf "$TARGET/.agents/skills/$s"
     cp -r "$REPO/$s" "$TARGET/.agents/skills/$s"
   else
+    # 目标已存在且是实体目录（旧版复制的技能）时必须先删，否则 ln -sfn 会把软链建到目录里面
+    rm -rf "$TARGET/.agents/skills/$s"
     ln -sfn "$REPO/$s" "$TARGET/.agents/skills/$s"
   fi
 done
