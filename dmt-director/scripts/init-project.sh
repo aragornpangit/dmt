@@ -6,7 +6,7 @@ ROOT="$(cd "${1:-$PWD}" && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "$ROOT"/docs/{pd/{prd,spec},dev/tickets,analyst,human/{human-arch,human-plan}} \
-         "$ROOT"/inbox/{director,pm,devm,anam} "$ROOT"/locks
+         "$ROOT"/inbox/{director,devm,anam} "$ROOT"/locks
 
 for line in 'inbox/*/' 'locks/'; do
   grep -qxF "$line" "$ROOT/.gitignore" 2>/dev/null || echo "$line" >> "$ROOT/.gitignore"

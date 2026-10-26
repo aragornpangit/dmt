@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 发收件箱消息 + herdr 门铃（文件名与方向自动生成）
 # 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run]
-#   to/from ∈ director|pm|devm|anam|devtl{n}|anatl{n}
+#   to/from ∈ director|devm|anam|devtl{n}|anatl{n}（pm 已并入 director）
 # 序号：max(扫描 inbox/<to>/** 含 .doing/ 的现有最大号, inbox/<to>/.seq 高水位) + 1
 set -eu
 TO="${1:?usage: send-msg.sh <to> <from> <slug> <body-file>}"
@@ -13,6 +13,24 @@ DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
+DIR="$(cd "$(dirname "$0")" && pwd)"
+superior_of() {
+  case "$1" in
+    devm|anam) echo director ;;
+    devtl*) echo devm ;;
+    anatl*) echo anam ;;
+    *) echo "" ;;
+  esac
+}
+SUP="$(superior_of "$FROM")"
+if [ -n "$SUP" ] && [ "$SUP" = "$TO" ] && [ "${DMT_MSG_FORCE:-0}" != 1 ]; then
+  if ! bash "$DIR/dispatch-ledger.sh" check "$FROM" >/dev/null 2>&1; then
+    echo "[send-msg] 并发账门禁：还有未派单元且并发位空闲，先派满再回报（DMT_MSG_FORCE=1 可强发）。" >&2
+    bash "$DIR/dispatch-ledger.sh" report "$FROM" >&2 || true
+    exit 2
+  fi
+fi
 BOX="$ROOT/inbox/$TO"
 mkdir -p "$BOX/.doing"
 

@@ -38,7 +38,7 @@ else
 fi
 
 echo
-echo "== 2) 六个角色技能必须指向各自唯一目录（PRD / SPEC / 工单 / 人类文档归 dmt-pm） =="
+echo "== 2) 六个技能必须指向各自唯一目录（PRD / SPEC / 工单 / 人类文档归 dmt-director；dmt-pm 为 pde{n} 子代理技能） =="
 check() {
   local file="$1" want="$2" who="${3:-}"
   [ -n "$who" ] || who="$(basename "$(dirname "$file")")"
@@ -54,12 +54,13 @@ check() {
     fail=1
   fi
 }
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'docs/pd/prd/'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'docs/pd/spec/'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'docs/dev/tickets/'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'to-tickets'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'docs/human/human-arch/'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" 'docs/human/human-plan/'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/pd/prd/'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/pd/spec/'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/dev/tickets/'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'to-tickets'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/human/human-arch/'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/human/human-plan/'
+check "$SKILLS_DIR/dmt-pm/SKILL.md" 'pde' 'dmt-pm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/team.md'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'docs/dev/tickets/'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'docs/analyst/'
@@ -67,11 +68,11 @@ check "$SKILLS_DIR/dmt-dtl/SKILL.md" 'docs/dev/tickets/'
 check "$SKILLS_DIR/dmt-atl/SKILL.md" 'docs/analyst/'
 
 echo
-echo "== 2b) 组织归属：director 管 pm/devm/anam，pm 无队长层只用子代理 =="
-check "$SKILLS_DIR/dmt-director/SKILL.md" 'pm' 'director'
+echo "== 2b) 组织归属：director 管 devm/anam，产品线只用 pde{n} 子代理 =="
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'pde' 'director'
 check "$SKILLS_DIR/dmt-director/SKILL.md" 'setup-team.sh' 'director'
 check "$SKILLS_DIR/dmt-pm/SKILL.md" '子代理' 'dmt-pm'
-check "$CONTRACT" '| `dmt-pm` | `pm` |' '团队契约'
+check "$CONTRACT" '| `dmt-pm` | `pde{n}` |' '团队契约'
 
 echo
 echo "== 3) 队长实例关闭动作必须登记（用完即关；只有创建者能关；只关 pane 不关 tab） =="
@@ -103,7 +104,7 @@ check "$SKILLS_DIR/dmt-am/SKILL.md" '≤4' 'anam'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '>4' 'anam'
 check "$CONTRACT" '≤4 ⇒ 自己派生 `dev-e`' '团队契约'
 check "$CONTRACT" '≤4 ⇒ 自己派生 `ana-e`' '团队契约'
-check "$CONTRACT" '并发数 = 单元数' '团队契约'
+check "$CONTRACT" 'min(N, CAP)' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '开满' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '开满' 'anam'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate' 'devm'
@@ -128,16 +129,16 @@ echo "== 4e) mattpocock 强制技能必须逐角色登记 =="
 check "$CONTRACT" '强制使用' '团队契约'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '/grilling' 'director'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '/code-review' 'director'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" '/to-spec' 'pm'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" '/to-tickets' 'pm'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '/to-spec' 'director'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '/to-tickets' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '/code-review' 'devm'
 check "$SKILLS_DIR/dmt-dtl/SKILL.md" '/tdd' 'devtl'
 check "$SKILLS_DIR/dmt-atl/SKILL.md" '/research' 'anatl'
 check "$SKILLS_DIR/dmt-atl/SKILL.md" '/rea' 'anatl'
 check "$SKILLS_DIR/dmt-dtl/SKILL.md" '/implement' 'devtl'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '/grill-me' 'director'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" '/grill-me' 'pm'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" '/grill-with-docs' 'pm'
+check "$SKILLS_DIR/dmt-pm/SKILL.md" '/grilling' 'dmt-pm'
+check "$SKILLS_DIR/dmt-pm/SKILL.md" '/research' 'dmt-pm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-me' 'anam'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-with-docs' 'anam'
 
@@ -156,16 +157,16 @@ else
 fi
 
 echo
-echo "== 4g) 评审门禁归属（文档归 pm / 代码归 devm） =="
+echo "== 4g) 评审门禁归属（文档门禁归 director / 代码门禁归 devm） =="
 check "$CONTRACT" '文档门禁' '团队契约'
 check "$CONTRACT" '代码门禁' '团队契约'
-check "$SKILLS_DIR/dmt-pm/SKILL.md" '文档门禁' 'pm'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '文档门禁' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '代码门禁' 'devm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不替代' 'director'
 
 echo
 echo "== 4h) cbc-herdr 通用技能必须逐角色登记 =="
-for role in dmt-director dmt-pm dmt-dm dmt-am dmt-dtl dmt-atl; do
+for role in dmt-director dmt-dm dmt-am dmt-dtl dmt-atl; do
   check "$SKILLS_DIR/$role/SKILL.md" 'cbc-herdr' "$role"
 done
 
@@ -178,7 +179,7 @@ done
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in init-project.sh setup-team.sh spawn-leader.sh close-leader.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh parallel-guard.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done
@@ -189,20 +190,23 @@ check "$CONTRACT" '.doing/' '团队契约'
 check "$CONTRACT" '.seq' '团队契约'
 check "$CONTRACT" 'msg-take.sh' '团队契约'
 check "$CONTRACT" 'msg-done.sh' '团队契约'
-for role in dmt-director dmt-pm dmt-dm dmt-am dmt-dtl dmt-atl; do
+for role in dmt-director dmt-dm dmt-am dmt-dtl dmt-atl; do
   check "$SKILLS_DIR/$role/SKILL.md" 'msg-take.sh' "$role"
 done
 
 echo
-echo "== 4l) 先派后干与并发账必须登记 =="
+echo "== 4l) 先派后干、并发账与完成即报必须登记 =="
 check "$CONTRACT" '先派后干' '团队契约'
 check "$CONTRACT" '并发账' '团队契约'
 check "$CONTRACT" '派发合规' '团队契约'
-for role in dmt-pm dmt-dm dmt-am; do
+for role in dmt-director dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" '先派后干' "$role"
   check "$SKILLS_DIR/$role/SKILL.md" '并发账' "$role"
 done
-check "$SKILLS_DIR/dmt-director/SKILL.md" '并发账' 'director'
+check "$CONTRACT" '完成即报' '团队契约'
+for role in dmt-director dmt-dm dmt-am dmt-dtl dmt-atl; do
+  check "$SKILLS_DIR/$role/SKILL.md" '完成即报' "$role"
+done
 
 echo
 echo "== 4m) 团队契约必须带版本号与日期，且与六个技能同号 =="

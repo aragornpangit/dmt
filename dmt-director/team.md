@@ -1,7 +1,7 @@
 # dmt 团队契约
 
-> **版本 4.1.0 · 2026-10-24** —— 与六个角色技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
-> 本文件是 **dmt 的唯一团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；六个角色技能 `dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`（运行 id 为 `director` / `pm` / `devm` / `anam` / `devtl{n}` / `anatl{n}`）只做落地说明，**冲突时以本文件为准**。
+> **版本 5.0.0 · 2026-10-26** —— 与六个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
+> 本文件是 **dmt 的唯一团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；六个技能 `dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`（`dmt-director` 运行 id `director`；`dmt-pm` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl` 运行 id 为 `devm` / `anam` / `devtl{n}` / `anatl{n}`）只做落地说明，**冲突时以本文件为准**。
 > 团队成员运行在终端多智能体复用器 Herdr 中；会话与 pane 随重启变化，本文件不登记 pane id。
 
 ## 0. 仓库结构
@@ -15,7 +15,7 @@ dmt/
 │   ├── team.md                           # 团队契约（本文件，唯一权威）
 │   ├── README.md                         # 仓库说明与安装
 │   └── scripts/                          # 机检 / 文件占用 / 初始化 / 建团队 / 开队长 / 关队长 / 发消息 / 认领 / 收口 / 推送 / 安装
-├── dmt-pm/SKILL.md                        # 产品部经理（pm）
+├── dmt-pm/SKILL.md                        # 产品工程师（pde{n} 子代理技能，不占 tab 不占 pane）
 ├── dmt-dm/SKILL.md                        # 开发经理
 ├── dmt-am/SKILL.md                        # 分析经理
 ├── dmt-dtl/SKILL.md                       # 开发队长（devtl{n}）
@@ -26,19 +26,18 @@ dmt/
 
 ### 1.1 组织与成员
 
-**层级**：`director`（总监）→ 部门经理（`pm` / `devm` / `anam`）→ 队长（`devtl{n}` / `anatl{n}`，**仅开发与分析两部有**）→ 工程师（`dev-e` / `ana-e` / `pm-e`）。产品部只有三层 —— `pm` 直接派生 `pm-e` 子代理，不设队长。共六个角色技能。
+**层级**：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 队长（`devtl{n}` / `anatl{n}`）→ 工程师（`dev-e` / `ana-e` / `pde{n}`）。产品部并入总监 —— `director` 亲自落笔 PRD / SPEC / 工单 / 人类文档并出文档门禁结论，需要支撑时自派 `pde{n}` 产品工程师子代理（`dmt-pm` 技能，**不占 tab 不占 pane**）做取证与核对；不设产品经理 pane、不设产品队长。共六个技能。
 
 ```
-director            总监（团队领导，label director）
-├── pm                 产品部经理（label pm，pane 在 director 的 tab 内右侧）
-│   └── pm-e           产品工程师（子代理，不占 pane）
-├── devm               开发经理（label devm）
-│   ├── devtl1          开发队长（pane label devtl1，在 devm 的 tab 内）
+director            总监兼产品部经理（label director，屏幕左侧）
+├── pde{n}             产品工程师（子代理，不占 tab 不占 pane，director 自派）
+├── devm               开发经理（label devm，pane 在 director 的 tab 内右侧）
+│   ├── devtl1          开发队长（pane label devtl1，在 devm 所在 tab 内）
 │   │   ├── dev-e       开发工程师（子代理，不占 pane）
 │   │   └── dev-e ...
 │   ├── devtl2 ...
 │   └── devtl{n}
-└── anam               分析经理（label anam）
+└── anam               分析经理（label anam，独立 tab）
     ├── anatl1          分析队长（pane label anatl1，在 anam 的 tab 内）
     │   ├── ana-e       分析工程师（子代理，不占 pane）
     │   └── ana-e ...
@@ -47,9 +46,8 @@ director            总监（团队领导，label director）
 
 | 角色 | 全称 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责 |
 |---|---|---|---|---|---|---|
-| 总监（团队领导） | TeamLeader | `dmt-director` | `director` | 用户 | `pm`、`devm`、`anam` | 唯一用户入口；接需求与验收口径、分派、跨部门裁决、创建并维护经理层 pane/tab；**发布**（抽查后 push）与**装机**；不替代 pm 的文档评审与 devm 的代码评审 |
-| 产品部经理 | ProductManager | `dmt-pm` | `pm` | `director` | `pm-e`（子代理） | 落笔 PRD、SPEC（[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)）、开发工单（[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)）、人类架构与人类计划；**文档门禁**：PRD / SPEC / 工单的评审责任人；用子代理并行做产品取证与核对 |
-| 开发经理 | DevelopManager | `dmt-dm` | `devm` | `director` | `dev-e`（≤4 自派）或 `devtl{n}`（>4） | 接单（pm 的 ticket）、排期派活、**代码门禁**：ticket 代码的评审责任人；整合开发部门交付物；**不拆票、不 push**（装机与 push 归 director） |
+| 总监兼产品部经理 | TeamLeader | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` 子代理） | 唯一用户入口；接需求与验收口径、**亲自落笔 PRD / SPEC / 工单 / 人类文档并出文档门禁结论**、分派、跨部门裁决、创建并维护经理层 pane/tab；**发布**（抽查后 push）与**装机**；不替代 devm 的代码评审 |
+| 开发经理 | DevelopManager | `dmt-dm` | `devm` | `director` | `dev-e`（≤4 自派）或 `devtl{n}`（>4） | 接单（director 落笔的 ticket）、排期派活、**代码门禁**：ticket 代码的评审责任人；整合开发部门交付物；**不拆票、不 push**（装机与 push 归 director） |
 | 分析经理 | AnalystManager | `dmt-am` | `anam` | `director` | `ana-e`（≤4 自派）或 `anatl{n}`（>4） | 接调研诉求；按排队数选自派子代理或开队长 pane；复核出处、收口调研报告 |
 | 开发队长 | DevelopLeader | `dmt-dtl` | `devtl{n}` | `devm` | `dev-e`（子代理） | 建 worktree、并发派开发工程师、收 diff 做实施层初检、回报 devm |
 | 分析队长 | AnalystLeader | `dmt-atl` | `anatl{n}` | `anam` | `ana-e`（子代理） | 拆子问题、派分析工程师并行取证、复核一手出处、汇总回报 anam |
@@ -59,33 +57,31 @@ director            总监（团队领导，label director）
 | 技能名 | 运行 id | 称呼 | 实例称呼 |
 |---|---|---|---|
 | `dmt-director` | `director` | 总监 | — |
-| `dmt-pm` | `pm` | 产品部经理 | — |
+| `dmt-pm` | `pde{n}` | 产品工程师 | 产品工程师1、产品工程师2 … |
 | `dmt-dm` | `devm` | 开发经理 | — |
 | `dmt-am` | `anam` | 分析经理 | — |
 | `dmt-dtl` | `devtl{n}` | 开发队长 | 开发队长1、开发队长2 … |
 | `dmt-atl` | `anatl{n}` | 分析队长 | 分析队长1、分析队长2 … |
 | — | `dev-e` | 开发工程师 | 按序号，如「工程师3」 |
 | — | `ana-e` | 分析工程师 | 按序号，如「工程师3」 |
-| — | `pm-e` | 产品工程师 | 按序号，如「产品工程师2」 |
 
 **单线指挥（硬约束，任何角色不得越级或横向直连）：**
 
-1. `director` **只**直接指挥 `pm`、`devm`、`anam`；**不得**越级给 `devtl{n}` / `anatl{n}` / 工程师派活或收活。
-2. `pm` **只**直接指挥 `pm-e`（子代理）与对 `director` 汇报；**不得**联系 `devm` / `anam` / 队长 / 任何工程师。
-3. `devm` **只**直接指挥 `devtl{n}`，或**在排队任务 ≤4 时自己派生 `dev-e` 子代理**；`anam` 同理，阈值同为 **≤4**（`anatl{n}` / 自派 `ana-e`）。
-4. 队长**只**向本部门经理汇报；`devtl{n}` 与 `anatl{n}` 之间、`pm` / `devm` / `anam` 三者之间**均不直连**，跨部门事项经 `director` 转派。
-5. 工程师 `dev-e` / `ana-e` / `pm-e` **只**向派生他的经理或队长汇报，**不装独立技能**（技能写进派发 prompt，见 §1.4）、**不占 pane**、**不走跨 pane 通信**。
+1. `director` **只**直接指挥 `devm`、`anam`，并可自派 `pde{n}` 等子代理；**不得**越级给 `devtl{n}` / `anatl{n}` / 工程师派活或收活。
+2. `devm` **只**直接指挥 `devtl{n}`，或**在排队任务 ≤4 时自己派生 `dev-e` 子代理**；`anam` 同理，阈值同为 **≤4**（`anatl{n}` / 自派 `ana-e`）。
+3. 队长**只**向本部门经理汇报；`devtl{n}` 与 `anatl{n}` 之间、`devm` 与 `anam` 之间**均不直连**，跨部门事项经 `director` 转派。
+4. 工程师 `dev-e` / `ana-e` / `pde{n}` **只**向派生他的总监、经理或队长汇报，**不装独立技能**（技能写进派发 prompt，见 §1.4）、**不占 pane**、**不走跨 pane 通信**。
 
 ### 1.2 运行环境与 pane 生命周期
 
-**身份＝pane label，不是位置、不是 tab。** 每个常驻角色占一个 **pane**（工程师是子代理、不占 pane），pane label 与角色/实例名同名（`director` / `pm` / `devm` / `anam` / `devtl{n}` / `anatl{n}`），在同一 workspace 内**唯一**。
+**身份＝pane label，不是位置、不是 tab。** 每个常驻角色占一个 **pane**（`pde{n}` / `dev-e` / `ana-e` 是子代理、不占 pane），pane label 与角色/实例名同名（`director` / `devm` / `anam` / `devtl{n}` / `anatl{n}`），在同一 workspace 内**唯一**。
 
-- **tab 只是视觉分组**：`devm` / `anam` 各占一个 tab，tab label 与本人 pane label 同名；**`pm` 不占 tab**，它的 pane 开在 **`director` 的 tab 内、director pane 右侧**；**队长不建 tab**，它的 pane 开在**本部门经理的 tab 内**（`devtl{n}` 在 `devm` 的 tab、`anatl{n}` 在 `anam` 的 tab）。
+- **tab 只是视觉分组**：**`anam` 占一个 tab**（tab label 与本人 pane label 同名）；**`devm` 不占 tab**，它的 pane 开在 **`director` 的 tab 内、director pane 右侧**（左 director、右 devm）；**队长不建 tab**，它的 pane 开在**本部门经理 pane 所在的 tab 内**（`devtl{n}` 在 director tab 内、`devm` 右侧继续排；`anatl{n}` 在 `anam` 的 tab 内）。
 - **识别伙伴一律按 pane label**（`herdr pane list` 过滤 `label`），**不按 tab 内位置、不按 pane id 记忆**：pane id 随重启变化，pane 顺序随 `pane swap` / `pane move` 变化（实测交换后 `pane list` 顺序立即翻转），**只有 label 稳定**。
-- **工程师仍是子代理**：`dev-e` / `ana-e` / `pm-e` 不占 pane、不装技能（技能随派发 prompt 下发）、不走跨 pane 通信。
-- **团队启动顺序（director 全自动拉起经理层）**：用户先备好 `director` tab 并在其中启动 harness；**director 第一件事是给自己正名 —— 先把 tab label 改成 `director`，再把 pane label 改成 `director`（顺序不可颠倒）**。随后 director **在右侧 split 出 `pm` pane**（`pane split <director pane> --direction right`，herdr 0.9.5 无 `pane create`，建 pane 的等价动作就是 split），再**创建 `devm`、`anam` 两个 tab 并给各自的 root pane 打上同名 label**。三个 pane 都由 director **代启动** harness（`pane send-text 'codebuddy --permission-mode auto'` + `send-keys enter`，就绪判据 `herdr pane get <pane>` 的 `agent_status` 非 `unknown`），就绪后输入角色斜杠命令 **`/dmt-pm`**（pm pane）、**`/dmt-dm`**（devm pane）、**`/dmt-am`**（anam pane）装载角色技能。**不请用户手动在经理 tab 里启动 harness**；经理 pane 同样不走 `shift+Tab` 切权限模式那套流程（启动命令已带 `--permission-mode auto`）。
-- **director 独占创建与维护**：`pm` / `devm` / `anam` 的 pane、tab 与 label 只由 director 建、只由 director 改；开工前巡检三个 label，缺失/漂移就 `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」。下级**不得**自行新建或改名自己的 pane/tab。
-- **director 的 tab 内有两个 pane**（director + pm）⇒ **禁止 `herdr tab close`**：关 tab 会连带杀掉 pm 与 director 自己；只许关 pane，且 director 不关 pm（pm 常驻）。
+- **工程师仍是子代理**：`pde{n}` / `dev-e` / `ana-e` 不占 pane、不装技能（技能随派发 prompt 下发）、不走跨 pane 通信。
+- **团队启动顺序（director 全自动拉起经理层）**：用户先备好 `director` tab 并在其中启动 harness；**director 第一件事是给自己正名 —— 先把 tab label 改成 `director`，再把 pane label 改成 `director`（顺序不可颠倒）**。随后 director **在右侧 split 出 `devm` pane**（`pane split <director pane> --direction right`，herdr 0.9.5 无 `pane create`，建 pane 的等价动作就是 split），再**创建 `anam` tab 并给其 root pane 打上 label `anam`**。两个 pane 都由 director **代启动** harness（`pane send-text 'codebuddy --permission-mode auto'` + `send-keys enter`，就绪判据 `herdr pane get <pane>` 的 `agent_status` 非 `unknown`），就绪后输入角色斜杠命令 **`/dmt-dm`**（devm pane）、**`/dmt-am`**（anam pane）装载角色技能。产品工作不需要 pane —— director 需要产品支撑时自派 `pde{n}` 子代理（prompt 里下发 `/dmt-pm` 技能）。**不请用户手动在经理 tab 里启动 harness**；经理 pane 同样不走 `shift+Tab` 切权限模式那套流程（启动命令已带 `--permission-mode auto`）。
+- **director 独占创建与维护**：`devm` / `anam` 的 pane、tab 与 label 只由 director 建、只由 director 改；开工前巡检两个 label，缺失/漂移就 `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」。下级**不得**自行新建或改名自己的 pane/tab。
+- **director 的 tab 内常驻 director 与 devm 两个 pane**（右侧还可能排着 `devtl{n}`）⇒ **禁止 `herdr tab close`**：关 tab 会连带杀掉 devm、队长与 director 自己；只许关 pane，且 director 不关 devm（devm 常驻）。
 - **队长按排队数生成、用完即关**：经理**只在排队任务超过阈值时**用 `pane split` 在**自己的 tab 内**开队长 pane 并打 label（**未超阈值由经理自己派生工程师子代理，不开 pane**），编号自 1 单调递增、**已关闭编号不复用**；**阈值：`devm` >4、`anam` >4**；关闭规则见本节末「队长实例的关闭（用完即关）」。
 - **容量**：队长 pane **竖排在右侧一列** ⇒ 每加一个队长，**右侧那一列的高度**被均分（经理 pane 宽度不变）。同一 tab 内**建议不超过 3 个队长**，更多时分批，或临时 `herdr pane zoom` 放大单个 pane。
 
@@ -96,14 +92,14 @@ HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
 ```
 
 若目标 label 不存在：**停下问用户**，不要猜测 pane id、不要对不存在的会话反复重试。
-**迁移兜底**（仅当 label 缺失）：存在同名 tab 且该 tab 只有一个 pane 时，用该 pane；否则仍须停下问用户。**`pm` 例外**：它与 `director` 同 tab，该 tab 恒有两个 pane，**不得**用 tab 兜底，必须按 label 或请用户重建。
+**迁移兜底**（仅当 label 缺失）：存在同名 tab 且该 tab 只有一个 pane 时，用该 pane；否则仍须停下问用户。**`devm` 例外**：它与 `director` 同 tab，该 tab 恒不止一个 pane，**不得**用 tab 兜底，必须按 label 或请用户重建。
 
-**身份自愈**（每个角色启动后第一件事）：`herdr pane get "$HERDR_PANE_ID"` 读到的 label 与角色名不符（含为空）时，立即 `herdr pane rename "$HERDR_PANE_ID" <角色名>`。队长与 `pm` **不得**用 `herdr tab list` 认自己 —— 它们的 tab label 都是上级的（队长在经理 tab、pm 在 director tab）。
+**身份自愈**（每个角色启动后第一件事）：`herdr pane get "$HERDR_PANE_ID"` 读到的 label 与角色名不符（含为空）时，立即 `herdr pane rename "$HERDR_PANE_ID" <角色名>`。队长与 `devm` **不得**用 `herdr tab list` 认自己 —— 它们的 tab label 都是上级的（devm 在 director tab、队长在经理所在 tab）。
 
 **创建 pane（用脚本，不手敲）**：
 
 ```bash
-# director：给自己正名（tab→pane）+ 建 pm/devm/anam + 代启动 + 输角色技能（幂等）
+# director：给自己正名（tab→pane）+ 建 devm（本 tab 右侧）/anam（独立 tab）+ 代启动 + 输角色技能（幂等）
 bash dmt-director/scripts/setup-team.sh
 
 # 经理：开队长 pane（第 1 个在经理右侧、第 2 个起在上一队长下方）+ 代启动 + 输队长技能
@@ -134,7 +130,7 @@ bash dmt-director/scripts/close-leader.sh devm 1
 
 #### 队长实例的关闭（用完即关）
 
-只有队长是「**按需实例**」；`pm` / `devm` / `anam` 自己的 pane（`pm` 的 pane 在 director tab 内）**常驻**，不随批次关闭。
+只有队长是「**按需实例**」；`devm` / `anam` 自己的 pane（`devm` 的 pane 在 director tab 内）**常驻**，不随批次关闭。
 
 - **责任人**：**创建者本人** —— `devm` 关 `devtl{n}`、`anam` 关 `anatl{n}`。herdr 的安全规则是「不关闭非自己创建的 pane/tab」，故 director 与其它角色**不得代关**。
 - **时机**：该队长**本批任务全部收口**，且创建者**确认无下一批可派**之后。**同一批内可复用**（同批多票/多题仍可分给同一队长，不必每票新建），**跨批不保留** —— 批结束即关；下一批用新编号新建。
@@ -152,8 +148,8 @@ bash dmt-director/scripts/close-leader.sh devm 1
 
 | 发送方 | 收件方 | 方向码 |
 |---|---|---|
-| `director` | `pm` / `devm` / `anam` | `director2pm` / `director2devm` / `director2anam` |
-| `pm` / `devm` / `anam` | `director` | `pm2director` / `devm2director` / `anam2director` |
+| `director` | `devm` / `anam` | `director2devm` / `director2anam` |
+| `devm` / `anam` | `director` | `devm2director` / `anam2director` |
 | `devm` | `devtl{n}` | `devm2devtl{n}` |
 | `devtl{n}` | `devm` | `devtl{n}2devm` |
 | `anam` | `anatl{n}` | `anam2anatl{n}` |
@@ -163,7 +159,7 @@ bash dmt-director/scripts/close-leader.sh devm 1
 
 **第二步 写收件箱文件**
 
-- 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `director` / `pm` / `devm` / `anam` / `devtl{n}` / `anatl{n}`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
+- 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `director` / `devm` / `anam` / `devtl{n}` / `anatl{n}`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
 - `{seq}`：自累计流水号，001 起，一条消息一个号（与 SPEC 的 `spec-seq` 无关）。**取号 = max(扫描 `inbox/<收件角色>/**`（含 `.doing/`）现有最大号, `inbox/<收件角色>/.seq` 高水位) + 1**；`.seq` 是单行文本，内容是**不带前导零**的十进制整数（bash 会把 `037` 当八进制 31、`008` 直接报错），由 `send-msg.sh` 自动维护，**不要手改**
 - **两个运行时子项**：`inbox/<收件角色>/.doing/`（已认领、在做）与 `inbox/<收件角色>/.seq`（序号高水位）；都在 `inbox/*/` 的 gitignore 覆盖内，不是交付物
 - `{方向}`：见上表；跨部门事项由 director 转派，不出现 `devm2anam` / `devtl2anatl` 之类
@@ -194,6 +190,8 @@ bash dmt-director/scripts/close-leader.sh devm 1
    - **Why**：2026-10-23 devm 在 16:00–16:45 做 T6 合并验证（分支跑 ctest → 手工合成冲突 → 合并后再跑 ctest），期间没有回看收件箱，director 的一封裁决信（037）与 TL1 的三封缺口报告（042/043/044）在里面躺了 2.5 小时。**信没丢、门铃也送到了，是收件方在干活时看不见门铃。**
    - **How to apply**：把「扫收件箱」当成操作的**前后置动作**，不是独立任务；扫的时候看两处 `ls inbox/<自己>/ inbox/<自己>/.doing/`，有文件就当场认领处理，**不要攒着**。攒着的后果是：你基于过时的状态继续决策，而对方以为你已经知道了。
 
+**完成即报（不傻等）**：`devm` / `anam` / `devtl{n}` / `anatl{n}` 本批工作一收口，或遇阻塞 / 超时 / 需要上级裁决，**立即**向直接上级发回报（收件箱正文 + 门铃），不等上级来问、不静默挂着；`director` 完成用户交办事项后同理主动向用户回报。收工前自查一句：「我有没有把结果告诉该告诉的人？」
+
 **送达判定**：以 `herdr agent prompt` 返回 `"type":"agent_prompted"` 为「已送达」；走回退通道时以 `send-text + send-keys` 返回 exit 0 **且** `pane read` 见正文为「已送达」；**收件方不回执**，故不再以回执判定。发送方不确定是否已被读取时，**口头问用户**，不重复投递。
 
 **不入库**：收件箱与 `locks/` 都是运行时通道，不是交付物；被服务项目的 `.gitignore` 必须含 `inbox/*/` 与 `locks/`。
@@ -204,19 +202,18 @@ bash dmt-director/scripts/close-leader.sh devm 1
 
 | 角色 | 强制技能 | 用在哪 |
 |---|---|---|
-| `director` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md) | 接需求问穿验收口径；方案自审；契约与文档交叉拷问；抽查代码 |
-| `pm` | [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) | SPEC、开发工单、需求澄清与开放问题推演、文档门禁自评与交叉拷问 |
+| `director` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) | 接需求问穿验收口径；方案自审；契约与文档交叉拷问；抽查代码；PRD / SPEC / 工单落笔 |
 | `devm` | [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md) | 评审整合前自审；缺陷分诊与回归定位 |
 | `devtl` | [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md) | 实施、提交前自审、门红定位 |
 | `anam` | [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) | 取证方法与证据分级、子问题拆解与反证、调研方案自审、证据与文档交叉拷问 |
 | `anatl` | [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) | 取证方法与证据分级、子问题拆解与反证、方案自审与交叉拷问 |
-| `pm-e` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) | 口径核对、产品事实取证（**写进派发 prompt**） |
+| `pde{n}` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) | 口径核对、产品事实取证（**写进派发 prompt**） |
 | `dev-e` | [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md) | 实施与提交（**写进派发 prompt**） |
 | `ana-e` | [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、`/rea`、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md) | 取证（含 REA 逆向）与反证（**写进派发 prompt**） |
 
 **命名与源文件**：上表技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**（路径形如 `skills/<category>/<name>/SKILL.md`），所有链接一律指向 `raw.githubusercontent.com` 的源文件。`/rea`（REA，竞品逆向）**不属于** mattpocock/skills，保持原名、不加链接。
 
-**通用技能（所有 pane 常驻角色）**：`cbc-herdr` —— CodeBuddy 在 herdr 里的状态上报（`working` / `idle` / `blocked`），让 `herdr pane list` 的 `agent_status` 可信；`director` / `pm` / `devm` / `anam` / `devtl` / `anatl` 六份技能**都必须登记**。工程师是子代理、不占 pane，不需要加载。
+**通用技能（所有 pane 常驻角色）**：`cbc-herdr` —— CodeBuddy 在 herdr 里的状态上报（`working` / `idle` / `blocked`），让 `herdr pane list` 的 `agent_status` 可信；`director` / `devm` / `anam` / `devtl` / `anatl` 五份 pane 角色技能**都必须登记**；`dmt-pm`（`pde{n}` 子代理技能）不登记。工程师是子代理、不占 pane，不需要加载。
 
 **检查**：当前 harness 的 skill 目录里能看到这些技能（用户级共享位置通常是 `~/.agents/skills/mattpocock-skills`，仅供参考，不作为硬判据）。
 
@@ -229,7 +226,7 @@ npx skills@latest add mattpocock/skills -a <agent>
 git clone https://github.com/mattpocock/skills.git
 ```
 
-已知缺口（2026-10 核查）：上游 `mattpocock/skills` **没有 `to-prd`**，`implement-spec` 仍在 `in-progress/` 未发布。pm 写 PRD 按本文件 §4 模板手写；若后续上游提供 `to-prd`，优先改用它。
+已知缺口（2026-10 核查）：上游 `mattpocock/skills` **没有 `to-prd`**，`implement-spec` 仍在 `in-progress/` 未发布。director 写 PRD 按本文件 §4 模板手写；若后续上游提供 `to-prd`，优先改用它。
 
 ### 1.5 文件占用（编辑前必须检查）
 
@@ -281,13 +278,13 @@ bash dmt-director/scripts/file-claim.sh list                     # 看全部占�
 
 | 唯一目录 | 负责人 | 产物 | 对齐要求 |
 |---|---|---|---|
-| `docs/pd/prd/` | pm | 产品需求文档（PRD） | `{prd-seq}` 独立编号 |
-| `docs/pd/spec/` | pm | 产品规格书（SPEC，含验收标准） | 与 ticket 共用 `spec-seq` |
-| `docs/dev/tickets/` | pm（票面内容与编号）；devm 只在票面末尾追加「实施状态」一节 | 开发工单（ticket） | 与 SPEC 共用 `spec-seq` |
+| `docs/pd/prd/` | director | 产品需求文档（PRD） | `{prd-seq}` 独立编号 |
+| `docs/pd/spec/` | director | 产品规格书（SPEC，含验收标准） | 与 ticket 共用 `spec-seq` |
+| `docs/dev/tickets/` | director（票面内容与编号）；devm 只在票面末尾追加「实施状态」一节 | 开发工单（ticket） | 与 SPEC 共用 `spec-seq` |
 | `docs/analyst/` | anam | 市场调研与竞品逆向报告 | 无 |
 | `docs/analyst/evidence/{research-seq}-{slug}/` | anam | 调研一手证据（采样产物／原始日志／manifest） | 与报告同号；须带 `manifest.txt`（文件名＋大小＋sha256＋采样命令） |
-| `docs/human/human-arch/` | pm | 人类架构文档 | 无 |
-| `docs/human/human-plan/` | pm | 人类计划文档 | 无 |
+| `docs/human/human-arch/` | director | 人类架构文档 | 无 |
+| `docs/human/human-plan/` | director | 人类计划文档 | 无 |
 | `docs/team.md` | director | 团队契约（本文件） | 无 |
 | `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 §1.3 |
@@ -295,7 +292,7 @@ bash dmt-director/scripts/file-claim.sh list                     # 看全部占�
 1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/human/`（除 `human-arch/`、`human-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
 2. 各部门的产物目录**互不越界**：只读引用可以，移动/改名不可以。
 3. **队长不写 `docs/`**：`devtl{n}` / `anatl{n}` 的回报与证据只落 `inbox/<上级>/`（或由上级并入票面/报告），`docs/` 内的产物一律由经理落笔。
-4. 旧体系（`docs/pd/` 除 `prd/`、`spec/` 外，`docs/dev/` 除 `tickets/` 外，`docs/test/`）只保留历史，**不再接收新产物**；历史文件不改名、不搬迁（历史事实留痕）。**现行口径（2026-10-21 用户裁定·第二次修订）**：① PRD 落 `docs/pd/prd/`；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/human/human-arch/`（人类架构）与 `docs/human/human-plan/`（人类计划），**现由 pm 落盘**（2026-10-24 起；本条其余内容为历史口径）；⑤ `docs/dev/arch/` **作废**，不再单独设架构目录；⑥ 收件箱由 `docs/<角色>/inbox/` 移到项目根 `inbox/<角色>/`。
+4. 旧体系（`docs/pd/` 除 `prd/`、`spec/` 外，`docs/dev/` 除 `tickets/` 外，`docs/test/`）只保留历史，**不再接收新产物**；历史文件不改名、不搬迁（历史事实留痕）。**现行口径（2026-10-21 用户裁定·第二次修订）**：① PRD 落 `docs/pd/prd/`；② SPEC 由 `docs/spec/` 改为 `docs/pd/spec/`；③ ticket 由 `docs/tickets/` 改为 `docs/dev/tickets/`；④ 新增 `docs/human/human-arch/`（人类架构）与 `docs/human/human-plan/`（人类计划），**现由 director 落盘**（2026-10-26 pm 并入 director 后；2026-10-24 起曾归 pm；本条其余内容为历史口径）；⑤ `docs/dev/arch/` **作废**，不再单独设架构目录；⑥ 收件箱由 `docs/<角色>/inbox/` 移到项目根 `inbox/<角色>/`。
 5. **目录初始化由 director 负责**：director 接手一个项目时先检查再补齐（见 §3.1），产物目录不由 anam / devm 自建。
 6. 机检口径：§7 的脚本按该节列出的十六项逐条断言；它**不校验单个文件的落盘路径**，新产物靠本表与评审把关。
 
@@ -312,39 +309,39 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
 - **只建目录、不建产物**：空目录不预置占位文件，避免被误认为已有交付物。
 - **`locks/` 是运行时通道**：文件占用登记（§1.5），不入库；缺失时脚本会自建，director 初始化时顺手建好。
-- **pm / anam / devm 不自建产物目录**：发现自己的目标目录缺失，回报 director（收件箱目录属运行时通道，可按需 `mkdir -p` 兜底；`inbox/devtl{n}`、`inbox/anatl{n}` 由发送方按需建）。
+- **anam / devm 不自建产物目录**：发现自己的目标目录缺失，回报 director（收件箱目录属运行时通道，可按需 `mkdir -p` 兜底；`inbox/devtl{n}`、`inbox/anatl{n}` 由发送方按需建）。
 - 契约文件 `docs/team.md` 与技能安装不在本步骤内（安装见 `README.md`）。
 
 ## 4. 工作流程
 
 1. **anam 调研**：anam 按阈值（≤4 自派 `ana-e`，>4 开 `anatl{n}`）派取证；anam 复核并收口成调研报告，**经 director 评审后落盘** `docs/analyst/`；**本批收口且确认无下一批可派后，anam 关闭该批 `anatl{n}`（§1.2）**。
-2. **director 定口径 → pm 出 PRD、SPEC 与工单**：director 与用户谈定边界、范围外与验收口径后派给 pm；pm 基于调研报告落笔 PRD 与 SPEC（[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)，含逐条可测的验收标准），再用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) 把 SPEC 拆成开发工单，分别写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`（文件头 `状态：待评审`），**由 pm 按文档门禁自评审**（验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环），通过后 pm 就地改状态行为 `状态：已通过` 并交 director 做口径确认与排期；director **不逐条评审文档**，只在口径冲突时裁决。
-3. **devm 接单**：devm 读 `docs/dev/tickets/` 的本批票面（pm 落笔、director 已 PASS），核 `spec-seq` 对齐与判据齐备后按依赖排期；**devm 不拆票、不改判据**，缺项回报 director 转 pm 补。devm 负责评审、整合本部门交付物。
+2. **director 出 PRD、SPEC 与工单**：director 与用户谈定边界、范围外与验收口径后**亲自落笔**（需要产品事实支撑时自派 `pde{n}` 子代理并行取证核对，文字与结论仍由 director 落笔）：基于调研报告写 PRD 与 SPEC（[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)，含逐条可测的验收标准），再用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) 把 SPEC 拆成开发工单，分别写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`（文件头 `状态：待评审`），**按文档门禁自评审**（验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环；用 [`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md) 与 [`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) 拷问），通过后就地改状态行为 `状态：已通过` 并交 devm 排期。
+3. **devm 接单**：devm 读 `docs/dev/tickets/` 的本批票面（director 落笔、已过文档门禁），核 `spec-seq` 对齐与判据齐备后按依赖排期；**devm 不拆票、不改判据**，缺项回报 director 补。devm 负责评审、整合本部门交付物。
 4. **devm 按排队数派活**：**排队任务 ≤4 ⇒ 自己派生 `dev-e` 子代理**（不开 pane、一票一 worktree）；**>4 ⇒ 建 `devtl{n}`**（优先 cbc + `/dmt-dtl`），把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给队长，队长建 worktree、派 `dev-e` 实施并做实施层初检。anam 阈值同为 ≤4 / >4（≤4 自派 `ana-e`，>4 建 `anatl{n}`）。
 5. **devm 验收整合**：核 diff 与初检读数（≤4 路径自己收子代理回报并自做初检）→ 构建与测试 → 合并（冲突逐 hunk 按意图消解）→ 不合格打回原派生者 → 逐票在票面末尾追加「实施状态」（不改判据）；**本批全部收口且确认无下一批可派后，关闭该批 `devtl{n}`（§1.2）**。
 6. **devm 评审代码，director 发布**：ticket 代码干完后由 **devm 按代码门禁评审**（逐条对照 SPEC 判据、核 diff 与证据、合并、写「实施状态」），devm PASS 即代码通过。devm 把评审结论与证据交 director，director **抽查**后自己提交并 `git push` 到 GitLab（至少每完成一个 ticket 推一次）；devm / 队长 / 工程师不 push。
-7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 pm/devm/anam 之间；pm 在多个 `pm-e` 之间；devm 在多个 `dev-e` 或 `devtl{n}` 之间；anam 在多个 `ana-e` 或 `anatl{n}` 之间；队长在多个工程师之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。**director 与 pm 自己的无依赖工作（评审前证据预检、文档交叉核对、外部事实取证）同样用子代理并行**，结论由本人落笔。
+7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 devm/anam 之间，产品单元在多个 `pde{n}` 之间；devm 在多个 `dev-e` 或 `devtl{n}` 之间；anam 在多个 `ana-e` 或 `anatl{n}` 之间；队长在多个工程师之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。**director 自己的无依赖工作（评审前证据预检、文档交叉核对、外部事实取证、产品取证）同样用子代理并行**，结论由本人落笔。
 
-### 4.1 PRD 模板（pm）
+### 4.1 PRD 模板（director）
 
 `Problem Statement` / `目标用户与场景` / `方案概述` / `用户故事（可验收）` / `验收标准` / `范围外` / `开放问题`。
 
-### 4.2 SPEC 模板（pm）
+### 4.2 SPEC 模板（director）
 
 `Problem Statement` / `Solution` / `User Stories` / `验收标准（逐条可测）` / `实现决策` / `测试接缝` / `Out of Scope` / `变更记录`。
 SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 
-### 4.3 工单模板（pm）
+### 4.3 工单模板（director）
 
 `目标` / `输入 SPEC 小节` / `验收判据（逐条可测）` / `Files 范围` / `依赖（票号）` / `timeoutMs` / `状态` / `实施状态（devm 追加）`。
-工单由 pm 用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) 按 tracer-bullet 纵向切片；**编号按依赖序、`spec-seq` 与 SPEC 严格对齐**；`Files 范围` 互不重叠，`依赖` 必须无环。
+工单由 director 用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) 按 tracer-bullet 纵向切片；**编号按依赖序、`spec-seq` 与 SPEC 严格对齐**；`Files 范围` 互不重叠，`依赖` 必须无环。
 
 ## 5. 纪律
 
 ### 5.1 Git
 
 1. **禁止 `git add -A` / `git add .`**，提交一律显式列文件路径（优先 `git commit -m "..." -- <path>`，绕过索引），且 `add` 与 `commit` 之间不插入其它动作（避免索引被并发写者扫入）。
-2. **推送只归 director**：`git push` **只有 director 能执行**；`pm` / `devm` / `anam` / 队长 / 工程师**一律不得 push**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
+2. **推送只归 director**：`git push` **只有 director 能执行**；`devm` / `anam` / 队长 / 工程师**一律不得 push**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
 3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff --cached --name-only` 复核暂存区。
 4. **同一 worktree 单一写者（含队长本人）**：一个 worktree 从开工到收工，**只有被派到该票的那一个 agent 可以提交**。任何人要提交自己的文档 / 记录，**不得**在工程师正在施工的 worktree 里做——走主工作树或另开 worktree。**并发提交不会报错，只会把别人的改动扫进自己的提交**，事后靠 `git show --stat` 才能发现，而那时已经进了历史。
    - **Why**：2026-10-23 devtl1 在 dev-e13 施工的同一 worktree 上并行提交了 4 个 docs commit，没有造成损失，但它自己指出「结果侥幸没事不代表流程对」。**这条规则此前只存在于 director 的记忆里、没写进本文件**——没写下来的规则不算规则。
@@ -359,22 +356,23 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 
 1. 派发前先做**依赖分析**：只有无依赖任务可并行；共享文件、共享构建目标、有顺序验收关系的任务必须串行。
 2. **经理层路径判据（可测）**：开工前数**当前未收口的排队任务数** —— **`devm`：≤4 ⇒ 自己派生 `dev-e`（不开 pane），>4 ⇒ 开 `devtl{n}` pane**；**`anam`：≤4 ⇒ 自己派生 `ana-e`，>4 ⇒ 开 `anatl{n}` pane**。两条都**优先 cbc harness**（`codebuddy --permission-mode auto` + `auto mode on` + `/dmt-dtl` 或 `/dmt-atl`）。路径由排队数决定，不由便利程度决定；已开出的队长 pane 批内复用。
-3. **先派后干 ＋ 饱和派发（`devm` / `anam` / `pm` 严责）**：
+3. **先派后干 ＋ 饱和派发（`director` / `devm` / `anam` 严责）**：
    - **先派后干**：开工第一个**动作**是**列单元清单并派满**，不是先读代码、不是先自己动手（读票 / 读 SPEC 只读不干）。**凡「产出一个交付物」的动作都算单元**（写一节 PRD / SPEC、改一张票的代码、跑一次取证、写一段报告）；**单元必须派给子代理**，经理自做只限非单元工作（排期、拆解、派发、评审、整合、收口、裁决、写账）。**唯一例外**：单元本身 <10 分钟且不可再拆 ⇒ 自做，并在并发账里记 `自做 1（<10min 原子）`。
-   - **饱和**：无依赖单元数 N ⇒ **必须一次开满 N 个子代理**（一单元一子代理），**同一回复内全部派出，并发数 = 单元数**；**少开一个即为违规**，除非在回报里写明该单元被串行的理由。
+   - **CAP 先探测**：开工先探测**当前 harness 的最大子代理并行数**（`bash dmt-director/scripts/probe-cap.sh` 自动探测：读 `CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS`，codebuddy 默认 20；也可查文档 / 试派观测 / 问用户），**以探测值为准**；探测不到 ⇒ 默认 **8**。探测结果记进并发账，`export DMT_SUBAGENT_CAP=<n>` 让账本与 hook 用同一数值（未设置按 8 算）；换 harness 重新探测。
+   - **饱和（开满）**：无依赖单元数 N ⇒ **每波并发派 `min(N, CAP)` 个子代理**（一单元一子代理），同一回复内全部派出；N > CAP 时**分波**，并发位一释放就立即补派下一波，水位保持满，全批派完才算派满；**本波少开一个即为违规**，除非在回报里写明该单元被串行的理由。
    - **理由白名单**（只认这六条）：依赖 / 共享文件 / 共享构建目标 / 顺序验收关系 / 同一设备 / 同一 REA 会话。**不在白名单的理由一律不成立**：「先开一个看看」「怕子代理做错」「写 prompt 太慢」「自己做更快」「省得管理」「**就一个文件 / 就一处改动**」「**这次小，我自己来**」。**「单文件改动」不是理由**：一个单元是不是单文件，与要不要派子代理无关；**自我豁免本身就是违规**（豁免只能记成白名单理由码，且会被 director 抽查复核）。
    - **手段**：cbc 可用 **teammate 方式**（`Agent` 带 `name` 建 team、多成员同批派出）；pi 用 dynamic workflow `runs.all`；其它 harness 用多个并行 subagents。
-   - **director 抽查以「并发数 vs 无依赖单元数」为判据**，不等且无白名单理由即打回。
-   - **机器牙**：`dmt-director/scripts/dispatch-ledger.sh` 记「单元 / 已派 / 豁免」，`dmt-director/scripts/install-hooks.sh` 把三条 hook 装进 `.codebuddy/settings.json`（`--user` 装用户级，`director` / `pm` / `devm` / `anam` **四个角色全机生效**；角色从 `DMT_ROLE` 或 herdr pane label 自动解析，非治理角色与无账本的会话立即 exit 0；旧账 >24h 不再阻断） —— `Agent` 调用后自动记账，**Stop hook 在还有未派单元时以 rc=2 阻断本轮**，PreToolUse 拦住经理自己写交付物。装了 hook 就不靠自觉；没装则靠并发账 + director 抽查。
-4. **队长层可测判据**：无依赖单元（票 / 取证单元）**≥2 ⇒ 必须并发派发**，并同样适用第 3 条的**开满**要求（队长对 N 个单元开 N 个工程师）；**仅在回报中给出串行理由时可例外**（理由同上）。手段优先级：dynamic workflow `runs.all`（pi）> 多个 subagents 并行（cbc 用 Agent/team 或 teammate）。
-5. **产品部**：`pm` 无队长层，无依赖产品单元 **≥2 ⇒ 必须并发派 `pm-e`**（cbc 用 Agent 子代理 / team，pi 用 dynamic workflow）；`director` 的评审前预检同理。
+   - **director 抽查以「每波并发数 = min(N, CAP)」为判据**（N > CAP 时看分波是否补满、并发位有无闲置），不等且无白名单理由即打回。
+   - **机器牙**：`dmt-director/scripts/dispatch-ledger.sh` 记「单元 / 已派 / 豁免」，`dmt-director/scripts/install-hooks.sh` 把三条 hook 装进 `.codebuddy/settings.json`（`--user` 装用户级，`director` / `devm` / `anam` **三个角色全机生效**；角色从 `DMT_ROLE` 或 herdr pane label 自动解析，非治理角色与无账本的会话立即 exit 0；旧账 >24h 不再阻断） —— `Agent` 调用后自动记账，**Stop hook 在「还有未派单元且并发未满（在途 < CAP）」时以 rc=2 阻断本轮**（在途 ≥ CAP 属分波等待，不阻断），PreToolUse 拦住治理角色自己写交付物、并拦住多单元期的同步 Agent 调用（强制后台并行，见 `probe-cap.sh` / `fanout.sh`）；SessionStart 注入并行纪律与当前 CAP，`send-msg.sh` 发回报前过并发账门禁。装了 hook 就不靠自觉；没装则靠并发账 + director 抽查。
+4. **队长层可测判据**：无依赖单元（票 / 取证单元）**≥2 ⇒ 必须并发派发**，并同样适用第 3 条的**开满**要求（队长每波对 N 个单元开 `min(N, CAP)` 个工程师，N > CAP 分波补满）；**仅在回报中给出串行理由时可例外**（理由同上）。手段优先级：dynamic workflow `runs.all`（pi）> 多个 subagents 并行（cbc 用 Agent/team 或 teammate）。
+5. **产品工作（director 自派 `pde{n}`）**：产品线无 pane、无队长层，无依赖产品单元 **≥2 ⇒ 必须并发派 `pde{n}`**（cbc 用 Agent 子代理 / team，pi 用 dynamic workflow），并同样适用第 3 条 CAP 开满口径（每波 `min(N, CAP)`）；`director` 的评审前预检同理。
 6. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）。
-7. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
+7. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询；N > CAP 分波时，唤醒后**先补派下一波、再收口**，并发位不得闲置。
 8. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
 9. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
 10. **并发账（每次上报第一行，硬格式）**：给上级的每份正文**第一行**必须是
-    `并发账：单元 N（<清单>）→ 派 M ＋ 未派 K（<理由码>）`
-    **M + K = N**（自做计入 K）。缺失、算术不成立、或理由码不在白名单 ⇒ **director 直接打回，不进评审**；**同一经理同一批次被打回 2 次 ⇒ 升级用户裁决**。**不做事前审批**：开工不需要总监点头，但必须 `plan` 落账；director **每小时巡检** `locks/dispatch-*.tsv`，发现「有未派单元且超 30 分钟」就发门铃问一句，不打断执行。`dispatch-ledger.sh report <角色>` 直接生成这一行，不要手写。派发 prompt 照骨架填空，不要现编：
+    `并发账：单元 N（<清单>）→ 派 M ＋ 未派 K（<理由码>）[CAP=<n>]`
+    **M + K = N**（自做计入 K）。理由码 ∈ 白名单六条，或 `cap`（在途 ≥ CAP、分波排队；子代理一完成必须立即补派，`cap` 不豁免收口、不属串行理由）。缺失、算术不成立、或理由码不合法 ⇒ **director 直接打回，不进评审**；**同一经理 / 总监同一批次被打回 2 次 ⇒ 升级用户裁决**。**不做事前审批**：开工不需要总监点头，但必须 `plan` 落账；director **每小时巡检** `locks/dispatch-*.tsv`，发现「有未派单元、并发位空闲（在途 < CAP）且超 30 分钟」就发门铃问一句，不打断执行。`dispatch-ledger.sh report <角色>` 直接生成这一行，不要手写。派发 prompt 照骨架填空，不要现编：
     `你是 <角色> 的子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。`
 
 ### 5.3 评审门禁
@@ -382,14 +380,14 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 | 门禁 | 提交方 | 评审方 | 通过条件 |
 |---|---|---|---|
 | 调研报告 | anam | director | director 认可结论与证据来源；**anam 落盘** `docs/analyst/` |
-| PRD / SPEC / 工单 | pm（起草） | **pm（文档门禁）**；director 只在口径冲突时裁决 | 验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环；通过后状态行改 `状态：已通过` |
+| PRD / SPEC / 工单 | director（起草） | **director（文档门禁自评）**，用户可抽查 | 验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环；通过后状态行改 `状态：已通过` |
 | 实施初检 | devtl（>4 路径）/ devm（≤4 自派路径） | devm | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
 | 队长实例关闭 | devm / anam（创建者） | 创建者本人自检 | 回报已入账、worktree 已 `git worktree remove`、收件箱根目录无未读且 `.doing/` 无未收口；关闭后 `herdr pane list` 无该 label |
-| 人类架构 / 人类计划 | pm | **pm（文档门禁）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
+| 人类架构 / 人类计划 | director | **director（文档门禁自评）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
 | ticket 代码 | 开发部门（>4 经 `devtl{n}`、≤4 由 devm 自派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后合并并写「实施状态」 |
 | 发布 | devm | director | 抽查评审结论与证据后 `git push`（每 ticket 一推；**不替代 devm 的代码评审**） |
-| **派发合规（并发账）** | pm / devm / anam | **director**（在既有评审点内看，不另设审批） | 报告第一行有并发账、**M + K = N**、未派理由在白名单；**缺失 / 算术不成立 / 理由不在白名单 ⇒ 打回，不进评审**；同一经理同一批次被打回 2 次 ⇒ **升级用户裁决**，director 只记录不裁定 |
-| 跨部门分歧 | pm / devm / anam | director | director 裁决并回结论 |
+| **派发合规（并发账）** | devm / anam | **director**（在既有评审点内看，不另设审批；director 自己的并发账随回报交用户抽查） | 报告第一行有并发账、**M + K = N**、未派理由在白名单（或 `cap` 分波排队）；**缺失 / 算术不成立 / 理由不在白名单 ⇒ 打回，不进评审**；同一经理同一批次被打回 2 次 ⇒ **升级用户裁决**，director 只记录不裁定 |
+| 跨部门分歧 | devm / anam | director | director 裁决并回结论 |
 
 ### 5.4 读数纪律（性能窗）
 
@@ -397,7 +395,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 2. **跨构建绝对值禁比**：不同 so／APK 的毫秒数不可互比（设备现装、语料、仓内 APK 三者不同源）；比值（如 detect 前向占比 f）可跨构建比，但须挂横幅说明。
 3. **「停」要复验**：`force-stop` 后必须 `pidof <pkg>` 为空才算停；队长回报的「已停」不可直接采信。
 4. **快照必须同时满足两条才算本窗**：① 在本窗 `new.list` 内；② `build_sha256` 与同窗其余快照**一致**。任一条不满足 ⇒ **跨轮残留**，禁用于任何对账（含 `detect_ms`／`fps`／`decode_ms`）。**Why**：`new.list` 只能证明「文件是这次新出现的」，证明不了「它属于这次会话」——2026-10-24 004 窗就有 1 份 `a676c083`（旧构建）快照混在 `new.list` 里（`detect_frames=172`、`window_ms=30106`，比同窗第 2 份早 33.8 s）；同一坑此前已三次（62 s 窗、`keys.tsv` 混入、`67528008`）。
-5. **装机权限（只归 director）**：`adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**写操作，只许 `director` 执行**；`pm`／`devm`／`anam`／队长／工程师**一律禁装、禁写设备**（需要装机时回报 director，由 director 自己动手，不转授权）。装机后必报 **APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空**。**Why**：2026-10-24 T1（host-only 票）的 dev-e 自行装机、覆写 calib 并 force-stop 了他人 `pid=23862` 的进程；用户随后裁定装机与推送都收归 director 一人。
+5. **装机权限（只归 director）**：`adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**写操作，只许 `director` 执行**；`devm`／`anam`／队长／工程师**一律禁装、禁写设备**（需要装机时回报 director，由 director 自己动手，不转授权）。装机后必报 **APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空**。**Why**：2026-10-24 T1（host-only 票）的 dev-e 自行装机、覆写 calib 并 force-stop 了他人 `pid=23862` 的进程；用户随后裁定装机与推送都收归 director 一人。
 
 **Why**：2026-10-24 的 f 补测窗（dump 开）一度被当作性能窗；同日某队长报「App 已 force-stop」，实测 pid 仍在。**没写下来的纪律不算纪律**。
 
@@ -411,9 +409,13 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 bash dmt-director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查**十八项**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 六个技能（`dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-pm`）；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `close-leader.sh`，契约含「禁止先关后收」与「只许关 pane」）；④ **身份识别已登记**（契约与六个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」，契约含「≥2 ⇒ 必须并发派发」）；⑥ **经理层路径判据与饱和派发已登记**（`dmt-dm` 含「≤4」「>4」、`dmt-am` 含「≤4」「>4」，契约含「≤4 ⇒ 自己派生 `dev-e`」与「≤4 ⇒ 自己派生 `ana-e`」；契约含「并发数 = 单元数」，`dmt-dm` / `dmt-am` 含「开满」与 `teammate`）；⑦ **装机与推送归属已登记**（契约含「只有 director 能执行」与「只许 director 执行」、`dmt-director` 含 `git push`、`dmt-dm` 含「不得 push」、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；`dmt-director` 含 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)+[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、`dmt-pm` 含 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)+[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、`dmt-dm` 含 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、`dmt-dtl` 含 [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、`dmt-atl` 含 [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)）；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，六个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-pm` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（六个 pane 角色技能各含 `cbc-herdr`）；⑫ **技能链接与上游一致**（契约与六个技能都含 `raw.githubusercontent.com`，技能名与 `mattpocock/skills` 目录名逐字一致）；⑬ **确定性动作已脚本化**（`init-project.sh` / `setup-team.sh` / `spawn-leader.sh` / `close-leader.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `dispatch-ledger.sh` / `self-work-guard.sh` / `install-hooks.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` 存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，六个角色技能各含 `msg-take.sh`）；⑮ **先派后干与并发账已登记**（契约含「先派后干」与「并发账」；`dmt-pm` / `dmt-dm` / `dmt-am` 各含「先派后干」与「并发账」，`dmt-director` 含「并发账」）；⑯ 本契约登记齐全；⑰ **契约头部带版本号与日期且与六个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，六份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看 §3 落盘登记表**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
+检查**十八项**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 六个技能（`dmt-director` / `dmt-pm` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pm` 为 `pde{n}` 子代理技能，不占 pane）；③ **队长实例关闭动作已登记**（契约与 `dmt-dm` / `dmt-am` 技能含 `close-leader.sh`，契约含「禁止先关后收」与「只许关 pane」）；④ **身份识别已登记**（契约与六个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **队长层并行判据已登记**（`dmt-dtl` / `dmt-atl` 含「必须并行」，契约含「≥2 ⇒ 必须并发派发」）；⑥ **经理层路径判据与饱和派发已登记**（`dmt-dm` 含「≤4」「>4」、`dmt-am` 含「≤4」「>4」，契约含「≤4 ⇒ 自己派生 `dev-e`」与「≤4 ⇒ 自己派生 `ana-e`」；契约含「min(N, CAP)」（CAP = 探测到的 harness 最大子代理并行数、探测不到默认 8，N > CAP 分波补满），`dmt-dm` / `dmt-am` 含「开满」与 `teammate`）；⑦ **装机与推送归属已登记**（契约含「只有 director 能执行」与「只许 director 执行」、`dmt-director` 含 `git push`、`dmt-dm` 含「不得 push」、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；`dmt-director` 含 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)+[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)+[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)+[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、`dmt-pm` 含 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)+[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、`dmt-dm` 含 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、`dmt-dtl` 含 [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、`dmt-atl` 含 [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)）；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，六个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（五个 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl` 各含 `cbc-herdr`，`dmt-pm` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与六个技能都含 `raw.githubusercontent.com`，技能名与 `mattpocock/skills` 目录名逐字一致）；⑬ **确定性动作已脚本化**（`init-project.sh` / `setup-team.sh` / `spawn-leader.sh` / `close-leader.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `dispatch-ledger.sh` / `self-work-guard.sh` / `parallel-guard.sh` / `probe-cap.sh` / `fanout.sh` / `install-hooks.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` 存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，五个 pane 角色技能各含 `msg-take.sh`）；⑮ **先派后干、并发账与完成即报已登记**（契约含「先派后干」与「并发账」；`dmt-director` / `dmt-dm` / `dmt-am` 各含「先派后干」与「并发账」；契约与 `dmt-director` / `dmt-dm` / `dmt-am` / `dmt-dtl` / `dmt-atl` 含「完成即报」）；⑯ 本契约登记齐全；⑰ **契约头部带版本号与日期且与六个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，六份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看 §3 落盘登记表**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
 
 ## 8. 变更记录
+
+- **2026-10-26（用户裁定·第三十六次：pm 并入 director + devm pane 并入 director tab + pde 子代理 + 并行强化机制）**：① **组织改造** —— 取消产品经理 pane，`director` 兼任产品部经理（亲自落笔 PRD / SPEC / 工单 / 人类文档并出文档门禁结论，可自派 `pde{n}` 取证核对）；`dmt-pm` 技能**保留**为 `pde{n}` 产品工程师**子代理**技能（不占 tab 不占 pane）；`devm` pane 移入 **director tab 右侧**（左 director、右 devm），`anam` 保持独立 tab；角色间一律按 **pane label** 识别与互通。② **并行强化（机制 1-6）** —— 新增 `probe-cap.sh`（读 `CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS` 等探测 CAP，codebuddy 默认 20，探测不到默认 8）、`fanout.sh`（单元清单一键生成并发派发）、SessionStart hook 注入并行纪律与当前 CAP、PreToolUse 拦多单元期同步 Agent 调用（强制后台并行）、PostToolUse 催派补波、`send-msg.sh` 发回报前过并发账门禁（`DMT_MSG_FORCE=1` 逃生舱）。③ 版本同号 `5.0.0`。**Why**：产品线一人可覆盖，pane 越少协作越快；并行最大化靠机制闸门，不靠自觉。
+
+- **2026-10-26（用户裁定·第三十五次：CAP 探测开满 + 完成即报）**：① **并发口径升级** —— 饱和从「并发数 = 单元数」改为：**先探测当前 harness 最大子代理并行数（CAP，探测不到默认 8），每波并发 `min(N, CAP)`，N > CAP 分波补满、并发位不闲置**；§5.2 各条与六技能同步。② **并发账升级** —— 尾注 `[CAP=<n>]`，未派理由新增 `cap`（分波排队，不豁免收口）；`dispatch-ledger.sh` 的 `check` / `report` 支持分波（在途 ≥ CAP 不阻断 Stop）。③ §1.3 新增**完成即报（不傻等）**：经理 / 队长收口或遇阻塞立即回报直接上级。④ 机检 4b / 4l 判据字面同步（「并发数 = 单元数」→「min(N, CAP)」，新增「完成即报」），版本同号 `4.2.0`。**Why**：原口径在 N 小时开不满、N 大时无上限，且收工不报会傻等；改为「探测上限、水位打满、收工即报」。
 
 - **2026-10-24（实测修正·第三十四次：序号撞号 / 启动不幂等 / 契约版本可查）**：① **`send-msg.sh` 八进制撞号** —— 文件名带前导零（`077`）或旧 `.seq` 里写着 `077` 时，bash 算术按八进制解析（`077` = 63），序号被打回 64，`inbox/devm` 实际出现过两个 `064`；现一律 `$((10#$x))` 强制十进制再比较与自增，六种边界（空箱 / `.seq` 带零 / `.seq` 是垃圾值 / 号在 `.doing/` / 号在根 / 两处并存）实测均单调递增。② **`setup-team.sh` / `spawn-leader.sh` 启动幂等** —— 对已在跑的 pane 重发 `codebuddy --permission-mode auto` 会被当成用户提问；改为先读 `herdr pane get` 的 `agent_status`，非 `unknown` 即跳过（`--force-start` 强制重发，`--reload` 只补发技能命令）。③ **就绪判据更正** —— `wait-output --match 'auto mode on'` 对已在跑的 pane 会立刻命中历史输出，等于没有判据；统一改为轮询 `agent_status` 直到非 `unknown`，§1.2、§2 与 `dmt-director` 技能同步。④ **`team.md` 头部加版本号与日期**（`版本 4.1.0 · 2026-10-24`），六份 `SKILL.md` 同号升到 `4.1.0`；机检新增 4m（版本与日期一致、契约内脚本路径必须带 `dmt-director/` 前缀），判据十七项 → 十八项。⑤ **脚本路径统一** —— §5.2「机器牙」与 §7 ⑨ 的 `scripts/…` 改为 `dmt-director/scripts/…`（原写法从项目根执行 rc=127）。⑥ **账本落点固定到主工作树** —— `dispatch-ledger.sh` / `file-claim.sh` 的 `ROOT` 改用 `git rev-parse --path-format=absolute --git-common-dir` 的父目录，在 worktree 里跑也写回 `<main>/locks/`，避免 director 在项目根巡检看不到、且各分支 `.gitignore` 未必有 `locks/`。⑦ `install-hooks.sh` 安装后 `chmod +x` 脚本目录（复制会丢执行位）。⑧ `install-skills.sh` 落点统一：脚本与契约原样落到 `<target>/dmt-director/`（技能仍进 `.agents/skills/`），旧的 `<target>/scripts/` 废弃。
 

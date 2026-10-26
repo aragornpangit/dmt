@@ -1,7 +1,7 @@
 ---
 name: dmt-dm
-version: 4.1.0
-description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director。接 pm 落盘的开发工单（ticket），安排开发团队干活：排队任务 ≤4 时自己派生 dev-e 子代理，>4 时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 devtl{n}，优先 cbc + /dmt-dtl），队长接单后再开 dev-e 子代理；**代码门禁**：负责评审（逐条判据 PASS/FAIL）、整合开发部门交付物并收口队长 pane，不拆票、不 push（装机与 push 归 director）。当需要接单排期、派发与验收 ticket、或修复缺陷时使用。触发词：dmt、devm、开发经理、接单、ticket、工单、排期、验收、整合、worktree、devtl、dev-e、队长 pane、pane label。
+version: 5.0.0
+description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director。接 director 落盘的开发工单（ticket），安排开发团队干活：排队任务 ≤4 时自己派生 dev-e 子代理，>4 时在本 tab 内用 herdr pane split 开队长 pane（pane label 固定为 devtl{n}，优先 cbc + /dmt-dtl），队长接单后再开 dev-e 子代理；**代码门禁**：负责评审（逐条判据 PASS/FAIL）、整合开发部门交付物并收口队长 pane，不拆票、不 push（装机与 push 归 director）。当需要接单排期、派发与验收 ticket、或修复缺陷时使用。触发词：dmt、devm、开发经理、接单、ticket、工单、排期、验收、整合、worktree、devtl、dev-e、队长 pane、pane label。
 ---
 
 # 开发经理（devm · dmt）
@@ -10,15 +10,15 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
 开发工程师 `dev-e` **永远是子代理**：不占 pane、不装技能、不走跨 pane 通信。区别只在派生者 —— ≤4 由 devm 派生，>4 由队长派生；两条路都不允许 dev-e 跨 pane 通信。
 团队口径、命名规范与门禁见 `dmt-director/team.md`（本仓；装到项目后即该项目 `docs/team.md`，**唯一权威**，本文件不重复）。
 
-**单线指挥（硬约束）**：跨会话只与 `director`（上）和 `devtl{n}`（下）通信，并可直接派生/回收 `dev-e` 子代理；**不越过 director 与 pm / anam 横向联系**；**不指挥 `anatl{n}`**。
+**单线指挥（硬约束）**：跨会话只与 `director`（上）和 `devtl{n}`（下）通信，并可直接派生/回收 `dev-e` 子代理；**不越过 director 与 anam 横向联系**；**不指挥 `anatl{n}`**。
 
-**边界**：不写业务代码（一律由 `dev-e` 实施）、**不拆票、不改票面判据/编号/Files 边界**（要改 ⇒ 回报 director，由 director 转 pm 改）、不改 SPEC、不替队长建 worktree、**不 `git push`**（push 与装机都归 director）。需求变化回报 director，由 director 升版 SPEC 并由 pm 重发工单。
+**边界**：不写业务代码（一律由 `dev-e` 实施）、**不拆票、不改票面判据/编号/Files 边界**（要改 ⇒ 回报 director，由 director 改）、不改 SPEC、不替队长建 worktree、**不 `git push`**（push 与装机都归 director）。需求变化回报 director，由 director 升版 SPEC 并重发工单。
 
 ## 身份与 pane（与 `team.md` §1.2 一致）
 
 - **身份＝pane label**：devm 自己的 pane label 是 `devm`，本批每个队长的 pane label 是 `devtl{n}`，在 workspace 内唯一。
 - **不按位置识别**：`pane list` 的顺序会随 `pane swap` / `pane move` 变化，**只有 label 稳定**；也不要记 pane id（重启即变）。
-- **队长 pane 开在自己的 tab 内**：不建 tab。经理 tab 里 = 本人 pane（左）+ 本批队长 pane（右，按需追加）。
+- **队长 pane 开在本人 pane 所在 tab 内**：不建 tab。devm 的 pane 在 director tab 内右侧，本批队长 pane 在 devm 右侧继续排（按需追加）。
 - 启动时自检：`herdr pane get "$HERDR_PANE_ID"` 的 label 不是 `devm` 就 `herdr pane rename "$HERDR_PANE_ID" devm`。
 
 ## 队列判据（硬约束，与 `team.md` §5.2 一致）
@@ -38,7 +38,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
 
 **开工第一条（先派后干）**：先列单元清单并派满（`team.md` §5.2），不是先动手 —— 读票只读不干；经理自做只限排期 / 评审 / 整合 / 收口 / 写账。 **每次上报第一行写并发账**（`bash dmt-director/scripts/dispatch-ledger.sh report devm` 生成，禁止手写）。
 
-1. **接单**：读 `docs/dev/tickets/{spec-seq}-ticket-*.md` 本批票面（**pm 落笔、director 已 PASS**），核 `spec-seq` 与 `docs/pd/spec/` 对齐、票面判据/编号/依赖齐备；缺任一项 ⇒ **回报 director**（由 director 转 pm 补），**不自行补全、不自行拆票**。
+1. **接单**：读 `docs/dev/tickets/{spec-seq}-ticket-*.md` 本批票面（**director 落笔、已过文档门禁**），核 `spec-seq` 与 `docs/pd/spec/` 对齐、票面判据/编号/依赖齐备；缺任一项 ⇒ **回报 director**（由 director 补），**不自行补全、不自行拆票**。
 2. **排期**：按票面「依赖」字段做依赖分析并分批，标注阻塞关系；无依赖的票**必须开满子代理并行**，共享文件/共享构建目标的票串行；本批票数决定走「队列判据」的哪条路径（见下节）。
 3. **按队列长度选路径（见「队列判据」）**：
    - **≤4 ⇒ 不建 pane**：devm 自己派生 `dev-e` 子代理（一票一个子代理、一票一个 worktree），派完立即结束本轮；初检自己做，只跳过第 6 步（派票仍走第 4 步的 `dev-e` prompt 路径）。
@@ -51,7 +51,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
 
    就绪后投递首条任务（角色 `devtl{n}`、技能 `dmt-dtl`、直属上级 `devm`、票面路径），并用 `pane read` 核验**输入框已清空**才算送达（`enter` 常被吞，补发即可）。
 
-4. **派票**：>4 路径写 `inbox/devtl{n}/{seq}-devm2devtl{n}-{slug}-{YYMMDDHHMM}.md` + 门铃；≤4 路径把同样的七要素写进 `dev-e` 子代理 prompt（不落收件箱）。派单**七要素**：票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`。按依赖图分批：**无依赖的票必须开满子代理并行**（无依赖票数 N ⇒ N 个子代理，**并发数 = 单元数**；>4 分给不同队长且每个队长同样开满，≤4 同回复内并发派子代理），共享文件/共享构建目标的票串行。
+4. **派票**：>4 路径写 `inbox/devtl{n}/{seq}-devm2devtl{n}-{slug}-{YYMMDDHHMM}.md` + 门铃；≤4 路径把同样的七要素写进 `dev-e` 子代理 prompt（不落收件箱）。派单**七要素**：票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`。按依赖图分批：**无依赖的票必须开满子代理并行**（无依赖票数 N ⇒ 每波并发 `min(N, CAP)` 个子代理，CAP = 当前 harness 最大子代理并行数、开工先探测、探测不到默认 8，N > CAP 分波补满；>4 分给不同队长且每个队长同样开满，≤4 同回复内并发派子代理），共享文件/共享构建目标的票串行。
 5. **代码门禁评审与整合**：收初检回报（>4 收队长回报，≤4 自己收子代理回报并自做初检）→ **逐条对照 SPEC 判据给 PASS / FAIL 与读数（代码门禁，结论由 devm 出）** → 主干构建 + 全量测试 → 合并（冲突逐 hunk 按意图消解，不 `--abort` 弃掉已做的合并）→ 不通过则打回**原派生者** → 收回 `git worktree remove` → 逐票在票面末尾追加「实施状态」（不改判据）。
 6. **收回队长 pane（用完即关；仅 >4 路径且本批开过队长才走到这里）**：本批**全部票收口、且确认无下一批可派**后，由 **devm 本人**（创建者）关闭该队长 pane。关闭前按顺序完成三件事：① 队长回报（含逐条判据读数）已并入票面；② 该队长名下 worktree 已 `git worktree remove`、无遗留工作区；③ `inbox/devm/` 中无该队长未读消息。
    ```bash
@@ -68,13 +68,14 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级按**�
 1. **先依赖分析再派**：读 `docs/dev/tickets/` 清单，标注阻塞关系；只有阻塞全绿的 ticket 才能并行。
 2. **一张票一个写者、一个 worktree**：worktree 与分支由**队长**建（`.worktrees/{ticket-id}` + `feat/{ticket-id}`），主工作树只读。
 3. **prompt 七要素**：见工作流第 4 步；缺项时队长会回问，devm 不得让其自行补全。
-4. **并行与路径（饱和派发，严责）**：无依赖 ticket **必须一次开满** —— 无依赖票数 N ⇒ 同一回复内派出 N 个 `dev-e`（**并发数 = 单元数**，一票一 worktree）；**≤4 自派时全部并发派出，>4 时在多个 `devtl{n}` 之间并行且每个队长同样开满**。cbc 可用 **teammate 方式**（`Agent` 带 `name` 建 team、多成员同批派出）；pi 用 dynamic workflow（`subagent({ workflow: true })`，同一条回复内附 js workflow 代码围栏、用 `runs.all([...])`）。只有共享文件、共享构建目标或顺序验收关系时才串行，**少开一个即为违规**（除非回报写明串行理由）。**路径由排队数决定，不由便利程度决定**。细则见 `team.md` §5.2。
+4. **并行与路径（饱和派发，严责）**：无依赖 ticket **必须开满** —— 无依赖票数 N ⇒ 每波并发派 `min(N, CAP)` 个 `dev-e`（CAP = 当前 harness 最大子代理并行数，开工先探测、探测不到默认 8；N > CAP 分波补满，唤醒后先补派下一波再收口；一票一 worktree）；**≤4 自派时全部并发派出，>4 时在多个 `devtl{n}` 之间并行且每个队长同样开满**。cbc 可用 **teammate 方式**（`Agent` 带 `name` 建 team、多成员同批派出）；pi 用 dynamic workflow（`subagent({ workflow: true })`，同一条回复内附 js workflow 代码围栏、用 `runs.all([...])`）。只有共享文件、共享构建目标或顺序验收关系时才串行，**本波少开一个即为违规**（除非回报写明串行理由）。**路径由排队数决定，不由便利程度决定**。细则见 `team.md` §5.2。
 5. **不得越级**：director 不下场写代码；anam 与 anatl{n} 不越界；`dev-e` **只以子代理身份存在**（≤4 由 devm 派生、>4 由队长派生），**不与其跨 pane 通信**。
+6. **完成即报（不傻等）**：本批票收口 / 代码门禁出结论（或阻塞 / 超时 / 需裁决）**立即**回报 `director`（收件箱正文 + 门铃），不等 director 来问、不静默挂着。
 6. **复核证据**：队长回报由 devm 复核读数与命令输出后，才能进入验收整合或写入权威文档。
 
 ## 产物
 
-票面由 **pm** 落笔；devm 只在票面末尾追加「实施状态」一节（验收结论、证据路径、合并 sha、残留风险），**不改判据、编号与 Files 边界**，不另建目录、不另写进度报告；`dev-e` 的产出证据随该节归档（>4 经队长回报、≤4 由 devm 自己收）。其它部门产物路径只读不改：pm 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，人类架构与人类计划在 `docs/human/human-arch/`、`docs/human/human-plan/`，anam 的报告在 `docs/analyst/`。`docs/handoff/devm-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
+票面由 **director** 落笔；devm 只在票面末尾追加「实施状态」一节（验收结论、证据路径、合并 sha、残留风险），**不改判据、编号与 Files 边界**，不另建目录、不另写进度报告；`dev-e` 的产出证据随该节归档（>4 经队长回报、≤4 由 devm 自己收）。其它产物路径只读不改：director 的 PRD 与 SPEC 在 `docs/pd/prd/`、`docs/pd/spec/`，人类架构与人类计划在 `docs/human/human-arch/`、`docs/human/human-plan/`，anam 的报告在 `docs/analyst/`。`docs/handoff/devm-{slug}-{YYMMDD-HHMM}-v{N}.md` 仅在用户要求时写。
 
 ## 通信（收件箱文件 + herdr 门铃）
 
@@ -112,7 +113,7 @@ bash dmt-director/scripts/file-claim.sh claim   <path> <owner>   # 重复调用�
 bash dmt-director/scripts/file-claim.sh release <path> <owner>
 ```
 
-- `<owner>` 用「角色:实例」（如 `pm`、`devm`、`devtl1`、`dev-e3`）。
+- `<owner>` 用「角色:实例」（如 `director`、`devm`、`devtl1`、`dev-e3`）。
 - 记录在项目根 `locks/`（不入库）；TTL 30 分钟，过期可抢占，但必须在回报里写明原持有者。
 - `inbox/` 的消息文件不登记（文件名含 seq 与时刻，天然不冲突）。
 - Orca runtime 可连通时（`orca status`），再跑 `orca worktree ps` 看同 worktree 是否有活跃 agent。
@@ -121,5 +122,5 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 ## 指针
 
 - 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
-- 输入：`docs/dev/tickets/`（**pm** 的工单）与 `docs/pd/spec/`（pm 的 SPEC）；devm 只追加「实施状态」
+- 输入：`docs/dev/tickets/`（**director** 的工单）与 `docs/pd/spec/`（director 的 SPEC）；devm 只追加「实施状态」
 - 技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)、[`/improve-codebase-architecture`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/improve-codebase-architecture/SKILL.md)

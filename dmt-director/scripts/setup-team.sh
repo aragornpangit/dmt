@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# director 用：给自己正名，建 pm / devm / anam 三个 pane 并代启动 cbc（创建与启动都幂等）
+# director 用：给自己正名，建 devm（本 tab 右侧）/ anam（独立 tab）两个 pane 并代启动 cbc（创建与启动都幂等）
 # 用法：bash setup-team.sh [--dry-run] [--no-start] [--force-start] [--reload]
 #   --no-start     只建 pane，不启动
 #   --force-start  即使 agent 已在跑也重发启动命令（默认跳过：对运行中的 agent 发启动命令会被当成用户提问）
@@ -71,22 +71,19 @@ ensure_started() {
 h env HERDR_ENV=1 herdr tab rename "$HERDR_TAB_ID" director
 h env HERDR_ENV=1 herdr pane rename "$HERDR_PANE_ID" director
 
-# 2) pm：在 director pane 右侧 split
-pm="$(pane_by_label pm || true)"
-if [ -z "$pm" ]; then
-  pm="$(HERDR_ENV=1 herdr pane split "$HERDR_PANE_ID" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"
-  h env HERDR_ENV=1 herdr pane rename "$pm" pm
+# 2) devm：在 director pane 右侧 split（与 director 同 tab，左 director 右 devm）
+devm="$(pane_by_label devm || true)"
+if [ -z "$devm" ]; then
+  devm="$(HERDR_ENV=1 herdr pane split "$HERDR_PANE_ID" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"
+  h env HERDR_ENV=1 herdr pane rename "$devm" devm
 fi
-ensure_started "$pm" '/dmt-pm'
+ensure_started "$devm" '/dmt-dm'
 
-# 3) devm / anam：各自建 tab
-for role in devm anam; do
-  p="$(pane_by_label "$role" || true)"
-  if [ -z "$p" ]; then
-    p="$(HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "$role" | jq -r '.result.root_pane.pane_id')"
-    h env HERDR_ENV=1 herdr pane rename "$p" "$role"
-  fi
-  case "$role" in devm) skill='/dmt-dm' ;; anam) skill='/dmt-am' ;; esac
-  ensure_started "$p" "$skill"
-done
-echo "team ready: director / pm / devm / anam"
+# 3) anam：独立建 tab
+p="$(pane_by_label anam || true)"
+if [ -z "$p" ]; then
+  p="$(HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label anam | jq -r '.result.root_pane.pane_id')"
+  h env HERDR_ENV=1 herdr pane rename "$p" anam
+fi
+ensure_started "$p" '/dmt-am'
+echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pm），不占 pane"

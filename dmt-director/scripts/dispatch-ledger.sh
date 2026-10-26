@@ -8,11 +8,15 @@
 #   check  <role>                  合规 rc=0；有未派单元 rc=2（Stop hook 用 rc=2 阻断本轮）
 #   report <role>                  打印可粘贴的「并发账」一行
 #   status <role>
+#   ledger-path <role>             打印账本文件路径（parallel-guard 用）
+#   inject -                       SessionStart hook：注入并行纪律与当前 CAP（stdout 进上下文）
+#   nudge -                        PostToolUse hook：水位不满时催派下一波（additionalContext）
+#   CAP：probe-cap.sh 探测（DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > codebuddy 默认 20 > 8）；在途 ≥ CAP 时未派单元视为分波排队，Stop 不阻断
 set -eu
 CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/pm/devm/anam
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam
 resolve_role() {
   r="$1"
   if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
@@ -24,7 +28,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|pm|devm|anam) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam) ;; *) exit 0 ;; esac
 fi
 # 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。
@@ -35,6 +39,7 @@ else
   root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 fi
 ROOT="$root"
+DIR="$(cd "$(dirname "$0")" && pwd)"
 LEDGER="$ROOT/locks/dispatch-$ROLE.tsv"
 mkdir -p "$ROOT/locks"
 
@@ -86,8 +91,12 @@ case "$CMD" in
     [ -n "$left" ] || exit 0
     n="$(awk -F'\t' 'END{print NR}' "$LEDGER")"
     d="$(awk -F'\t' '$2!="planned"{c++} END{print c+0}' "$LEDGER")"
-    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left" >&2
-    echo "[dispatch] 先派后干：把未派单元派出去，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
+    cap="$(bash "$DIR/probe-cap.sh")"
+    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
+    # 分波：在途已达 harness 并发上限 ⇒ 等完成通知再补派下一波，不阻断
+    if [ "${inflight:-0}" -ge "$cap" ]; then exit 0; fi
+    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left（在途 ${inflight:-0} < CAP $cap，可继续派）" >&2
+    echo "[dispatch] 先派后干：每波 min(N, CAP) 把并发派满，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
     exit 2
     ;;
   report)
@@ -97,10 +106,32 @@ case "$CMD" in
     k=$(( n - m ))
     if [ "$k" -lt 0 ]; then k=0; fi
     codes="$(awk -F'\t' '$2=="excused"{printf "%s:%s ", $1, $3}' "$LEDGER" 2>/dev/null)"
-    echo "并发账：单元 $n（$units）→ 派 $m ＋ 未派 $k（${codes:-无}）"
+    cap="$(bash "$DIR/probe-cap.sh")"
+    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
+    extra=""
+    if [ "$k" -gt 0 ] && [ "${inflight:-0}" -ge "$cap" ]; then extra="cap:在途${inflight}>=${cap},下一波补派 "; fi
+    reason="${codes}${extra}"
+    echo "并发账：单元 $n（$units）→ 派 $m ＋ 未派 $k（${reason:-无}）[CAP=${cap}]"
     ;;
   status)
     if [ -f "$LEDGER" ]; then column -t -s "$(printf '\t')" "$LEDGER"; else echo "(no ledger for $ROLE)"; fi
+    ;;
+  ledger-path)
+    echo "$LEDGER"
+    ;;
+  inject)
+    cap="$(bash "$DIR/probe-cap.sh")"
+    echo "并行纪律（dmt）：无依赖单元每波并发派 min(N, CAP) 个子代理（当前 CAP=$cap，probe-cap.sh 探测；N > CAP 分波补满，唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
+    ;;
+  nudge)
+    cap="$(bash "$DIR/probe-cap.sh")"
+    [ -f "$LEDGER" ] || exit 0
+    pending="$(awk -F'\t' '$2=="planned"{c++} END{print c+0}' "$LEDGER")"
+    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
+    if [ "$pending" -ge 1 ] && [ "$inflight" -lt "$cap" ]; then
+      jq -n --arg t "[dispatch] 还有 $pending 个未派单元、在途 $inflight < CAP $cap：立即补派下一波（每波 min(N, CAP)，run_in_background: true），别让并发位空着。" '{hookSpecificOutput:{additionalContext:$t}}'
+    fi
+    exit 0
     ;;
   *) echo "unknown cmd: $CMD" >&2; exit 2 ;;
 esac
