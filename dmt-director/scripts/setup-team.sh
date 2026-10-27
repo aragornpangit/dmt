@@ -23,28 +23,15 @@ missing=""
 [ -n "${HERDR_WORKSPACE_ID:-}" ] || missing="$missing HERDR_WORKSPACE_ID"
 [ -z "$missing" ] || { echo "缺少环境变量:$missing（在 director pane 内执行本脚本）" >&2; exit 2; }
 
+. "$(cd "$(dirname "$0")" && pwd)/lib-dmt.sh"
+
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
-pane_by_label() {
-  HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
-    | jq -r --arg l "$1" '.result.panes[] | select(.label==$l) | .pane_id' | head -1
-}
+pane_by_label() { dmt_pane_by_label "$1"; }
 # agent_status: unknown = 该 pane 没有 agent 在跑；idle/working/blocked = 已在跑
-pane_status() {
-  HERDR_ENV=1 herdr pane get "$1" 2>/dev/null \
-    | jq -r '.result.pane.agent_status // "unknown"' 2>/dev/null || echo unknown
-}
+pane_status() { dmt_pane_status "$1"; }
 # 就绪判据：轮询 agent_status 不再是 unknown。
 # 不要用 wait-output 匹配屏幕文字 —— 对已在跑的 pane 它会立刻命中历史输出，等于没有判据。
-wait_ready() {
-  local pane="$1" i=0 st
-  while [ "$i" -lt 60 ]; do
-    st="$(pane_status "$pane")"
-    if [ "$st" != "unknown" ]; then echo "ready ($st): $pane"; return 0; fi
-    sleep 1; i=$((i + 1))
-  done
-  echo "WARN: $pane still unknown after 60s; skill command sent anyway" >&2
-  return 1
-}
+wait_ready() { dmt_wait_ready "$1" 60 || true; }
 ensure_started() {
   local pane="$1" skill="$2" st
   [ "$START" = 1 ] || { echo "skip start: $pane"; return 0; }

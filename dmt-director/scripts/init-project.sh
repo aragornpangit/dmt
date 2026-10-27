@@ -1,16 +1,29 @@
 #!/usr/bin/env bash
 # 初始化被服务项目的目录与 .gitignore，并跑一次机检（幂等）
-# 用法：bash init-project.sh [项目根目录]（默认当前目录）
+# 用法：bash init-project.sh [项目根目录] [--no-check]（默认当前目录）
+#   --no-check 只建目录与 .gitignore，不跑机检（技能还没装时用，否则机检必然 HAS_FAIL）
 set -eu
-ROOT="$(cd "${1:-$PWD}" && pwd)"
+ROOT=""; CHECK=1
+for a in "$@"; do
+  case "$a" in
+    --no-check) CHECK=0 ;;
+    -*) echo "unknown option: $a" >&2; exit 2 ;;
+    *) ROOT="$(cd "$a" && pwd)" ;;
+  esac
+done
+[ -n "$ROOT" ] || ROOT="$PWD"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p "$ROOT"/docs/{pd/{prd,spec},dev/tickets,analyst,human/{human-arch,human-plan}} \
          "$ROOT"/inbox/{director,devm,anam} "$ROOT"/locks
 
-for line in 'inbox/*/' 'locks/'; do
+for line in 'inbox/*/' 'locks/' '.codebuddy/'; do
   grep -qxF "$line" "$ROOT/.gitignore" 2>/dev/null || echo "$line" >> "$ROOT/.gitignore"
 done
 
 echo "initialized: $ROOT"
-bash "$SCRIPT_DIR/check-dmt-doc-paths.sh" "$ROOT"
+if [ "$CHECK" = 1 ]; then
+  bash "$SCRIPT_DIR/check-dmt-doc-paths.sh" "$ROOT"
+else
+  echo "skip check（--no-check）；装好技能后再跑 bash $SCRIPT_DIR/check-dmt-doc-paths.sh \"$ROOT\""
+fi

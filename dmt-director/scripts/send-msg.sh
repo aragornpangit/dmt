@@ -28,7 +28,8 @@ esac
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
 # 收件箱定位到主工作树根（与 dispatch-ledger 同口径；在 worktree 里跑也指回主树）
-ROOT="$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd)"
+DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
+ROOT="$(dmt_root)"
 # 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
 DIR="$(cd "$(dirname "$0")" && pwd)"
 superior_of() {

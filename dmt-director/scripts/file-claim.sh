@@ -12,13 +12,9 @@ set -u
 
 # 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。
-root="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
-if [ -n "$root" ]; then
-  case "$root" in */.git) root="${root%/.git}" ;; esac
-else
-  root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-fi
-ROOT="$root"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$DIR/lib-dmt.sh"
+ROOT="$(dmt_root)"
 LOCKS="${DMT_LOCKS_DIR:-$ROOT/locks}"
 TTL="${DMT_CLAIM_TTL:-1800}"
 mkdir -p "$LOCKS" 2>/dev/null

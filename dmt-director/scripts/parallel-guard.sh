@@ -11,16 +11,8 @@ case "$tn" in Agent|Task|Teammate|teammate) ;; *) exit 0 ;; esac
 rb="$(printf '%s' "$payload" | jq -r '.tool_input.run_in_background // false' 2>/dev/null || true)"
 [ "$rb" = "true" ] && exit 0
 DIR="$(cd "$(dirname "$0")" && pwd)"
-resolve_role() {
-  r="$1"
-  if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
-  if [ -z "$r" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
-    r="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
-        | jq -r --arg p "$HERDR_PANE_ID" '.result.panes[] | select(.pane_id==$p) | .label' | head -1 || true)"
-  fi
-  printf '%s' "$r"
-}
-ROLE="$(resolve_role "$ROLE")"
+. "$DIR/lib-dmt.sh"
+ROLE="$(dmt_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
   case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi

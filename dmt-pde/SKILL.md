@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.6.0
+version: 5.7.0
 description: 产品工程师(pde{n})，director 自派的产品子代理技能，不占 tab 不占 pane、不进收件箱。受 director 召唤**落笔 PRD / SPEC / 工单**（写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`，director 定口径与验收定稿），并做产品事实取证、用户故事与边界枚举、验收标准核对、既有文档一致性预检；**匹配 `/to-spec`、`/to-tickets` 技能**（与 director 同套，SPEC 与工单方法论一致）。director 需写 PRD / SPEC / 工单或需要产品支撑时，在派发 prompt 里下发本技能生成 pde1…pde{n} 子代理（一单元一实例，无依赖并发、按需求开）。触发词：dmt、pde、产品工程师、产品取证、用户故事、验收标准核对、一致性核查、PRD、SPEC。
 ---
 

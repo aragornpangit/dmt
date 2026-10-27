@@ -13,17 +13,9 @@ fi
 # 归一成绝对路径：hook 偶尔给相对路径，相对形式会绕过下面的 */docs/... 模式
 FILE="$(realpath -m "$FILE" 2>/dev/null || printf '%s' "$FILE")"
 DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$DIR/lib-dmt.sh"
 # 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper（director-helper/devm-helper/anam-helper）
-resolve_role() {
-  r="$1"
-  if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
-  if [ -z "$r" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
-    r="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
-        | jq -r --arg p "$HERDR_PANE_ID" '.result.panes[] | select(.pane_id==$p) | .label' | head -1 || true)"
-  fi
-  printf '%s' "$r"
-}
-ROLE="$(resolve_role "$ROLE")"
+ROLE="$(dmt_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
   case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi

@@ -13,35 +13,30 @@
 #   nudge -                        PostToolUse hook：有未派单元时提示可补派下一批（additionalContext）
 #   CAP：probe-cap.sh 探测（DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > 8）；有效并发上限 n = min(8, cap)；在途 ≥1 属按需推进，Stop 不阻断
 set -eu
+DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$DIR/lib-dmt.sh"
 CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
 # 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper（director-helper/devm-helper/anam-helper）
-resolve_role() {
-  r="$1"
-  if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
-  if [ -z "$r" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
-    r="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
-        | jq -r --arg p "$HERDR_PANE_ID" '.result.panes[] | select(.pane_id==$p) | .label' | head -1 || true)"
-  fi
-  printf '%s' "$r"
-}
-ROLE="$(resolve_role "$ROLE")"
+ROLE="$(dmt_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
   case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi
 # 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。
-root="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
-if [ -n "$root" ]; then
-  case "$root" in */.git) root="${root%/.git}" ;; esac
-else
-  root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-fi
-ROOT="$root"
-DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(dmt_root)"
 LEDGER="$ROOT/locks/dispatch-$ROLE.tsv"
 mkdir -p "$ROOT/locks"
+# 同角色并发写（本体与 helper 同 label、hook 自动记账与手工命令撞车）⇒ 串行化「读-改-写」
+LOCK="$ROOT/locks/.dispatch-$ROLE.lock"
+tries=0
+while ! mkdir "$LOCK" 2>/dev/null; do
+  tries=$((tries + 1))
+  [ "$tries" -lt 100 ] || { echo "[dispatch] 等锁超时：$LOCK" >&2; exit 4; }
+  sleep 0.1
+done
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
 
 # 账本行：unit <TAB> status(planned|dispatched|excused|done) <TAB> code(-|理由码) <TAB> 时间
 # 单元名一律按字段比较（awk），不做正则匹配——单元名含 . * & / 也不会误伤

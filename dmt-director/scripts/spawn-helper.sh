@@ -26,28 +26,16 @@ case "$ROLE" in
   anam) SKILL='/dmt-am' ;;
 esac
 
+. "$(cd "$(dirname "$0")" && pwd)/lib-dmt.sh"
+
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 # 查询类：失败给空（dry-run / 无 herdr 环境也能走完分支打印）
 q() { HERDR_ENV=1 herdr "$@" 2>/dev/null || true; }
 list_panes() { q pane list --workspace "${HERDR_WORKSPACE_ID:-}"; }
-pane_by_label() {
-  list_panes | jq -r --arg l "$1" '.result.panes[]? | select(.label==$l) | .pane_id' 2>/dev/null | head -1 || true
-}
-pane_status() {
-  HERDR_ENV=1 herdr pane get "$1" 2>/dev/null \
-    | jq -r '.result.pane.agent_status // "unknown"' 2>/dev/null || echo unknown
-}
+pane_by_label() { dmt_pane_by_label "$1"; }
+pane_status() { dmt_pane_status "$1"; }
 # 就绪判据：轮询 agent_status 不再是 unknown（与 setup-team.sh 同判据）
-wait_ready() {
-  local pane="$1" i=0 st
-  while [ "$i" -lt 60 ]; do
-    st="$(pane_status "$pane")"
-    if [ "$st" != "unknown" ]; then echo "ready ($st): $pane"; return 0; fi
-    sleep 1; i=$((i + 1))
-  done
-  echo "WARN: $pane still unknown after 60s" >&2
-  return 1
-}
+wait_ready() { dmt_wait_ready "$1" 60 || true; }
 start_pane() {
   local pane="$1"
   [ "$START" = 1 ] || { echo "skip start: $pane"; return 0; }

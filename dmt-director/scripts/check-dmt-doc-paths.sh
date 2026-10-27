@@ -145,8 +145,8 @@ check "$CONTRACT" 'min(8, cap)' '团队契约'
 check "$CONTRACT" '按需求开' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '按需求开' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '按需求开' 'anam'
-check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate' 'devm'
-check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate' 'anam'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate 方式' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate 方式' 'anam'
 
 echo
 echo "== 4c) 门铃通道必须登记（五种 harness 优先 agent prompt，其余回退） =="
@@ -230,8 +230,28 @@ for role in dmt-director dmt-pde dmt-dm dmt-am; do
 done
 
 echo
+echo "== 4i-b) 技能链接文字必须与上游目录名逐字一致 =="
+check_links() {
+  local file="$1" who="${2:-$(basename "$(dirname "$file")")}" n=0 bad=0 label dir
+  [ -f "$file" ] || return 0
+  while IFS= read -r m; do
+    label="$(printf '%s' "$m" | sed -n 's#^\[`\{0,1\}/\([a-z-]*\)`\{0,1\}\].*#\1#p')"
+    dir="$(printf '%s' "$m" | sed -n 's#.*/skills/[a-z-]*/\([a-z-]*\)/SKILL\.md).*#\1#p')"
+    [ -n "$label" ] && [ -n "$dir" ] || continue
+    n=$((n + 1))
+    if [ "$label" != "$dir" ]; then
+      echo "FAIL $who 链接文字 /$label 与上游目录 $dir 不一致"
+      fail=1; bad=1
+    fi
+  done < <(grep -oE '\[`?/[a-z-]+`?\]\(https://raw\.githubusercontent\.com/mattpocock/skills/main/skills/[a-z-]+/[a-z-]+/SKILL\.md\)' "$file")
+  [ "$bad" = 1 ] || echo "OK   $who 的 $n 条技能链接文字与上游目录名一致"
+}
+check_links "$CONTRACT" '团队契约'
+for role in dmt-director dmt-pde dmt-dm dmt-am; do check_links "$SKILLS_DIR/$role/SKILL.md" "$role"; done
+
+echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh parallel-guard.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh parallel-guard.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done

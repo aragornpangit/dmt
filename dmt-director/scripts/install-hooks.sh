@@ -23,7 +23,8 @@ if [ "$DRY" = 1 ]; then echo "would write $CFG (scripts: $DIR)"; exit 0; fi
 mkdir -p "$(dirname "$CFG")"
 # a copied script tree loses the executable bit; the hook runs via `bash` but 4j checks -x
 chmod +x "$DIR"/*.sh 2>/dev/null || true
-[ -f "$CFG" ] && cp "$CFG" "$CFG.bak-$(date +%Y%m%d%H%M%S)"
+# 固定覆盖一份 .bak（原来每次装都留一份带时间戳的副本，无限堆积）
+[ -f "$CFG" ] && cp "$CFG" "$CFG.bak"
 
 python3 - "$CFG" "$DIR" <<'PY'
 import json, os, sys
