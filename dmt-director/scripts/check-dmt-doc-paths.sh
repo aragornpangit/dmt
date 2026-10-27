@@ -326,7 +326,7 @@ for k in '文件面矩阵' '派 M' '验收面'; do
     echo "FAIL 队列纪律要素缺失          $k"; fail=1
   fi
 done
-if [ -f "${DMT_REPO_ROOT:-/nonexistent}/dmt-director/INCIDENT-20261027-serial-queue.md" ] || [ -f "$(dirname "$CONTRACT")/../dmt-director/INCIDENT-20261027-serial-queue.md" ]; then
+if [ -f "${DMT_REPO_ROOT:-/nonexistent}/logs/2026-10-27-serial-queue-incident.md" ] || [ -f "$(dirname "$CONTRACT")/../logs/2026-10-27-serial-queue-incident.md" ]; then
   echo "OK   事故复盘档在位"
 else
   echo "INFO 事故复盘档仅在技能仓内（目标项目不安装，不判红）"
