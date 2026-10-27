@@ -189,10 +189,9 @@ check_row "$CONTRACT" 'ana-e' '/research' 'ana-e 行'
 check_row "$CONTRACT" 'ana-e' '/grilling' 'ana-e 行'
 check_row "$CONTRACT" 'ana-e' '/grill-me' 'ana-e 行'
 check_row "$CONTRACT" 'ana-e' '/grill-with-docs' 'ana-e 行'
-# reviewer{n}：验收必用 /review（= /code-review，同一技能）
-check_row "$CONTRACT" 'reviewer{n}' '/review' 'reviewer 行'
+# reviewer{n}：验收必用 /code-review（上游：mattpocock/skills engineering/code-review）
 check_row "$CONTRACT" 'reviewer{n}' '/code-review' 'reviewer 行'
-check "$SKILLS_DIR/dmt-director/SKILL.md" '/review' 'director'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '/code-review' 'director'
 
 echo
 echo "== 4f) 文件占用（编辑前检查）必须登记 =="
@@ -331,6 +330,25 @@ if [ -f "${DMT_REPO_ROOT:-/nonexistent}/logs/2026-10-27-serial-queue-incident.md
   echo "OK   事故复盘档在位"
 else
   echo "INFO 事故复盘档仅在技能仓内（目标项目不安装，不判红）"
+fi
+
+echo
+echo "== 4o) 派发 prompt 文件写入纪律必须登记（改 bash 用单引号 heredoc／禁 JS 模板字符串／Edit 锚点唯一） =="
+# 三份派发技能 + pde（子代理技能：同样收 prompt、同样用 Edit）与生成器 fanout.sh 均须带该纪律
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md"; do
+  if grep -q '文件写入纪律' "$f" 2>/dev/null; then
+    echo "OK   文件写入纪律              $(basename "$(dirname "$f")")/$(basename "$f")"
+  else
+    echo "FAIL 缺文件写入纪律            $f"; fail=1
+  fi
+done
+check "$CONTRACT" '单引号 heredoc' '团队契约'
+check "$CONTRACT" '模板字符串' '团队契约'
+check "$CONTRACT" 'oldString' '团队契约'
+if grep -q '文件写入纪律' "$(dirname "$(readlink -f "$0")")/fanout.sh" 2>/dev/null; then
+  echo "OK   文件写入纪律              fanout.sh"
+else
+  echo "FAIL 缺文件写入纪律            fanout.sh"; fail=1
 fi
 
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="

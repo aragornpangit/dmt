@@ -26,7 +26,7 @@ while IFS=$'\t' read -r unit input bounds product criteria timeout; do
   n=$((n + 1))
   wave=$(( (n - 1) / CAP + 1 ))
   echo "[单元 $n · 第 $wave 波] 子代理 prompt："
-  echo "你是 $ROLE 的子代理。单元：$unit。输入：$input。边界：$bounds。产物：$product。判据：$criteria。回报：结论+证据（一手出处/可复现命令）+分级[OBS]/[INF]/[UNK]。超时：${timeout:-2700000}。"
+  echo "你是 $ROLE 的子代理。单元：$unit。输入：$input。边界：$bounds。产物：$product。判据：$criteria。回报：结论+证据（一手出处/可复现命令）+分级[OBS]/[INF]/[UNK]。超时：${timeout:-2700000}。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。"
   echo "---"
 done < "$UNITS"
 echo "共 $n 个单元：先 dispatch-ledger.sh plan $ROLE <单元名...> 落账（先派后干），再在同一回复内并发派 min($n, $CAP) 个（按需求开，上限 min(8, cap)，run_in_background: true）；N 超上限分批，唤醒后先补派再收口。"

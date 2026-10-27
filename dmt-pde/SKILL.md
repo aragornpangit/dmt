@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.9.0
+version: 5.10.0
 description: 产品工程师(pde{n})，director 自派的产品子代理技能，不占 tab 不占 pane、不进收件箱。受 director 召唤**落笔 PRD / SPEC / 工单**（写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`，director 定口径与验收定稿），并做产品事实取证、用户故事与边界枚举、验收标准核对、既有文档一致性预检；**匹配 `/to-spec`、`/to-tickets` 技能**（与 director 同套，SPEC 与工单方法论一致）。director 需写 PRD / SPEC / 工单或需要产品支撑时，在派发 prompt 里下发本技能生成 pde1…pde{n} 子代理（一单元一实例，无依赖并发、按需求开）。触发词：dmt、pde、产品工程师、产品取证、用户故事、验收标准核对、一致性核查、PRD、SPEC。
 ---
 
@@ -18,14 +18,14 @@ pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1
 
 ## 工作流（单实例）
 
-1. **接派**：prompt 必含 —— 单元描述、输入路径、边界（Files）、产物格式、判据、回报格式、`timeoutMs`。缺任一项**先回问**，不自行脑补。
+1. **接派**：prompt 必含 —— 单元描述、输入路径、边界（Files）、产物格式、判据、回报格式、`timeoutMs`、**文件写入纪律**（改 bash 用单引号 heredoc／Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 `oldString` 必须唯一）。缺任一项**先回问**，不自行脑补。
 2. **取证 / 核对 / 落笔**：按单元执行（落笔类单元在 director 给的口径与 Files 边界内写 PRD / SPEC / 工单，交 director 验收定稿）。一手来源优先（官方文档 / 规格 / 可复现命令与输出）；二手来源必须标注，不得冒充一手。
 3. **回报（完成即报，不傻等）**：结论 + 证据（一手出处 / 可复现命令）+ 分级（`[OBS]` 直接观测 / `[INF]` 推断 / `[UNK]` 未知）+ 未解问题。**干完立即交回报**，阻塞 / 超时同样立即报，不等 director 来问。
 
 ## 并行口径（director 派发时执行，实例须知）
 
 - 无依赖产品单元 **≥2 ⇒ 并发派**，每波 `min(N, CAP)`，按需求开（上限 min(8, cap)，N 超上限分批）；CAP = min(8, cap)（cap = 当前 harness 最大支持的 agent 数，probe-cap.sh 输出即 CAP），一单元一 `pde{n}`。
-- prompt 骨架（照填，不要现编）：`你是 director 的 pde{n} 子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。`
+- prompt 骨架（照填，不要现编）：`你是 director 的 pde{n} 子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`
 
 ## 强制技能（写进每份 prompt）
 
