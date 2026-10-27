@@ -58,7 +58,8 @@ if [ "$DOTEAM" = 1 ]; then
   [ -n "${HERDR_PANE_ID:-}" ] || missing="$missing HERDR_PANE_ID"
   [ -n "${HERDR_TAB_ID:-}" ] || missing="$missing HERDR_TAB_ID"
   [ -n "${HERDR_WORKSPACE_ID:-}" ] || missing="$missing HERDR_WORKSPACE_ID"
-  if [ -z "$missing" ]; then run bash "$SCRIPT_DIR/setup-team.sh"
+  # 建 pane 的 cwd 取 setup-team.sh 的 $PWD，必须先进项目根再调用，否则 pane 会落在 scripts/ 目录
+  if [ -z "$missing" ]; then ( cd "$ROOT" && run bash "$SCRIPT_DIR/setup-team.sh" )
   else echo "[launch] herdr 环境不齐（缺:$missing），跳过建团队；在 director pane 内重跑本脚本或直接 bash $SCRIPT_DIR/setup-team.sh"; fi
 else
   echo "[launch] 跳过建团队"
