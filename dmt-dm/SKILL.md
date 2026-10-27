@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.7.0
+version: 5.7.1
 description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director。接 director 落盘的开发工单（ticket），**直接派 dev-e 工程师子代理**实施：devm 亲自建 worktree（一票一 worktree）、按需求开 dev-e（上限 min(8, cap)，N 超上限分批）、收 diff 做实施层初检、复核一手出处；**代码门禁**：负责评审（逐条判据 PASS/FAIL）、整合开发部门交付物，不拆票；**代码库归 devm 管理：push 与 merge 归 devm**（收到 director 验收通过通知后才执行；装机归 director）。**可依用户要求与 tickets 计划直接开工，知会 director 即可**。当需要接单排期、派发与验收 ticket、或修复缺陷时使用。触发词：dmt、devm、开发经理、接单、ticket、工单、排期、验收、整合、worktree、dev-e、pane label。
 ---
 

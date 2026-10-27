@@ -4,6 +4,9 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 **产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
 **经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开，上限 `min(8, cap)`）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
 
+> **作用域（Scope，必读）**：本仓全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（用 `init-project.sh <项目根>` 初始化的那个 project root）。
+> **维护 `dmt` / `dmt-en` 等技能仓自身时不适用**：维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权，也不需 devm 代推**。
+
 | 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责摘要 |
 |---|---|---|---|---|---|
 | 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}`） | 唯一入口；接需求与验收口径、召唤 `pde{n}` 落笔 PRD / SPEC / 工单（director 定稿）、落笔人类文档并出文档门禁结论、分派、裁决、维护 pane/tab；抽查放行（merge / push 归 devm，不代推）与装机；**不替代** devm 的代码评审 |
