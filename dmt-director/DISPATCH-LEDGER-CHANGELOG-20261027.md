@@ -44,3 +44,11 @@ cp scripts/dispatch-ledger.sh.orig-20261027 scripts/dispatch-ledger.sh   # 一�
 
 - 台账范式与完整 CLI：`/home/panxiaoyong/pxy/projects26h2/max-subagents/docs/ledger.md`
 - 设计与 7 缺陷取证：`/home/panxiaoyong/pxy/projects26h2/max-subagents/docs/ledger-design.md`
+
+## 追加变更（2026-10-27）：`is-subagent` 子命令
+
+`self-work-guard.sh` 的子代理豁免判据从内联 jq 收敛为**单一来源**：经 `dispatch-ledger.sh is-subagent` 查询 max-subagents 内核 `policy.is_subagent()`。
+
+- `ledger.py` 新增 `is-subagent` 子命令：stdin 读 hook payload，命中子代理上下文 `rc=0`、主线程 `rc=1`，stdout 干净（只以退出码表达结论）。
+- `dispatch-ledger.sh` 新增 `is-subagent` 透传 case：**不套 `kernel_pass`**——`kernel_pass` 会把非零 rc 统一 fail-open 成 0，`rc=1`（主线程）会被误放成「是子代理」，主线程豁免失守；壳层仅在内核不可用时 fail-open `rc=0`。
+- `self-work-guard.sh` 删除内联 jq 判据，改为调用 `bash dispatch-ledger.sh is-subagent <ROLE>`；豁免语义不变（是子代理 → 放行）。

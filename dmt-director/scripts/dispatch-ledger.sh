@@ -28,6 +28,10 @@
 #
 # 【对外契约（dmt hook 与人在用，保持不变）】
 #   子命令：plan / inc / excuse / done / append / check / report / status / ledger-path / inject / nudge
+#     is-subagent：stdin payload 是否子代理上下文的布尔查询（rc=0 是 / rc=1 不是）。
+#     判据单一来源为内核 policy.is_subagent()（self-work-guard.sh 经此查询，不再自带
+#     内联 jq 副本）。注意 rc=1 是有效结果「不是子代理」，不走 kernel_pass 的
+#     fail-open 映射；仅内核不可用时 fail-open rc=0（视为子代理放行）。
 #     append：SendMessage 追加新单元过账（2026-10-27 事故 P3）——逐个 inc --unit，
 #     账内 planned 就地认领、账外单元追加一行 dispatched；只增不改，不动既有行
 #     （勿用 plan 重排：dmt 壳 plan 固定 --reset，会清掉已派/完成行、压低「派 M」）
@@ -203,6 +207,20 @@ case "$CMD" in
     # 契约 8：内核输出即 hookSpecificOutput.additionalContext JSON
     rc=0
     kernel_pass nudge --ledger-path "$LEDGER" --session "$ROLE" || rc=$?
+    exit "$rc"
+    ;;
+  is-subagent)
+    # 布尔查询：rc=0 是子代理 / rc=1 不是。不能直接套 kernel_pass —— 它把非 0/2
+    # 一律 fail-open 成 0，会把「不是子代理」（rc=1，有效结果）误报成「是」，导致
+    # self-work-guard.sh 对主线程整体放行。这里原样透传 0/1，只在内核不可用（脚本
+    # 缺失 / 无 python3）时 fail-open rc=0：视为子代理放行（guard 是纪律闸非安全闸，
+    # 宁可漏拦不可错杀主线程的正常流程）。
+    if ! kernel_available; then
+      echo "[dispatch] 台账内核不可用（$KERNEL），is-subagent fail-open：rc=0（视为子代理）" >&2
+      exit 0
+    fi
+    rc=0
+    printf '%s' "$payload" | python3 "$KERNEL" is-subagent || rc=$?
     exit "$rc"
     ;;
   *)
