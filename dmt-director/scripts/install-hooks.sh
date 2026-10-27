@@ -51,9 +51,12 @@ def add(event, matcher, cmd):
 add("PostToolUse", "*", "bash " + d + "/dispatch-ledger.sh inc - auto")
 add("PostToolUse", "*", "bash " + d + "/dispatch-ledger.sh nudge -")
 add("Stop", None, "bash " + d + "/dispatch-ledger.sh check -")
-add("PreToolUse", "*", "bash " + d + "/self-work-guard.sh -")
-add("PreToolUse", "*", "bash " + d + "/parallel-guard.sh -")
-add("SessionStart", None, "bash " + d + "/dispatch-ledger.sh inject -")
+# 三条 guard 已停用（2026-10-27），改为 skill 语义约束 —— 先派后干 / 强制后台并行 / SessionStart
+# 纪律注入，现由 dmt-director / dmt-dm / dmt-am 各自 SKILL.md 的强制条款承担。
+# 对应 .sh 文件保留不删（机检 4j 仍要求可执行）；下方清理循环仍会移除旧装的这三条注册。
+# add("PreToolUse", "*", "bash " + d + "/self-work-guard.sh -")
+# add("PreToolUse", "*", "bash " + d + "/parallel-guard.sh -")
+# add("SessionStart", None, "bash " + d + "/dispatch-ledger.sh inject -")
 json.dump(data, open(cfg, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print("hooks written to", cfg)
 PY
