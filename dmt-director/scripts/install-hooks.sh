@@ -48,10 +48,10 @@ def add(event, matcher, cmd):
     hooks.setdefault(event, []).append(entry)
 # matcher "*" everywhere: the scripts filter by tool_name / file path themselves
 add("PostToolUse", "*", "bash " + d + "/dispatch-ledger.sh inc - auto")
-add("PostToolUse", "TaskOutput|Agent|Task|Teammate", "bash " + d + "/dispatch-ledger.sh nudge -")
+add("PostToolUse", "*", "bash " + d + "/dispatch-ledger.sh nudge -")
 add("Stop", None, "bash " + d + "/dispatch-ledger.sh check -")
 add("PreToolUse", "*", "bash " + d + "/self-work-guard.sh -")
-add("PreToolUse", "Agent|Task|Teammate", "bash " + d + "/parallel-guard.sh -")
+add("PreToolUse", "*", "bash " + d + "/parallel-guard.sh -")
 add("SessionStart", None, "bash " + d + "/dispatch-ledger.sh inject -")
 json.dump(data, open(cfg, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print("hooks written to", cfg)

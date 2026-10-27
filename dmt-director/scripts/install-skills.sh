@@ -6,6 +6,11 @@
 set -eu
 TARGET="${1:?usage: install-skills.sh <project-root> [--copy]}"
 MODE="${2:-link}"
+case "$MODE" in
+  link) ;;
+  --copy|copy) MODE=copy ;;
+  *) echo "unknown arg: $2（只认 --copy）" >&2; exit 2 ;;
+esac
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="$(cd "$TARGET" && pwd)"
 SKILLS="dmt-director dmt-pde dmt-dm dmt-am"

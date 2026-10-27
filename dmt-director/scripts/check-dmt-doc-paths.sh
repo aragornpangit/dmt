@@ -7,11 +7,11 @@ set -u
 
 ROOT="$(cd "${1:-$PWD}" && pwd)" || exit 2
 SKILLS_DIR="${DMT_SKILLS_DIR:-$ROOT/.agents/skills}"
-# 契约定位：优先项目内的 docs/team.md，回退到脚本真实位置的上一级（脚本与本仓 team.md 同级时）
-if [ -f "$ROOT/docs/team.md" ]; then
-  CONTRACT="$ROOT/docs/team.md"
-else
-  CONTRACT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)/team.md"
+# 契约定位：项目内 docs/team.md（安装副本）优先；只有脚本本身就在 $ROOT 的技能仓里时才回退到仓内正本。
+# 回退不能无条件：否则目标项目缺契约时会被技能仓的 team.md 顶替，机检报假绿。
+CONTRACT="$ROOT/docs/team.md"
+if [ ! -f "$CONTRACT" ] && [ "$(cd "$(dirname "$(readlink -f "$0")")/../.." && pwd)" = "$ROOT" ]; then
+  CONTRACT="$ROOT/dmt-director/team.md"
 fi
 
 # 六个产物目录（docs 下）+ 收件箱根（项目根下，不在 docs/ 内）
@@ -20,6 +20,10 @@ DOC_DIRS="docs/pd/prd docs/pd/spec docs/dev/tickets docs/analyst docs/human/huma
 fail=0
 echo "项目根：  $ROOT"
 echo "技能目录：$SKILLS_DIR"
+echo "契约文件：$CONTRACT"
+for r in dmt-director dmt-pde dmt-dm dmt-am; do
+  if [ -L "$SKILLS_DIR/$r" ]; then echo "WARN 技能为软链（校验的是技能仓本体）：$SKILLS_DIR/$r"; break; fi
+done
 echo
 echo "== 1) 六个产物目录与根目录 inbox/ 必须存在 =="
 for d in $DOC_DIRS; do
@@ -40,6 +44,8 @@ fi
 echo
 echo "== 2) 四个技能必须指向各自唯一目录（PRD / SPEC / 工单 / 人类文档归 dmt-director；dmt-pde 为 pde{n} 子代理技能） =="
 # 负向断言：命中禁用表述即 FAIL（grep -E）
+# 只查正文：§7 机检清单与 §8 变更记录会原样复述断言字面，整文件 grep 会被自己「自证」
+_body() { sed -n '1,/^## 7\./p' "$1"; }
 check_absent() {
   local file="$1" pat="$2" who="${3:-}"
   [ -n "$who" ] || who="$(basename "$(dirname "$file")")"
@@ -48,11 +54,21 @@ check_absent() {
     fail=1
     return
   fi
-  if grep -qE -- "$pat" "$file"; then
+  if _body "$file" | grep -qE -- "$pat"; then
     echo "FAIL $who 含禁用表述 /$pat/"
     fail=1
   else
     echo "OK   $who 不含禁用表述 /$pat/"
+  fi
+}
+check_row() { # check_row <file> <行首 id> <want> <who>：按表格行锚定，防止 §7 / §8 的复述顶替
+  local file="$1" row="$2" want="$3" who="${4:-$2}"
+  if [ ! -f "$file" ]; then echo "FAIL 未找到              $who（$file）"; fail=1; return; fi
+  if _body "$file" | grep -F -- "| \`$row\` |" | grep -q -- "$want"; then
+    echo "OK   $who 行含 $want"
+  else
+    echo "FAIL $who 行缺 $want（按行锚定未命中）"
+    fail=1
   fi
 }
 check() {
@@ -63,7 +79,7 @@ check() {
     fail=1
     return
   fi
-  if grep -q -- "$want" "$file"; then
+  if _body "$file" | grep -q -- "$want"; then
     echo "OK   $who 含 $want"
   else
     echo "FAIL $who 缺 $want"
@@ -80,6 +96,9 @@ check "$SKILLS_DIR/dmt-pde/SKILL.md" 'pde{n}' 'dmt-pde'
 check "$SKILLS_DIR/dmt-director/SKILL.md" 'docs/team.md'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'docs/dev/tickets/'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'docs/analyst/'
+# 互斥：别人的产物目录不得出现在本角色技能里（只查正文，软链安装时同样生效）
+# 只查「不得落笔」的目录：dmt-am 不得把 PRD / 工单当自己的产物（只读引用其它目录不算越界）
+check_absent "$SKILLS_DIR/dmt-am/SKILL.md" 'docs/pd/prd/|docs/dev/tickets/' 'dmt-am 越界'
 
 echo
 echo "== 2b) 组织归属：director 管 devm/anam，产品线只用 pde{n} 子代理 =="
@@ -142,7 +161,7 @@ check "$CONTRACT" '至少每完成一个 ticket 推送一次' '团队契约'
 check "$CONTRACT" '至少每小时' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'push 与 merge 归 devm' 'devm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不代推' 'director'
-check_absent "$SKILLS_DIR/dmt-director/SKILL.md" 'git push.{0,3}只由 director' 'director'
+check_absent "$SKILLS_DIR/dmt-director/SKILL.md" 'git push[^。]{0,20}只由[ ]*director' 'director'
 
 echo
 echo "== 4e) mattpocock 强制技能必须逐角色登记 =="
@@ -161,13 +180,19 @@ check "$SKILLS_DIR/dmt-pde/SKILL.md" '/to-tickets' 'dmt-pde'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-me' 'anam'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-with-docs' 'anam'
 # 工程师吸收的原队长执行技能（登记在契约角色表 dev-e / ana-e 行）
-check "$CONTRACT" '/tdd' 'dev-e 行'
-check "$CONTRACT" '/implement' 'dev-e 行'
-check "$CONTRACT" '/diagnosing-bugs' 'dev-e 行'
-check "$CONTRACT" '`/rea`' 'ana-e 行'
-check "$CONTRACT" '/grilling' 'ana-e 行'
-check "$CONTRACT" '/grill-me' 'ana-e 行'
-check "$CONTRACT" '/grill-with-docs' 'ana-e 行'
+check_row "$CONTRACT" 'dev-e' '/tdd' 'dev-e 行'
+check_row "$CONTRACT" 'dev-e' '/implement' 'dev-e 行'
+check_row "$CONTRACT" 'dev-e' '/code-review' 'dev-e 行'
+check_row "$CONTRACT" 'dev-e' '/diagnosing-bugs' 'dev-e 行'
+check_row "$CONTRACT" 'ana-e' '`/rea`' 'ana-e 行'
+check_row "$CONTRACT" 'ana-e' '/research' 'ana-e 行'
+check_row "$CONTRACT" 'ana-e' '/grilling' 'ana-e 行'
+check_row "$CONTRACT" 'ana-e' '/grill-me' 'ana-e 行'
+check_row "$CONTRACT" 'ana-e' '/grill-with-docs' 'ana-e 行'
+# reviewer{n}：验收必用 /review（= /code-review，同一技能）
+check_row "$CONTRACT" 'reviewer{n}' '/review' 'reviewer 行'
+check_row "$CONTRACT" 'reviewer{n}' '/code-review' 'reviewer 行'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '/review' 'director'
 
 echo
 echo "== 4f) 文件占用（编辑前检查）必须登记 =="

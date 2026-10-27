@@ -16,10 +16,12 @@ for a in "$@"; do
     *) echo "unknown arg: $a" >&2; exit 2 ;;
   esac
 done
-: "$HERDR_ENV"
-: "$HERDR_PANE_ID"
-: "$HERDR_TAB_ID"
-: "$HERDR_WORKSPACE_ID"
+missing=""
+[ -n "${HERDR_ENV:-}" ] || missing="$missing HERDR_ENV"
+[ -n "${HERDR_PANE_ID:-}" ] || missing="$missing HERDR_PANE_ID"
+[ -n "${HERDR_TAB_ID:-}" ] || missing="$missing HERDR_TAB_ID"
+[ -n "${HERDR_WORKSPACE_ID:-}" ] || missing="$missing HERDR_WORKSPACE_ID"
+[ -z "$missing" ] || { echo "缺少环境变量:$missing（在 director pane 内执行本脚本）" >&2; exit 2; }
 
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 pane_by_label() {
@@ -74,16 +76,35 @@ h env HERDR_ENV=1 herdr pane rename "$HERDR_PANE_ID" director
 # 2) devm：在 director pane 右侧 split（与 director 同 tab，左 director 右 devm）
 devm="$(pane_by_label devm || true)"
 if [ -z "$devm" ]; then
-  devm="$(HERDR_ENV=1 herdr pane split "$HERDR_PANE_ID" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"
-  h env HERDR_ENV=1 herdr pane rename "$devm" devm
+  if [ "$DRY" = 1 ]; then
+    echo "+ herdr pane split $HERDR_PANE_ID --direction right --cwd $PWD --no-focus" >&2
+    echo "+ herdr pane rename <devm-pane> devm" >&2
+    devm="<devm-pane>"
+  else
+    devm="$(HERDR_ENV=1 herdr pane split "$HERDR_PANE_ID" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
+    [ -n "$devm" ] || { echo "ERROR: pane split 失败（devm）" >&2; exit 4; }
+    HERDR_ENV=1 herdr pane rename "$devm" devm
+  fi
 fi
 ensure_started "$devm" '/dmt-dm'
 
 # 3) anam：独立建 tab
 p="$(pane_by_label anam || true)"
 if [ -z "$p" ]; then
-  p="$(HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label anam | jq -r '.result.root_pane.pane_id')"
-  h env HERDR_ENV=1 herdr pane rename "$p" anam
+  # 幂等按 tab label 判：已有 anam tab（pane label 漂移）⇒ 取该 tab 的 pane 改名，不再建第二个 tab
+  tab="$(HERDR_ENV=1 herdr tab list --workspace "$HERDR_WORKSPACE_ID" | jq -r '.result.tabs[] | select(.label=="anam") | .tab_id' | head -1)"
+  if [ -n "$tab" ]; then
+    p="$(HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" | jq -r --arg t "$tab" '.result.panes[] | select(.tab_id==$t) | .pane_id' | head -1)"
+    h env HERDR_ENV=1 herdr pane rename "$p" anam
+  elif [ "$DRY" = 1 ]; then
+    echo "+ herdr tab create --workspace $HERDR_WORKSPACE_ID --cwd $PWD --label anam" >&2
+    echo "+ herdr pane rename <anam-pane> anam" >&2
+    p="<anam-pane>"
+  else
+    p="$(HERDR_ENV=1 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label anam | jq -r '.result.root_pane.pane_id // empty')"
+    [ -n "$p" ] || { echo "ERROR: tab create 失败（anam）" >&2; exit 4; }
+    HERDR_ENV=1 herdr pane rename "$p" anam
+  fi
 fi
 ensure_started "$p" '/dmt-am'
 echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pde），不占 pane"

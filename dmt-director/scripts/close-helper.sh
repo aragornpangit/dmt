@@ -12,7 +12,10 @@ done
 case "$ROLE" in director|devm|anam) ;; *) echo "role must be director|devm|anam" >&2; exit 2 ;; esac
 LABEL="${ROLE}-helper"
 
-list="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null || true)"
+if ! list="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null)"; then
+  echo "ERROR: herdr pane list 失败，无法确认 $LABEL 状态（不按已关闭处理）" >&2
+  exit 4
+fi
 pane="$(printf '%s' "$list" | jq -r --arg l "$LABEL" '.result.panes[]? | select(.label==$l) | .pane_id' 2>/dev/null | head -1 || true)"
 if [ -z "$pane" ]; then
   if [ "$DRY" = 1 ] && [ -z "$list" ]; then

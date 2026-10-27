@@ -8,7 +8,8 @@ set -eu
 ROLE="${1:?usage: fanout.sh <role> <units-file> [--cap N]}"
 UNITS="${2:?missing units file}"
 CAPARG=""
-if [ "${3:-}" = "--cap" ]; then CAPARG="${4:?--cap needs a value}"; fi
+if [ "${3:-}" = "--cap" ]; then CAPARG="${4:?--cap needs a value}";
+elif [ -n "${3:-}" ]; then echo "unknown arg: $3（只认 --cap N）" >&2; exit 2; fi
 [ -f "$UNITS" ] || { echo "units file not found: $UNITS" >&2; exit 2; }
 DIR="$(cd "$(dirname "$0")" && pwd)"
 CAP="${CAPARG:-$(bash "$DIR/probe-cap.sh")}"

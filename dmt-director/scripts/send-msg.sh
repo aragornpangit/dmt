@@ -48,6 +48,16 @@ fi
 BOX="$ROOT/inbox/$TO"
 mkdir -p "$BOX/.doing"
 
+# 串行化「算号 + 落盘 + 写 .seq」：同一 inbox 有多个写者（devm / anam / 三个 helper）
+LOCK="$BOX/.seq.lock"
+tries=0
+while ! mkdir "$LOCK" 2>/dev/null; do
+  tries=$((tries + 1))
+  [ "$tries" -lt 300 ] || { echo "[send-msg] 等锁超时：$LOCK" >&2; exit 4; }
+  sleep 0.1
+done
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+
 # 扫描自愈：根目录与 .doing/ 里的现有最大号（.seq 丢失或被拷贝时兜底）
 scan_max="$(find "$BOX" -maxdepth 2 -name '[0-9]*-*' -printf '%f\n' 2>/dev/null \
             | sed -n 's/^0*\([0-9]\{1,\}\)-.*/\1/p' | sort -n | tail -1 || true)"
@@ -72,6 +82,7 @@ if [ "$DRY" = 1 ]; then
 fi
 cp "$BODY" "$BOX/$NAME"
 printf '%d\n' "$seq_num" > "$BOX/.seq.tmp" && mv "$BOX/.seq.tmp" "$BOX/.seq"
+rmdir "$LOCK" 2>/dev/null || true; trap - EXIT
 
 # helper 的单向汇报只写箱、不按门铃（无门铃往返）：本体扫箱收取
 case "$FROM" in

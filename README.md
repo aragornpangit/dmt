@@ -25,10 +25,11 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 | 角色 | 交付物（落盘位置） |
 |---|---|
-| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（`pde{n}` 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；评审结论（收件箱）；装机 |
+| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（PRD / SPEC / 工单由 `pde{n}` 落笔、director 定稿；取证类 pde 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；评审结论（收件箱）；装机 |
 | `devm` | 票面末尾「实施状态」；合并后的主干代码；`feat/{ticket-id}` 分支提交（worktree）；实施层初检结论；验收证据（收件箱回报）；**merge 与 push**；GitLab 推送（每 ticket 一推 ＋ 每小时巡检） |
 | `anam` | `docs/analyst/` 调研报告 ＋ `docs/analyst/evidence/` 一手证据；取证回报与一手出处复核 |
-| `pde{n}` / `dev-e` / `ana-e` | 取证材料 / worktree 代码提交 / 核对材料（经派生者收口） |
+| `pde{n}` | `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 落笔（director 定稿） |
+| `dev-e` / `ana-e` | worktree 代码提交 / 核对材料（经派生者收口，不写收件箱） |
 
 **三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**
 
@@ -37,7 +38,7 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 成员运行在 Herdr（终端多智能体复用器）中，**按 pane label 识别伙伴**（label 与角色名同名、全 workspace 唯一；不看 tab 内位置，pane id 每次发送前重查）。
 **角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**：先 `msg-take.sh` 移到 `inbox/<自己>/.doing/`（认领），办完 `msg-done.sh` 删除（详见 `team.md` §1.3）。
-工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开，上限 `min(8, cap)`）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → director 按票数派 reviewer1…reviewer{n} 对照同 spec-seq 的 SPEC+ticket 逐条验收 → 通过通知 devm merge/push（reviewer{n} 为子代理、不占 pane 不装技能，`/code-review` 写进派发 prompt，按需求开、上限 `min(8, cap)`；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 devm 返工、不得先 merge/push。装机（`adb install` 等）**只许 `director` 执行**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
+工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开，上限 `min(8, cap)`）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → director 按票数派 reviewer1…reviewer{n} 对照同 spec-seq 的 SPEC+ticket 逐条验收 → 通过通知 devm merge/push（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt，按需求开、上限 `min(8, cap)`；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 devm 返工、不得先 merge/push。装机（`adb install` 等）**只许 `director` 执行**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
 
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
 
@@ -66,7 +67,7 @@ bash dmt-director/scripts/install-skills.sh <项目根>
 bash dmt-director/scripts/install-skills.sh <项目根> --copy
 ```
 
-脚本做五件事：建 `.agents/skills/` 与 `<项目根>/dmt-director/`；软链或复制四个技能目录；把 `team.md` 复制到 `docs/team.md`；把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做四件事：① 建 `.agents/skills/` 并软链或复制四个技能目录；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 复制到 `docs/team.md`（机检读这份副本，须与正本同版本）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness（codebuddy / codex / opencode 等）的用户级技能目录时，规则同样是**目录名即技能名**。

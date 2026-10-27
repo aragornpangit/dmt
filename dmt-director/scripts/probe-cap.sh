@@ -6,14 +6,9 @@
 set -u
 cap="${DMT_SUBAGENT_CAP:-}"
 if [ -z "$cap" ]; then cap="${CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS:-}"; fi
-if [ -z "$cap" ]; then
-  if [ -n "${CODEBUDDY_SESSION_ID:-}${CODEBUDDY_CODE:-}${CODEBUDDY:-}" ] || command -v codebuddy >/dev/null 2>&1; then
-    cap=20
-  else
-    cap=8
-  fi
-fi
-case "$cap" in ''|*[!0-9]*|0) cap=8 ;; esac
+[ -n "$cap" ] || cap=8
+case "$cap" in ''|*[!0-9]*) cap=8 ;; esac
 cap=$((10#$cap))
+[ "$cap" -ge 1 ] || cap=8
 if [ "$cap" -gt 8 ]; then cap=8; fi
 echo "$cap"

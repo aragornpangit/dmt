@@ -8,7 +8,7 @@
 #   --skip-team     跳过建团队 pane（无 herdr 环境时也会自动跳过）
 #   --dry-run       只打印将执行的动作，不实际执行
 # 阶段（顺序固定）：① install-skills → ② init-project → ③ install-hooks → ④ setup-team
-# 请在技能仓（或其安装副本）的 dmt-director/scripts/ 内执行本脚本。
+# 请在目标项目根执行：bash dmt-director/scripts/launch.sh [项目根目录]（省略参数＝当前目录）。
 set -eu
 ROOT="."
 COPY=0; USERHOOKS=0; DOSKILLS=1; DOHOOKS=1; DOTEAM=1; DRY=0
@@ -31,6 +31,10 @@ else
   ROOT="$PWD"
 fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 目标根不能是技能脚本目录本身（否则 docs/、inbox/、locks/、技能全装进 scripts/）
+case "$ROOT" in
+  */dmt-director/scripts|*/dmt-director) echo "[launch] 目标根不能是技能目录：$ROOT" >&2; exit 2 ;;
+esac
 
 run() { echo "[launch] $*"; [ "$DRY" = 1 ] || "$@"; }
 

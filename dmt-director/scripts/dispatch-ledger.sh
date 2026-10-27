@@ -3,7 +3,7 @@
 # 用法：
 #   plan   <role> <unit...>        开工前声明本批无依赖单元（重置账本）
 #   inc    <role> [unit]           记一次派发（PostToolUse hook 自动调时不带 unit，自动认领第一个 planned 单元）
-#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea|atomic（atomic = 仅限 <10min 不可拆自做）
+#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea（六条，与 team.md §5.2 白名单一致）
 #   done   <role> <unit>           记一个单元收口
 #   check  <role>                  合规 rc=0；有未派单元且在途 0 才 rc=2（Stop hook 用 rc=2 阻断本轮）
 #   report <role>                  打印可粘贴的「并发账」一行
@@ -82,7 +82,7 @@ case "$CMD" in
     ;;
   excuse)
     u="${1:?missing unit}"; code="${2:?missing code}"
-    case "$code" in dep|files|build|order|device|rea|atomic) ;; *) echo "bad code: $code" >&2; exit 2 ;; esac
+    case "$code" in dep|files|build|order|device|rea) ;; *) echo "bad code: $code" >&2; exit 2 ;; esac
     st="$(row_status "$u")"
     case "$st" in
       planned) set_row "$u" planned excused "$code"; echo "excused $u ($code)" ;;
@@ -115,12 +115,12 @@ case "$CMD" in
     # 按需求开：在途 ≥1 属按需推进，不阻断；只有「有未派单元且在途 0」才阻断（不比 CAP）
     if [ "${inflight:-0}" -ge 1 ]; then exit 0; fi
     echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left（在途 0，可继续派）" >&2
-    echo "[dispatch] 先派后干：按需求派发，上限 min(8, cap)，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
+    echo "[dispatch] 先派后干：按需求派发，上限 min(8, cap)，或 excuse 记理由（dep|files|build|order|device|rea）。见 team.md §5.2。" >&2
     exit 2
     ;;
   report)
     n="$(awk -F'\t' 'END{print NR}' "$LEDGER" 2>/dev/null || echo 0)"
-    units="$(awk -F'\t' '{printf "%s ", $1}' "$LEDGER" 2>/dev/null || true)"
+    units="$(awk -F'\t' '{printf "%s%s", (NR>1?" ":""), $1}' "$LEDGER" 2>/dev/null || true)"
     m="$(awk -F'\t' '$2=="dispatched"||$2=="done"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
     k=$(( n - m ))
     if [ "$k" -lt 0 ]; then k=0; fi
