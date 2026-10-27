@@ -11,7 +11,7 @@ if [ -z "$FILE" ] && [ -n "$payload" ]; then
 fi
 [ -n "$FILE" ] || exit 0
 DIR="$(cd "$(dirname "$0")" && pwd)"
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam/devtl{n}/anatl{n}
 resolve_role() {
   r="$1"
   if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
@@ -23,7 +23,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
 fi
 case "$FILE" in
   */docs/pd/*|*/docs/dev/tickets/*|*/docs/analyst/*|*/docs/human/*) ;;
@@ -32,7 +32,7 @@ esac
 if bash "$DIR/dispatch-ledger.sh" check "$ROLE" >/dev/null 2>&1; then exit 0; fi
 {
   echo "[self-work-guard] 该文件是交付物，属于「单元工作」，而本批还有单元没派。"
-  echo "[self-work-guard] 先派子代理（team.md §5.2 先派后干），或 dispatch-ledger.sh excuse <unit> <code> 记理由。"
+  echo "[self-work-guard] 先派子代理（team.md §5.2 先派后干），或 dispatch-ledger.sh excuse <role> <unit> <code> 记理由。"
   bash "$DIR/dispatch-ledger.sh" report "$ROLE" || true
 } >&2
 exit 2

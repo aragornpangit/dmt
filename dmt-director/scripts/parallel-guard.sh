@@ -22,7 +22,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
 fi
 LEDGER="$(bash "$DIR/dispatch-ledger.sh" ledger-path "$ROLE" 2>/dev/null || true)"
 [ -n "$LEDGER" ] && [ -f "$LEDGER" ] || exit 0
@@ -30,7 +30,7 @@ pending="$(awk -F'\t' '$2=="planned"{c++} END{print c+0}' "$LEDGER")"
 [ "$pending" -ge 1 ] || exit 0
 {
   echo "[parallel-guard] 本批还有 $pending 个未派单元：Agent 调用必须 run_in_background: true，"
-  echo "[parallel-guard] 并在同一回复内并发派满（每波 min(N, CAP)）；同步调用会把并行变串行。"
+  echo "[parallel-guard] 并在同一回复内并发派发（按需求开，上限 min(8, cap)）；同步调用会把并行变串行。"
   bash "$DIR/dispatch-ledger.sh" report "$ROLE" || true
 } >&2
 exit 2

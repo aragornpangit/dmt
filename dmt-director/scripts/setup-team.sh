@@ -86,4 +86,4 @@ if [ -z "$p" ]; then
   h env HERDR_ENV=1 herdr pane rename "$p" anam
 fi
 ensure_started "$p" '/dmt-am'
-echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pm），不占 pane"
+echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pde），不占 pane"

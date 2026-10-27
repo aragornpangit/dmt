@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# director 用：显式路径提交并推送到 GitLab + GitHub（每 ticket 一推 / 每小时巡检）
+# devm 用（merge 与 push 归 devm）：显式路径提交并推送到 GitLab + GitHub（每 ticket 一推 / 每小时巡检）
 # 用法：bash publish.sh -m <message> [--auto] [--no-push] [--remotes "gitlab origin"] -- <paths...>
 #   --auto 由 git status --porcelain 枚举改动路径（仍是显式路径，不用 git add -A）
 set -eu
@@ -17,7 +17,19 @@ done
 [ -n "$MSG" ] || { echo "missing -m <message>" >&2; exit 2; }
 
 if [ "$AUTO" = 1 ]; then
-  PATHS="$(git status --porcelain | sed 's/^...//' | tr '\n' ' ')"
+  PATHS=""
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    p="${line:3}"
+    # rename 行（R old -> new）取新路径
+    case "$p" in *" -> "*) p="${p##* -> }" ;; esac
+    # 含空格 / 引号的路径跳过并告警（避免按空格切分吃错路径）
+    case "$p" in
+      *\"*) echo "WARN: 跳过含引号的路径: $p" >&2; continue ;;
+      *' '*) echo "WARN: 跳过含空格的路径: $p" >&2; continue ;;
+    esac
+    PATHS="$PATHS$p "
+  done < <(git status --porcelain)
 fi
 [ -n "${PATHS// /}" ] || { echo "nothing to commit"; exit 0; }
 

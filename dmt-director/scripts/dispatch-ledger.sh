@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# 派发账本：把「无依赖单元必须派满」变成可机器校验的硬约束
+# 派发账本：把「无依赖单元按需求派发」变成可机器校验的硬约束
 # 用法：
 #   plan   <role> <unit...>        开工前声明本批无依赖单元（重置账本）
-#   inc    <role> [unit]           记一次派发（PostToolUse hook 在 Agent 调用后自动调）
-#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea|atomic
+#   inc    <role> [unit]           记一次派发（PostToolUse hook 自动调时不带 unit，自动认领第一个 planned 单元）
+#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea|atomic（atomic = 仅限 <10min 不可拆自做）
 #   done   <role> <unit>           记一个单元收口
-#   check  <role>                  合规 rc=0；有未派单元 rc=2（Stop hook 用 rc=2 阻断本轮）
+#   check  <role>                  合规 rc=0；有未派单元且在途 0 才 rc=2（Stop hook 用 rc=2 阻断本轮）
 #   report <role>                  打印可粘贴的「并发账」一行
 #   status <role>
 #   ledger-path <role>             打印账本文件路径（parallel-guard 用）
 #   inject -                       SessionStart hook：注入并行纪律与当前 CAP（stdout 进上下文）
-#   nudge -                        PostToolUse hook：水位不满时催派下一波（additionalContext）
-#   CAP：probe-cap.sh 探测（DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > codebuddy 默认 20 > 8）；在途 ≥ CAP 时未派单元视为分波排队，Stop 不阻断
+#   nudge -                        PostToolUse hook：有未派单元时提示可补派下一批（additionalContext）
+#   CAP：probe-cap.sh 探测（DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > 8）；有效并发上限 n = min(8, cap)；在途 ≥1 属按需推进，Stop 不阻断
 set -eu
-CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status> <role> ...}"
+CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam/devtl{n}/anatl{n}
 resolve_role() {
   r="$1"
   if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
@@ -28,7 +28,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
 fi
 # 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。
@@ -42,6 +42,16 @@ ROOT="$root"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 LEDGER="$ROOT/locks/dispatch-$ROLE.tsv"
 mkdir -p "$ROOT/locks"
+
+# 账本行：unit <TAB> status(planned|dispatched|excused|done) <TAB> code(-|理由码) <TAB> 时间
+# 单元名一律按字段比较（awk），不做正则匹配——单元名含 . * & / 也不会误伤
+row_status() { awk -F'\t' -v u="$1" '$1==u{s=$2} END{print s}' "$LEDGER" 2>/dev/null || true; }
+first_planned() { awk -F'\t' '$2=="planned"{print $1; exit}' "$LEDGER" 2>/dev/null || true; }
+set_row() { # set_row <unit> <from> <to> <code：传 - 则不改 code 字段>
+  awk -F'\t' -v OFS='\t' -v u="$1" -v from="$2" -v to="$3" -v code="$4" \
+    '{ if(!done && $1==u && $2==from){ $2=to; if(code!="-") $3=code; done=1 } print }' \
+    "$LEDGER" > "$LEDGER.tmp" && mv "$LEDGER.tmp" "$LEDGER"
+}
 
 case "$CMD" in
   plan)
@@ -58,27 +68,37 @@ case "$CMD" in
       case "$tn" in Agent|Task|Teammate|teammate) ;; *) exit 0 ;; esac
     fi
     u="${1:-auto}"
-    if grep -q "^$u	planned	-	" "$LEDGER" 2>/dev/null; then
-      sed -i "s/^$u	planned	-	/$u	dispatched	-	/" "$LEDGER"
-    else
-      printf '%s\tdispatched\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"
+    if [ -z "$u" ] || [ "$u" = auto ] || [ "$u" = "-" ]; then
+      # hook 自动记账：认领第一个 planned 单元（不新增假单元，防账本被 auto 污染）
+      u="$(first_planned)"
+      [ -n "$u" ] || { echo "no planned unit left"; exit 0; }
     fi
-    echo "dispatched $u"
+    st="$(row_status "$u")"
+    case "$st" in
+      planned) set_row "$u" planned dispatched -; echo "dispatched $u" ;;
+      dispatched|excused|done) echo "already recorded: $u ($st)" ;;
+      *) printf '%s\tdispatched\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"; echo "dispatched $u" ;;
+    esac
     ;;
   excuse)
     u="${1:?missing unit}"; code="${2:?missing code}"
     case "$code" in dep|files|build|order|device|rea|atomic) ;; *) echo "bad code: $code" >&2; exit 2 ;; esac
-    if grep -q "^$u	planned	-	" "$LEDGER" 2>/dev/null; then
-      sed -i "s/^$u	planned	-	/$u	excused	$code	/" "$LEDGER"
-    else
-      printf '%s\texcused\t%s\t%s\n' "$u" "$code" "$(date +%H%M%S)" >> "$LEDGER"
-    fi
-    echo "excused $u ($code)"
+    st="$(row_status "$u")"
+    case "$st" in
+      planned) set_row "$u" planned excused "$code"; echo "excused $u ($code)" ;;
+      dispatched|excused|done) echo "refuse: $u already recorded as $st" >&2; exit 2 ;;
+      *) printf '%s\texcused\t%s\t%s\n' "$u" "$code" "$(date +%H%M%S)" >> "$LEDGER"; echo "excused $u ($code)" ;;
+    esac
     ;;
   done)
     u="${1:?missing unit}"
-    sed -i "s/^$u	dispatched	/$u	done	-	/" "$LEDGER" 2>/dev/null || true
-    echo "done $u"
+    st="$(row_status "$u")"
+    if [ "$st" = dispatched ]; then
+      set_row "$u" dispatched done -
+      echo "done $u"
+    else
+      echo "done $u (status=${st:-none}, skipped)"
+    fi
     ;;
   check)
     # Stop hook anti-loop: if this turn was already bounced once (stop_hook_active=true), let it end
@@ -91,26 +111,26 @@ case "$CMD" in
     [ -n "$left" ] || exit 0
     n="$(awk -F'\t' 'END{print NR}' "$LEDGER")"
     d="$(awk -F'\t' '$2!="planned"{c++} END{print c+0}' "$LEDGER")"
-    cap="$(bash "$DIR/probe-cap.sh")"
     inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
-    # 分波：在途已达 harness 并发上限 ⇒ 等完成通知再补派下一波，不阻断
-    if [ "${inflight:-0}" -ge "$cap" ]; then exit 0; fi
-    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left（在途 ${inflight:-0} < CAP $cap，可继续派）" >&2
-    echo "[dispatch] 先派后干：每波 min(N, CAP) 把并发派满，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
+    # 按需求开：在途 ≥1 属按需推进，不阻断；只有「有未派单元且在途 0」才阻断（不比 CAP）
+    if [ "${inflight:-0}" -ge 1 ]; then exit 0; fi
+    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left（在途 0，可继续派）" >&2
+    echo "[dispatch] 先派后干：按需求派发，上限 min(8, cap)，或 excuse 记理由（dep|files|build|order|device|rea|atomic）。见 team.md §5.2。" >&2
     exit 2
     ;;
   report)
     n="$(awk -F'\t' 'END{print NR}' "$LEDGER" 2>/dev/null || echo 0)"
-    units="$(awk -F'\t' '{printf "%s ", $1}' "$LEDGER" 2>/dev/null)"
+    units="$(awk -F'\t' '{printf "%s ", $1}' "$LEDGER" 2>/dev/null || true)"
     m="$(awk -F'\t' '$2=="dispatched"||$2=="done"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
     k=$(( n - m ))
     if [ "$k" -lt 0 ]; then k=0; fi
-    codes="$(awk -F'\t' '$2=="excused"{printf "%s:%s ", $1, $3}' "$LEDGER" 2>/dev/null)"
+    codes="$(awk -F'\t' '$2=="excused"{printf "%s:%s ", $1, $3}' "$LEDGER" 2>/dev/null || true)"
     cap="$(bash "$DIR/probe-cap.sh")"
     inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
     extra=""
-    if [ "$k" -gt 0 ] && [ "${inflight:-0}" -ge "$cap" ]; then extra="cap:在途${inflight}>=${cap},下一波补派 "; fi
+    if [ "$k" -gt 0 ] && [ "${inflight:-0}" -ge "$cap" ]; then extra="cap:在途达上限、分批排队 "; fi
     reason="${codes}${extra}"
+    if [ -z "$reason" ] && [ "$k" -gt 0 ]; then reason="缺理由码（不合规：须派发或 excuse）"; fi
     echo "并发账：单元 $n（$units）→ 派 $m ＋ 未派 $k（${reason:-无}）[CAP=${cap}]"
     ;;
   status)
@@ -121,7 +141,7 @@ case "$CMD" in
     ;;
   inject)
     cap="$(bash "$DIR/probe-cap.sh")"
-    echo "并行纪律（dmt）：无依赖单元每波并发派 min(N, CAP) 个子代理（当前 CAP=$cap，probe-cap.sh 探测；N > CAP 分波补满，唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
+    echo "并行纪律（dmt）：无依赖单元并发派 min(N, CAP) 个子代理（按需求开，上限 min(8, cap)，N 超上限分批；当前 CAP=$cap，probe-cap.sh 探测；唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
     ;;
   nudge)
     cap="$(bash "$DIR/probe-cap.sh")"
@@ -129,7 +149,7 @@ case "$CMD" in
     pending="$(awk -F'\t' '$2=="planned"{c++} END{print c+0}' "$LEDGER")"
     inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
     if [ "$pending" -ge 1 ] && [ "$inflight" -lt "$cap" ]; then
-      jq -n --arg t "[dispatch] 还有 $pending 个未派单元、在途 $inflight < CAP $cap：立即补派下一波（每波 min(N, CAP)，run_in_background: true），别让并发位空着。" '{hookSpecificOutput:{additionalContext:$t}}'
+      jq -n --arg t "[dispatch] 还有 $pending 个未派单元、在途 $inflight < CAP $cap：可补派下一批（min(N, CAP)，run_in_background: true）。" '{hookSpecificOutput:{additionalContext:$t}}'
     fi
     exit 0
     ;;

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 经理用：按阈值开队长 pane（第 1 个在经理右侧，第 2 个起在上一队长下方）
 # 用法：bash spawn-leader.sh <devm|anam> <n> [--dry-run] [--no-start] [--force-start]
-#   需要 HERDR_ENV=1、HERDR_WORKSPACE_ID、HERDR_PANE_ID（经理自己的 pane）
+#   需要 HERDR_ENV=1、HERDR_WORKSPACE_ID
 #   幂等：label 已存在时不重建；若该 pane 没有 agent 在跑（agent_status=unknown）则补启动
 set -eu
 ROLE="$1"
@@ -13,6 +13,8 @@ for a in "$@"; do
 done
 case "$ROLE" in devm|anam) ;; *) echo "role must be devm|anam" >&2; exit 2 ;; esac
 case "$N" in ''|*[!0-9]*) echo "n must be a positive integer" >&2; exit 2 ;; esac
+N=$((10#$N))
+if [ "$N" -lt 1 ]; then echo "n must be a positive integer" >&2; exit 2; fi
 
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 pane_by_label() {
@@ -63,16 +65,29 @@ if [ -n "$existing" ]; then
   exit 0
 fi
 
+# 并发队长实例数上限 = min(8, cap)（team.md §1.2）：同类队长 pane 同时最多 CAP 个，达到上限拒开
+# 幂等优先：label 已存在 ⇒ 上面已存在并 exit 0，不进闸门、不 REFUSE
+SD="$(cd "$(dirname "$0")" && pwd)"
+CAPV="$(bash "$SD/probe-cap.sh")"
+if [ "$ROLE" = devm ]; then PFX=devtl; else PFX=anatl; fi
+live="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
+  | jq -r --arg re "^${PFX}[0-9]+$" '[.result.panes[] | select(.label|test($re))] | length' 2>/dev/null || echo 0)"
+if [ "${live:-0}" -ge "$CAPV" ]; then
+  echo "REFUSE: 并发队长实例数已达上限 min(8, cap)=$CAPV（在跑 ${live} 个 ${PFX}{n}）；先收口或分批" >&2
+  exit 3
+fi
+
 me="$(pane_by_label "$ME" || true)"
 [ -n "$me" ] || { echo "manager pane '$ME' not found" >&2; exit 3; }
 
 if [ "$N" -eq 1 ]; then
   base="$me"; dir=right
 else
-  prev="$PREFIX$((N-1))"
-  base="$(pane_by_label "$prev" || true)"
-  [ -n "$base" ] || { echo "previous leader pane '$prev' not found" >&2; exit 3; }
-  dir=down
+  # 锚点：本经理名下现存最后一个队长 pane（按 label 找最大号），找不到退回经理 pane
+  last="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
+    | jq -r --arg pfx "$PREFIX" '[.result.panes[] | select(.label|test("^"+$pfx+"[0-9]+$")) | {l:.label, n:(.label|sub("^"+$pfx;"")|tonumber)}] | sort_by(.n) | last | .l // empty' || true)"
+  base="$(pane_by_label "$last" || true)"
+  if [ -n "$base" ]; then dir=down; else base="$me"; dir=right; fi
 fi
 
 pane="$(HERDR_ENV=1 herdr pane split "$base" --direction "$dir" --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"

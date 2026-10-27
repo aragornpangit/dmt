@@ -9,10 +9,18 @@ FROM="${2:?missing from}"
 SLUG="${3:?missing slug}"
 BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
+# 收发双方白名单：director|devm|anam|devtl{n}|anatl{n}，非法直接拒发（exit 2）
+for who in "$TO" "$FROM"; do
+  case "$who" in
+    director|devm|anam|devtl[0-9]*|anatl[0-9]*) ;;
+    *) echo "bad role: $who (want director|devm|anam|devtl{n}|anatl{n})" >&2; exit 2 ;;
+  esac
+done
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# 收件箱定位到主工作树根（与 close-leader/dispatch-ledger 同口径；在 worktree 里跑也指回主树）
+ROOT="$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd)"
 # 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
 DIR="$(cd "$(dirname "$0")" && pwd)"
 superior_of() {
@@ -26,7 +34,7 @@ superior_of() {
 SUP="$(superior_of "$FROM")"
 if [ -n "$SUP" ] && [ "$SUP" = "$TO" ] && [ "${DMT_MSG_FORCE:-0}" != 1 ]; then
   if ! bash "$DIR/dispatch-ledger.sh" check "$FROM" >/dev/null 2>&1; then
-    echo "[send-msg] 并发账门禁：还有未派单元且并发位空闲，先派满再回报（DMT_MSG_FORCE=1 可强发）。" >&2
+    echo "[send-msg] 并发账门禁：还有未派单元且并发位空闲，按需求开，上限 min(8, cap)，先派发再回报（DMT_MSG_FORCE=1 可强发）。" >&2
     bash "$DIR/dispatch-ledger.sh" report "$FROM" >&2 || true
     exit 2
   fi
@@ -59,7 +67,7 @@ fi
 cp "$BODY" "$BOX/$NAME"
 printf '%d\n' "$seq_num" > "$BOX/.seq.tmp" && mv "$BOX/.seq.tmp" "$BOX/.seq"
 
-pane="$(HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
+pane="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" \
   | jq -r --arg l "$TO" '.result.panes[] | select(.label==$l) | .pane_id' | head -1 || true)"
 [ -n "$pane" ] || { echo "WARN: pane label '$TO' not found; message written, doorbell skipped" >&2; echo "$NAME"; exit 0; }
 
