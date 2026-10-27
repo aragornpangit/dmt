@@ -4,12 +4,12 @@
 set -eu
 ROLE="${1:?usage: msg-done.sh <role> <file>}"
 FILE="${2:?missing file}"
-# 角色白名单：director|devm|anam|devtl{n}|anatl{n}，非法 exit 2
+# 角色白名单：director|devm|anam，非法 exit 2（helper 无自己的 inbox，不作收件角色）
 case "$ROLE" in
-  director|devm|anam|devtl[0-9]*|anatl[0-9]*) ;;
-  *) echo "bad role: $ROLE (want director|devm|anam|devtl{n}|anatl{n})" >&2; exit 2 ;;
+  director|devm|anam) ;;
+  *) echo "bad role: $ROLE (want director|devm|anam)" >&2; exit 2 ;;
 esac
-# 收件箱定位到主工作树根（与 close-leader/dispatch-ledger 同口径）
+# 收件箱定位到主工作树根（与 dispatch-ledger 同口径）
 ROOT="$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd)"
 BOX="$ROOT/inbox/$ROLE"
 NAME="$(basename "$FILE")"

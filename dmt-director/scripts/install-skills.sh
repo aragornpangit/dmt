@@ -8,7 +8,7 @@ TARGET="${1:?usage: install-skills.sh <project-root> [--copy]}"
 MODE="${2:-link}"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="$(cd "$TARGET" && pwd)"
-SKILLS="dmt-director dmt-pde dmt-dm dmt-am dmt-dtl dmt-atl"
+SKILLS="dmt-director dmt-pde dmt-dm dmt-am"
 
 mkdir -p "$TARGET/.agents/skills"
 for s in $SKILLS; do

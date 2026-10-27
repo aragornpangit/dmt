@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 发收件箱消息 + herdr 门铃（文件名与方向自动生成）
 # 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run]
-#   to/from ∈ director|devm|anam|devtl{n}|anatl{n}（pm 已并入 director）
+#   from ∈ director|devm|anam|{角色}-helper；to ∈ director|devm|anam（helper 无自己的 inbox、不接受输入框内容）
+#   helper 发出的单向汇报只写箱、不按门铃（本体扫箱收取）
 # 序号：max(扫描 inbox/<to>/** 含 .doing/ 的现有最大号, inbox/<to>/.seq 高水位) + 1
 set -eu
 TO="${1:?usage: send-msg.sh <to> <from> <slug> <body-file>}"
@@ -9,25 +10,30 @@ FROM="${2:?missing from}"
 SLUG="${3:?missing slug}"
 BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
-# 收发双方白名单：director|devm|anam|devtl{n}|anatl{n}，非法直接拒发（exit 2）
-for who in "$TO" "$FROM"; do
+# 发方白名单：director|devm|anam|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
+# helper 是纯分身（用户裁定）：无自己的 inbox、不接受输入框内容 —— 任务随 spawn-helper 一次性下发
+for who in "$TO"; do
   case "$who" in
-    director|devm|anam|devtl[0-9]*|anatl[0-9]*) ;;
-    *) echo "bad role: $who (want director|devm|anam|devtl{n}|anatl{n})" >&2; exit 2 ;;
+    director|devm|anam) ;;
+    director-helper|devm-helper|anam-helper)
+      echo "helper 不接受输入框内容、无自己的 inbox（任务随 spawn-helper 一次性下发，成果由 helper 单向汇报主体）：$TO 不能作收方" >&2; exit 2 ;;
+    *) echo "bad role: $TO (want director|devm|anam)" >&2; exit 2 ;;
   esac
 done
+case "$FROM" in
+  director|devm|anam|director-helper|devm-helper|anam-helper) ;;
+  *) echo "bad role: $FROM (want director|devm|anam|{角色}-helper)" >&2; exit 2 ;;
+esac
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
-# 收件箱定位到主工作树根（与 close-leader/dispatch-ledger 同口径；在 worktree 里跑也指回主树）
+# 收件箱定位到主工作树根（与 dispatch-ledger 同口径；在 worktree 里跑也指回主树）
 ROOT="$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd)"
 # 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
 DIR="$(cd "$(dirname "$0")" && pwd)"
 superior_of() {
   case "$1" in
     devm|anam) echo director ;;
-    devtl*) echo devm ;;
-    anatl*) echo anam ;;
     *) echo "" ;;
   esac
 }
@@ -66,6 +72,11 @@ if [ "$DRY" = 1 ]; then
 fi
 cp "$BODY" "$BOX/$NAME"
 printf '%d\n' "$seq_num" > "$BOX/.seq.tmp" && mv "$BOX/.seq.tmp" "$BOX/.seq"
+
+# helper 的单向汇报只写箱、不按门铃（无门铃往返）：本体扫箱收取
+case "$FROM" in
+  *-helper) echo "$NAME"; exit 0 ;;
+esac
 
 pane="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" \
   | jq -r --arg l "$TO" '.result.panes[] | select(.label==$l) | .pane_id' | head -1 || true)"

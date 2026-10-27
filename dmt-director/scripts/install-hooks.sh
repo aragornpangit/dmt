@@ -4,7 +4,7 @@
 #   bash install-hooks.sh <project-root>     装到 <project>/.codebuddy/settings.json（用 <project>/dmt-director/scripts）
 #   bash install-hooks.sh --user             装到 ~/.codebuddy/settings.json（用本仓 scripts，五个派发角色全机生效）
 #   --dry-run 只打印目标路径
-# 生效角色：director / devm / anam / devtl{n} / anatl{n}（可用 DMT_DISPATCH_ALL=1 放开到其它角色）
+# 生效角色：director / devm / anam 与 helper（可用 DMT_DISPATCH_ALL=1 放开到其它角色）
 set -eu
 ARG1="${1:?usage: install-hooks.sh <project-root>|--user [--dry-run]}"
 DRY=0; [ "${2:-}" = "--dry-run" ] && DRY=1
@@ -56,5 +56,5 @@ add("SessionStart", None, "bash " + d + "/dispatch-ledger.sh inject -")
 json.dump(data, open(cfg, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 print("hooks written to", cfg)
 PY
-echo "roles governed: director|devm|anam|devtl*|anatl* (override with DMT_DISPATCH_ALL=1)"
+echo "roles governed: director|devm|anam|director-helper|devm-helper|anam-helper (override with DMT_DISPATCH_ALL=1)"
 echo "role is resolved from DMT_ROLE or the herdr pane label; ungoverned sessions exit 0 immediately"

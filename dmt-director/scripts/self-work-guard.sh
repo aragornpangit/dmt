@@ -11,7 +11,7 @@ if [ -z "$FILE" ] && [ -n "$payload" ]; then
 fi
 [ -n "$FILE" ] || exit 0
 DIR="$(cd "$(dirname "$0")" && pwd)"
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam/devtl{n}/anatl{n}
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper（director-helper/devm-helper/anam-helper）
 resolve_role() {
   r="$1"
   if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
@@ -23,7 +23,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi
 case "$FILE" in
   */docs/pd/*|*/docs/dev/tickets/*|*/docs/analyst/*|*/docs/human/*) ;;

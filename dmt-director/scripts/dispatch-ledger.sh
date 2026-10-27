@@ -16,7 +16,7 @@ set -eu
 CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam/devtl{n}/anatl{n}
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper（director-helper/devm-helper/anam-helper）
 resolve_role() {
   r="$1"
   if [ -z "$r" ] || [ "$r" = "-" ]; then r="${DMT_ROLE:-}"; fi
@@ -28,7 +28,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi
 # 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。

@@ -22,7 +22,7 @@ resolve_role() {
 }
 ROLE="$(resolve_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam|devtl*|anatl*) ;; *) exit 0 ;; esac
+  case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
 fi
 LEDGER="$(bash "$DIR/dispatch-ledger.sh" ledger-path "$ROLE" 2>/dev/null || true)"
 [ -n "$LEDGER" ] && [ -f "$LEDGER" ] || exit 0
