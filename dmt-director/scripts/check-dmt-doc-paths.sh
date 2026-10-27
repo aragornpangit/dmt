@@ -310,6 +310,28 @@ else
 fi
 
 echo
+echo
+echo "== 4n) 一子代理一单元队列必须登记（2026-10-27 事故后立规） =="
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md"; do
+  if grep -q '一子代理一单元队列' "$f" 2>/dev/null; then
+    echo "OK   一子代理一单元队列        $(basename "$(dirname "$f")")/$(basename "$f")"
+  else
+    echo "FAIL 缺一子代理一单元队列      $f"; fail=1
+  fi
+done
+for k in '文件面矩阵' '派 M' '验收面'; do
+  if sed -n '1,/^## 8\./p' "$CONTRACT" | grep -q -- "$k"; then
+    echo "OK   队列纪律要素              $k"
+  else
+    echo "FAIL 队列纪律要素缺失          $k"; fail=1
+  fi
+done
+if [ -f "${DMT_REPO_ROOT:-/nonexistent}/dmt-director/INCIDENT-20261027-serial-queue.md" ] || [ -f "$(dirname "$CONTRACT")/../dmt-director/INCIDENT-20261027-serial-queue.md" ]; then
+  echo "OK   事故复盘档在位"
+else
+  echo "INFO 事故复盘档仅在技能仓内（目标项目不安装，不判红）"
+fi
+
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then
   for d in 'docs/pd/prd/' 'docs/pd/spec/' 'docs/dev/tickets/' 'docs/analyst/' 'docs/human/human-arch/' 'docs/human/human-plan/' 'inbox/'; do

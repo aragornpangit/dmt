@@ -1,6 +1,6 @@
 # dmt 团队契约
 
-> **版本 5.7.1 · 2026-10-27** —— 与四个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
+> **版本 5.8.0 · 2026-10-27** —— 与四个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
 > **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
 > **不适用于技能仓自身的维护**：维护 `dmt` / `dmt-en` / 其他技能仓时，上述归属纪律**不生效** —— 维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权、也不需 devm 代推**；装机权限同理只约束「目标项目中的设备写操作」。
 > 本文件是 **dmt 的唯一团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；四个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
@@ -359,6 +359,16 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
     **M + K = N**（自做计入 K）。理由码 ∈ 白名单六条，或 `cap`（在途 ≥ CAP、分批排队；子代理一完成必须立即补派，`cap` 不豁免收口、不属串行理由）。缺失、算术不成立、或理由码不合法 ⇒ **直属上级直接打回，不进评审**（经理 / 总监的账均由 director 核）；**同一批次被打回 2 次 ⇒ 升级**（经理 / 总监升级用户裁决）。**不做事前审批**：开工不需要总监点头，但必须 `plan` 落账；director **每小时巡检** `locks/dispatch-*.tsv`，发现「有未派单元、在途 0 且超 30 分钟」就发门铃问一句，不打断执行。`dispatch-ledger.sh report <角色>` 直接生成这一行，不要手写。派发 prompt 照骨架填空，不要现编：
     `你是 <角色> 的子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。`
 
+
+10. **一子代理一单元队列（2026-10-27 事故后立规，复盘见 `dmt-director/INCIDENT-20261027-serial-queue.md`）**：
+    - **在途子代理只收同一单元的纠正 / 收窄**；**新单元一律另派子代理**（另开 worktree），**不得**用 `SendMessage` 追加成队列。
+    - **追加前先做「文件面矩阵」**：逐条写 `单元 | 触达文件 | 与在途单元是否重叠`。重叠才可排队（理由码 `files`，**必须列出具体文件路径**）；不重叠 ⇒ **立即另派**。
+    - **追加新单元必须过账**：`dispatch-ledger.sh plan` 重排 ＋ `inc`，使账本「派 M」**等于**实际在途数 —— 账本对「追加」不能是盲区。
+    - **队列消息会过期**：依赖上级裁定的追加，要么写明「以最新裁定为准」，要么等裁定落地再派；否则子代理会按已作废的规格做完一轮。
+    - **判据（违规即打回）**：同一子代理 `N queued ≥ 2`；或账本「派 M」< 实际在途数；或理由码写 `files` 却列不出重叠文件路径。
+    - **复用 vs 新派的唯一判据**：问「这条要求会不会改变他正在做的事的**验收面**？」不会 ⇒ 复用（缺陷修正 / 收窄）；会 ⇒ 新派（哪怕同票同主题）。
+
+
 ### 5.3 评审门禁
 
 | 门禁 | 提交方 | 评审方 | 通过条件 |
@@ -396,6 +406,8 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh
 检查**十八项（另含 2b / 4c 两组专项，共 20 组断言）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 四个技能（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` 为 `pde{n}` 子代理技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与四个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **经理层并行判据已登记**（`dmt-dm` / `dmt-am` 含「必须并行」，契约含「无依赖任务一律派子代理」与「min(N, CAP)」）；⑥ **经理层路径与按需求并发已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」；契约含「min(8, cap)」与「按需求开」（cap = harness 最大支持的 agent 数；有效 CAP = `min(8, cap)`、探测不到默认 8，N 超上限分批推进；总监 / 经理同一时刻在途实例一律 ≤ `min(8, cap)`），`dmt-dm` / `dmt-am` 含「按需求开」与 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `director` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；`dmt-director` 含 [`/grilling`](${G}/productivity/grilling/SKILL.md)+[`/code-review`](${G}/engineering/code-review/SKILL.md)+[`/to-spec`](${G}/engineering/to-spec/SKILL.md)+[`/to-tickets`](${G}/engineering/to-tickets/SKILL.md)、`dmt-pde` 含 [`/grilling`](${G}/productivity/grilling/SKILL.md)+[`/research`](${G}/engineering/research/SKILL.md)、`dmt-dm` 含 [`/code-review`](${G}/engineering/code-review/SKILL.md)、`dmt-am` 含 [`/research`](${G}/engineering/research/SKILL.md)；`reviewer{n}` 行含 `/review`（= `/code-review`）；工程师吸收的队长执行技能已登记（`dev-e` 行含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`ana-e` 行含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，四个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与四个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `dispatch-ledger.sh` / `self-work-guard.sh` / `parallel-guard.sh` / `probe-cap.sh` / `fanout.sh` / `install-hooks.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` 共 19 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **先派后干、并发账与完成即报已登记**（契约含「先派后干」与「并发账」；`dmt-director` / `dmt-dm` / `dmt-am` 各含「先派后干」与「并发账」；契约与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」；契约含「派发合规」）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与四个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态或脚本接口后必须重跑。**
 
 ## 8. 变更记录
+
+- **2026-10-27（用户要求·第五十次：一子代理一单元队列 ＋ 事故复盘，版本 `5.8.0`）**：用户当场指出 —— 081 返工期间 `devm` 把 **5 条可独立并行的追加要求**逐条 `SendMessage` 投进**同一个忙碌子代理**（界面读数 `41m 08s · 5 queued`），该代理串行消化、主线程空转，其中 2 个单元本可早就并行开工。① **§5.2 新增第 10 条「一子代理一单元队列」**：在途代理只收同单元纠正/收窄，新单元一律另派；追加前做「文件面矩阵」；追加新单元必须过账（补账本对追加的盲区）；队列消息会过期须带时效；给出三条违规判据与「复用 vs 新派」唯一判据。② **新增事故档** `dmt-director/INCIDENT-20261027-serial-queue.md`（事实 / 三层根因 / 代价 / 五条预防 P1–P5 / 复发信号 / 本次正确拆分对照表）。③ **机检 ⑨** 断言契约与 `dmt-dm`／`dmt-am` 均含该规则。**版本升 `5.8.0`**。**Why**：无依赖单元串行化的代价不只是等待 —— 队列把「取数时点」推迟，会让子代理按**已过期作废的规格**做完一轮（本次 `081c` 按撤回前的口径实现，白跑一轮）。
 
 - **2026-10-27（用户要求·第四十九次：补「作用域（Scope）」声明，版本 `5.7.1`）**：用户指出 —— 「push 归 director / devm」这类**归属纪律在文档里未写作用域**，导致**其他 agent 维护 `dmt` 技能仓自身时误以为也要遵守**（实例：本轮给 `pda-fleet` 等仓推内网 GitLab 前，曾据「push 只由 director 执行」一度犹豫）。① **契约头部新增「作用域（Scope）」段**：全部纪律（角色权限、写操作归属、门禁、pane 生命周期、收件箱规范）只作用于 **dmt 工作流所管理的目标项目**（`init-project.sh <项目根>` 初始化的 project root）；**维护 `dmt` / `dmt-en` 等技能仓自身时不适用**——维护者可直接 `git add` / `commit` / `push`，无需 director 授权或 devm 代推。② §5.2 第 2 条（merge / push 归 devm）与 `dmt-director` 的「独占写操作」条各加同款作用域限定。③ `README.md` 顶部补一句作用域说明。**版本升 `5.7.1`**（四个技能 `version:` 同步）。**Why**：纪律不写作用域＝把「项目内规则」读成「绝对规则」，会让维护技能仓本身的 agent 做出错误让步。
 
