@@ -1,152 +1,198 @@
 #!/usr/bin/env bash
-# 派发账本：把「无依赖单元按需求派发」变成可机器校验的硬约束
-# 用法：
-#   plan   <role> <unit...>        开工前声明本批无依赖单元（重置账本）
-#   inc    <role> [unit]           记一次派发（PostToolUse hook 自动调时不带 unit，自动认领第一个 planned 单元）
-#   excuse <role> <unit> <code>    记一次豁免 code ∈ dep|files|build|order|device|rea（六条，与 team.md §5.2 白名单一致）
-#   done   <role> <unit>           记一个单元收口
-#   check  <role>                  合规 rc=0；有未派单元且在途 0 才 rc=2（Stop hook 用 rc=2 阻断本轮）
-#   report <role>                  打印可粘贴的「并发账」一行
-#   status <role>
-#   ledger-path <role>             打印账本文件路径（parallel-guard 用）
-#   inject -                       SessionStart hook：注入并行纪律与当前 CAP（stdout 进上下文）
-#   nudge -                        PostToolUse hook：有未派单元时提示可补派下一批（additionalContext）
-#   CAP：probe-cap.sh 探测（DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > 8）；有效并发上限 n = min(8, cap)；在途 ≥1 属按需推进，Stop 不阻断
+# =============================================================================
+# dispatch-ledger.sh —— max-subagents 台账内核（ledger.py）的薄壳
+# =============================================================================
+# 【本文件现状】
+#   本脚本已从「自实现台账读写/统计/锁」收敛为 **max-subagents/ledger.py 的薄壳**：
+#   所有台账判据（pending/inflight 口径、重复单元拒绝、stale 锁接管、subagent 上下文
+#   判定、过期判据、派发工具白名单）都委托给同一份实现：
+#     /home/panxiaoyong/pxy/projects26h2/max-subagents/ledger.py（+ policy.py）
+#   历史实现原样保留在同目录备份：scripts/dispatch-ledger.sh.orig-20261027（152 行）。
+#
+# 【7 条缺陷的修复位置】（细节见 max-subagents/docs/ledger-design.md §4、docs/ledger.md §5）
+#   1. report 报数虚高（把 excused 算成未派）：pending 只数 planned。
+#      → policy.counts_from_rows()；本壳 report 用 query --json 取数后按 dmt 格式拼装。
+#   2. plan 不去重 → 幽灵单元：重复单元 rc=2 且不写账。
+#      → ledger.py cmd_plan()；本壳 plan 传 --reset（dmt 的 plan 本就是重置语义）。
+#   3. 锁无 stale 回收（残留锁 → 11s/rc=4，角色永久瘫痪）：锁内写 pid+ts，死 pid /
+#      age>10s 立即接管，等待上限 3s，超时 fail-open rc=0。
+#      → ledger.py LedgerLock；本壳【删除】原 mkdir 锁逻辑，不再自带锁。
+#   4. 时间戳无日期 + 过期判据用文件 mtime：行内时间改 ISO 带日期；过期按行内时间。
+#      → policy.now_iso() / ledger.py _effective_rows()；本壳给 check 传
+#      MAX_SUBAGENTS_LEDGER_TTL_HOURS=24（旧账不阻断），绝不看文件 mtime。
+#   5. inc 不区分 subagent 上下文：payload 带 agent_id 时不销父账。
+#      → policy.is_subagent() / ledger.py cmd_inc()。
+#   6. 派发工具名白名单与 gate 分叉：统一 policy.SPAWN_RE。
+#      → policy.SPAWN_RE / ledger.py cmd_inc()。
+#   7. pi adapter 不传 agent_id（max-subagents 侧新发现）：见适配器文档，与本壳无关。
+#
+# 【对外契约（dmt hook 与人在用，保持不变）】
+#   子命令：plan / inc / excuse / done / check / report / status / ledger-path / inject / nudge
+#   调用：bash dispatch-ledger.sh <cmd> <role> [args...]；inc/check/nudge 从 stdin 读 payload
+#   角色：dmt_role（"-"/空 → DMT_ROLE → herdr pane label）；只治理
+#     director|devm|anam|director-helper|devm-helper|anam-helper，其它角色静默 exit 0；
+#     DMT_DISPATCH_ALL=1 绕过白名单
+#   账本：$(dmt_root)/locks/dispatch-<ROLE>.tsv（沿用原布局，不换到 state 目录）
+#   excuse 理由码：dep|files|build|order|device|rea
+#   check：有未派且在途 0 → rc=2；stop_hook_active=true → rc=0；>24h 旧账不阻断
+#   report：并发账：单元 N（units）→ 派 M ＋ 未派 K（reason）[CAP=cap]（CAP 来自 probe-cap.sh）
+#   nudge：hookSpecificOutput.additionalContext JSON
+#   inject：dmt 原有文案
+#
+# 【fail-open】
+#   内核不可用 / 意外退出码（非 0/2）：check 一律 rc=0（绝不卡住 agent）；
+#   其它命令 stderr 报错后 rc=0。绝不允许脚本故障卡住 dmt 的 agent。
+# =============================================================================
 set -eu
+
 DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR/lib-dmt.sh"
+
+# 台账内核：绝对路径常量（禁止相对路径 —— cwd 不受控，相对路径会 miss）
+KERNEL="/home/panxiaoyong/pxy/projects26h2/max-subagents/ledger.py"
+
 CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
-# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper（director-helper/devm-helper/anam-helper）
+
+# 角色解析：参数 "-" 或空 ⇒ $DMT_ROLE ⇒ herdr pane label；只治理 director/devm/anam 与 helper
 ROLE="$(dmt_role "$ROLE")"
 if [ "${DMT_DISPATCH_ALL:-0}" != 1 ]; then
-  case "$ROLE" in director|devm|anam|director-helper|devm-helper|anam-helper) ;; *) exit 0 ;; esac
+  case "$ROLE" in
+    director|devm|anam|director-helper|devm-helper|anam-helper) ;;
+    *) exit 0 ;;   # 非治理角色对所有命令静默 exit 0（契约 10）
+  esac
 fi
-# 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
-# 否则 director 在项目根巡检 locks/dispatch-*.tsv 看不到，且各分支 .gitignore 未必有 locks/。
+# 空角色兜底：不能进文件路径 / 锁名（引用未定义变量必须有默认值，契约 2）
+[ -n "$ROLE" ] || ROLE="default"
+
+# 账本固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/（契约 4）
 ROOT="$(dmt_root)"
 LEDGER="$ROOT/locks/dispatch-$ROLE.tsv"
-mkdir -p "$ROOT/locks"
-# 同角色并发写（本体与 helper 同 label、hook 自动记账与手工命令撞车）⇒ 串行化「读-改-写」
-LOCK="$ROOT/locks/.dispatch-$ROLE.lock"
-tries=0
-while ! mkdir "$LOCK" 2>/dev/null; do
-  tries=$((tries + 1))
-  [ "$tries" -lt 100 ] || { echo "[dispatch] 等锁超时：$LOCK" >&2; exit 4; }
-  sleep 0.1
-done
-trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+mkdir -p "$ROOT/locks" 2>/dev/null || true
 
-# 账本行：unit <TAB> status(planned|dispatched|excused|done) <TAB> code(-|理由码) <TAB> 时间
-# 单元名一律按字段比较（awk），不做正则匹配——单元名含 . * & / 也不会误伤
-row_status() { awk -F'\t' -v u="$1" '$1==u{s=$2} END{print s}' "$LEDGER" 2>/dev/null || true; }
-first_planned() { awk -F'\t' '$2=="planned"{print $1; exit}' "$LEDGER" 2>/dev/null || true; }
-set_row() { # set_row <unit> <from> <to> <code：传 - 则不改 code 字段>
-  awk -F'\t' -v OFS='\t' -v u="$1" -v from="$2" -v to="$3" -v code="$4" \
-    '{ if(!done && $1==u && $2==from){ $2=to; if(code!="-") $3=code; done=1 } print }' \
-    "$LEDGER" > "$LEDGER.tmp" && mv "$LEDGER.tmp" "$LEDGER"
+# hook payload：非 tty 时读 stdin（原样转发给内核；超时 1s 防止挂死）
+payload=""
+if [ ! -t 0 ]; then payload="$(timeout 1 cat 2>/dev/null || true)"; fi
+
+# 内核是否可用（脚本缺失 / 无 python3 都算不可用 → fail-open）
+kernel_available() {
+  [ -f "$KERNEL" ] && command -v python3 >/dev/null 2>&1
+}
+
+# 透传执行：stdin=payload；退出码 0/2 原样返回（契约语义），其它（含内核缺失）报错后 rc=0。
+# 一次调用只调一次内核 ⇒ 不会形成读改写竞态（锁由 ledger.py 内部管理）。
+kernel_pass() {
+  local rc=0
+  if ! kernel_available; then
+    echo "[dispatch] 台账内核不可用（$KERNEL），fail-open：rc=0" >&2
+    return 0
+  fi
+  printf '%s' "$payload" | python3 "$KERNEL" "$@" || rc=$?
+  case "$rc" in
+    0|2) return "$rc" ;;
+    *) echo "[dispatch] 台账内核 ${1:-} 意外退出码 $rc，fail-open 转为 rc=0" >&2; return 0 ;;
+  esac
 }
 
 case "$CMD" in
   plan)
-    [ $# -ge 1 ] || { echo "plan needs at least one unit" >&2; exit 2; }
-    : > "$LEDGER"
-    for u in "$@"; do printf '%s\tplanned\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"; done
-    echo "planned $# unit(s) for $ROLE"
+    # 契约 ③：重复单元被拒 rc=2 且不写账（ledger.py 先查重后落盘）
+    [ "$#" -ge 1 ] || { echo "plan needs at least one unit" >&2; exit 2; }
+    rc=0
+    kernel_pass plan --ledger-path "$LEDGER" --session "$ROLE" --reset -- "$@" || rc=$?
+    exit "$rc"
     ;;
   inc)
-    # only a sub-agent dispatch counts as a unit: the hook fires on every tool, filter by tool_name
-    payload=""; if [ ! -t 0 ]; then payload="$(timeout 1 cat 2>/dev/null || true)"; fi
-    if [ -n "$payload" ]; then
-      tn="$(printf '%s' "$payload" | jq -r '.tool_name // empty' 2>/dev/null || true)"
-      case "$tn" in Agent|Task|Teammate|teammate) ;; *) exit 0 ;; esac
-    fi
-    u="${1:-auto}"
-    if [ -z "$u" ] || [ "$u" = auto ] || [ "$u" = "-" ]; then
-      # hook 自动记账：认领第一个 planned 单元（不新增假单元，防账本被 auto 污染）
-      u="$(first_planned)"
-      [ -n "$u" ] || { echo "no planned unit left"; exit 0; }
-    fi
-    st="$(row_status "$u")"
-    case "$st" in
-      planned) set_row "$u" planned dispatched -; echo "dispatched $u" ;;
-      dispatched|excused|done) echo "already recorded: $u ($st)" ;;
-      *) printf '%s\tdispatched\t-\t%s\n' "$u" "$(date +%H%M%S)" >> "$LEDGER"; echo "dispatched $u" ;;
+    # hook 自动记账形如 `inc - auto`：auto/-/空 都不带 --unit，由内核认领第一个 planned
+    args=(inc --ledger-path "$LEDGER" --session "$ROLE")
+    case "${1:-}" in
+      ""|auto|-) ;;
+      *) args+=(--unit "$1") ;;
     esac
+    rc=0
+    kernel_pass "${args[@]}" || rc=$?
+    exit "$rc"
     ;;
   excuse)
-    u="${1:?missing unit}"; code="${2:?missing code}"
-    case "$code" in dep|files|build|order|device|rea) ;; *) echo "bad code: $code" >&2; exit 2 ;; esac
-    st="$(row_status "$u")"
-    case "$st" in
-      planned) set_row "$u" planned excused "$code"; echo "excused $u ($code)" ;;
-      dispatched|excused|done) echo "refuse: $u already recorded as $st" >&2; exit 2 ;;
-      *) printf '%s\texcused\t%s\t%s\n' "$u" "$code" "$(date +%H%M%S)" >> "$LEDGER"; echo "excused $u ($code)" ;;
-    esac
+    [ "$#" -ge 1 ] || { echo "excuse needs a unit" >&2; exit 2; }
+    [ "$#" -ge 2 ] || { echo "excuse needs a code" >&2; exit 2; }
+    rc=0
+    kernel_pass excuse --ledger-path "$LEDGER" --session "$ROLE" --unit "$1" --code "$2" || rc=$?
+    exit "$rc"
     ;;
   done)
-    u="${1:?missing unit}"
-    st="$(row_status "$u")"
-    if [ "$st" = dispatched ]; then
-      set_row "$u" dispatched done -
-      echo "done $u"
-    else
-      echo "done $u (status=${st:-none}, skipped)"
-    fi
+    [ "$#" -ge 1 ] || { echo "done needs a unit" >&2; exit 2; }
+    rc=0
+    kernel_pass done --ledger-path "$LEDGER" --session "$ROLE" --unit "$1" || rc=$?
+    exit "$rc"
     ;;
   check)
-    # Stop hook anti-loop: if this turn was already bounced once (stop_hook_active=true), let it end
-    payload=""; if [ ! -t 0 ]; then payload="$(timeout 1 cat 2>/dev/null || true)"; fi
-    if [ -n "$payload" ] && [ "$(printf '%s' "$payload" | jq -r '.stop_hook_active // false' 2>/dev/null)" = "true" ]; then exit 0; fi
-    # 超过 24h 的旧账不再阻断（避免历史批次卡住新会话）
-    if [ -n "$(find "$LEDGER" -mmin +1440 2>/dev/null)" ]; then exit 0; fi
-    [ -f "$LEDGER" ] || exit 0
-    left="$(awk -F'\t' '$2=="planned"{printf "%s ", $1}' "$LEDGER")"
-    [ -n "$left" ] || exit 0
-    n="$(awk -F'\t' 'END{print NR}' "$LEDGER")"
-    d="$(awk -F'\t' '$2!="planned"{c++} END{print c+0}' "$LEDGER")"
-    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
-    # 按需求开：在途 ≥1 属按需推进，不阻断；只有「有未派单元且在途 0」才阻断（不比 CAP）
-    if [ "${inflight:-0}" -ge 1 ]; then exit 0; fi
-    echo "[dispatch] 单元 $n → 已派/已豁免 $d，未派：$left（在途 0，可继续派）" >&2
-    echo "[dispatch] 先派后干：按需求派发，上限 min(8, cap)，或 excuse 记理由（dep|files|build|order|device|rea）。见 team.md §5.2。" >&2
-    exit 2
+    # 契约 6：>24h 旧账不阻断 —— 按行内 ISO 时间判过期（内核支持），绝不看文件 mtime
+    export MAX_SUBAGENTS_LEDGER_TTL_HOURS="${MAX_SUBAGENTS_LEDGER_TTL_HOURS:-24}"
+    rc=0
+    kernel_pass check --ledger-path "$LEDGER" --session "$ROLE" || rc=$?
+    exit "$rc"
     ;;
   report)
-    n="$(awk -F'\t' 'END{print NR}' "$LEDGER" 2>/dev/null || echo 0)"
-    units="$(awk -F'\t' '{printf "%s%s", (NR>1?" ":""), $1}' "$LEDGER" 2>/dev/null || true)"
-    m="$(awk -F'\t' '$2=="dispatched"||$2=="done"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
-    k=$(( n - m ))
-    if [ "$k" -lt 0 ]; then k=0; fi
-    codes="$(awk -F'\t' '$2=="excused"{printf "%s:%s ", $1, $3}' "$LEDGER" 2>/dev/null || true)"
-    cap="$(bash "$DIR/probe-cap.sh")"
-    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER" 2>/dev/null)"
+    # 契约 7：取内核统计（含 rows），按 dmt 原格式拼装 + CAP
+    cap="$(bash "$DIR/probe-cap.sh" 2>/dev/null || echo 8)"
+    json=""
+    if kernel_available; then
+      json="$(python3 "$KERNEL" query --ledger-path "$LEDGER" --session "$ROLE" --json 2>/dev/null || true)"
+    fi
+    total=0; pending=0; inflight=0; done_n=0; units=""; codes=""
+    if [ -n "$json" ] && command -v jq >/dev/null 2>&1; then
+      total="$(printf '%s' "$json" | jq -r '.total // 0' 2>/dev/null || echo 0)"
+      pending="$(printf '%s' "$json" | jq -r '.pending // 0' 2>/dev/null || echo 0)"
+      inflight="$(printf '%s' "$json" | jq -r '.inflight // 0' 2>/dev/null || echo 0)"
+      done_n="$(printf '%s' "$json" | jq -r '.done // 0' 2>/dev/null || echo 0)"
+      units="$(printf '%s' "$json" | jq -r '[.rows[]?.unit] | join(" ")' 2>/dev/null || true)"
+      codes="$(printf '%s' "$json" | jq -r '[.rows[]? | select(.status=="excused") | "\(.unit):\(.code) "] | join("")' 2>/dev/null || true)"
+    fi
+    # 数值兜底：jq 异常时不能让算术失败（fail-open）
+    case "$total" in ''|*[!0-9]*) total=0 ;; esac
+    case "$pending" in ''|*[!0-9]*) pending=0 ;; esac
+    case "$inflight" in ''|*[!0-9]*) inflight=0 ;; esac
+    case "$done_n" in ''|*[!0-9]*) done_n=0 ;; esac
+    case "$cap" in ''|*[!0-9]*) cap=8 ;; esac
+    m=$(( inflight + done_n ))     # 「派」= 在途 + 完成（与原格式一致）
+    k="$pending"                   # 「未派」= 仅 planned（缺陷 1 修复：不再把 excused 算进来）
     extra=""
-    if [ "$k" -gt 0 ] && [ "${inflight:-0}" -ge "$cap" ]; then extra="cap:在途达上限、分批排队 "; fi
+    if [ "$k" -gt 0 ] && [ "$inflight" -ge "$cap" ]; then extra="cap:在途达上限、分批排队 "; fi
     reason="${codes}${extra}"
     if [ -z "$reason" ] && [ "$k" -gt 0 ]; then reason="缺理由码（不合规：须派发或 excuse）"; fi
-    echo "并发账：单元 $n（$units）→ 派 $m ＋ 未派 $k（${reason:-无}）[CAP=${cap}]"
-    ;;
-  status)
-    if [ -f "$LEDGER" ]; then column -t -s "$(printf '\t')" "$LEDGER"; else echo "(no ledger for $ROLE)"; fi
-    ;;
-  ledger-path)
-    echo "$LEDGER"
-    ;;
-  inject)
-    cap="$(bash "$DIR/probe-cap.sh")"
-    echo "并行纪律（dmt）：无依赖单元并发派 min(N, CAP) 个子代理（按需求开，上限 min(8, cap)，N 超上限分批；当前 CAP=$cap，probe-cap.sh 探测；唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
-    ;;
-  nudge)
-    cap="$(bash "$DIR/probe-cap.sh")"
-    [ -f "$LEDGER" ] || exit 0
-    pending="$(awk -F'\t' '$2=="planned"{c++} END{print c+0}' "$LEDGER")"
-    inflight="$(awk -F'\t' '$2=="dispatched"{c++} END{print c+0}' "$LEDGER")"
-    if [ "$pending" -ge 1 ] && [ "$inflight" -lt "$cap" ]; then
-      jq -n --arg t "[dispatch] 还有 $pending 个未派单元、在途 $inflight < CAP $cap：可补派下一批（min(N, CAP)，run_in_background: true）。" '{hookSpecificOutput:{additionalContext:$t}}'
-    fi
+    echo "并发账：单元 $total（$units）→ 派 $m ＋ 未派 $k（${reason:-无}）[CAP=$cap]"
     exit 0
     ;;
-  *) echo "unknown cmd: $CMD" >&2; exit 2 ;;
+  status)
+    rc=0
+    kernel_pass status --ledger-path "$LEDGER" --session "$ROLE" || rc=$?
+    exit "$rc"
+    ;;
+  ledger-path)
+    # parallel-guard.sh / self-work-guard.sh 用；输出解析后的绝对路径（契约 4）
+    out=""
+    if kernel_available; then
+      out="$(python3 "$KERNEL" ledger-path --ledger-path "$LEDGER" 2>/dev/null || true)"
+    fi
+    printf '%s\n' "${out:-$LEDGER}"
+    exit 0
+    ;;
+  inject)
+    # 契约 9：保留 dmt 原有文案（含 CAP 与 team.md 口径）
+    cap="$(bash "$DIR/probe-cap.sh" 2>/dev/null || echo 8)"
+    echo "并行纪律（dmt）：无依赖单元并发派 min(N, CAP) 个子代理（按需求开，上限 min(8, cap)，N 超上限分批；当前 CAP=$cap，probe-cap.sh 探测；唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
+    exit 0
+    ;;
+  nudge)
+    # 契约 8：内核输出即 hookSpecificOutput.additionalContext JSON
+    rc=0
+    kernel_pass nudge --ledger-path "$LEDGER" --session "$ROLE" || rc=$?
+    exit "$rc"
+    ;;
+  *)
+    echo "unknown cmd: $CMD" >&2
+    exit 2
+    ;;
 esac
