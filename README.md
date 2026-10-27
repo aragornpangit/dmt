@@ -43,16 +43,16 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
 
 ```
-dmt/                              # 一个角色一个文件夹
-├── README.md                                 # 项目总说明（本文件）
-├── dmt-director/                                 # 总监（技能 dmt-director）
+dmt/                                    # 一个角色一个文件夹
+├── README.md                           # 项目总说明（本文件）
+├── dmt-director/                       # 总监（技能 dmt-director）
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（唯一权威）
-│   ├── README.md                       # 仓库说明与安装（根 README.md）
-│   └── scripts/                        # 机检 / 文件占用 / 初始化 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 派发账本 / hooks / CAP 探测 / 并行派发 / 推送 / 安装
-├── dmt-pde/SKILL.md                      # 产品工程师（pde{n} 子代理技能，不占 pane）
-├── dmt-dm/SKILL.md                      # 开发经理
-└── dmt-am/SKILL.md                      # 分析经理
+│   ├── README.md                       # 角色目录说明（正文见根 README.md）
+│   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 派发账本 / hooks / CAP 探测 / 并行派发 / 推送 / 安装（+ lib-dmt.sh 公共库）
+├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
+├── dmt-dm/SKILL.md                     # 开发经理
+└── dmt-am/SKILL.md                     # 分析经理
 ```
 
 ## 安装到一个项目
