@@ -129,6 +129,22 @@ echo "check output='${out}' rc=$rc"
 expect_rc 0 "$rc" "非治理角色 check rc=0"
 echo
 
+echo "===== ⑪ append 追加过账（一子代理一单元队列，2026-10-27 事故 P3） ====="
+rm -f "$LEDGER"
+bash "$DL" plan "$ROLE" u1 >/dev/null 2>&1
+printf '%s' '{"tool_name":"Agent","agent_id":"a1"}' | bash "$DL" inc "$ROLE" >/dev/null 2>&1
+out="$(bash "$DL" append "$ROLE" 2>&1)"; rc=$?
+expect_rc 2 "$rc" "append 无单元 rc=2"
+out="$(bash "$DL" append "$ROLE" u2 u3 2>&1)"; rc=$?
+echo "$out"; echo "[append rc=$rc]"; expect_rc 0 "$rc" "append rc=0"
+printf '%s\n' "$out" | grep -q 'u2' && pass "append u2 过账" || fail "append u2 未过账"
+printf '%s\n' "$out" | grep -q 'u3' && pass "append u3 过账" || fail "append u3 未过账"
+out="$(bash "$DL" report "$ROLE" 2>&1)"; echo "$out"
+printf '%s\n' "$out" | grep -q '单元 3' && pass "append 后单元 3" || fail "append 后计数错"
+printf '%s\n' "$out" | grep -q '派 3' && pass "append 后派 3（含追加 2）" || fail "append 后派数错"
+grep -q $'^u1\tdispatched' "$LEDGER" && pass "append 不动既有行（u1 仍 dispatched）" || fail "append 动了既有行"
+echo
+
 echo "===== 结果 ====="
 if [ "$FAIL" = 0 ]; then echo "ALL PASS"; else echo "SOME FAILED"; fi
 exit "$FAIL"

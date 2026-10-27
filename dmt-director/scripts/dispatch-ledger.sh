@@ -27,7 +27,10 @@
 #   7. pi adapter 不传 agent_id（max-subagents 侧新发现）：见适配器文档，与本壳无关。
 #
 # 【对外契约（dmt hook 与人在用，保持不变）】
-#   子命令：plan / inc / excuse / done / check / report / status / ledger-path / inject / nudge
+#   子命令：plan / inc / excuse / done / append / check / report / status / ledger-path / inject / nudge
+#     append：SendMessage 追加新单元过账（2026-10-27 事故 P3）——逐个 inc --unit，
+#     账内 planned 就地认领、账外单元追加一行 dispatched；只增不改，不动既有行
+#     （勿用 plan 重排：dmt 壳 plan 固定 --reset，会清掉已派/完成行、压低「派 M」）
 #   调用：bash dispatch-ledger.sh <cmd> <role> [args...]；inc/check/nudge 从 stdin 读 payload
 #   角色：dmt_role（"-"/空 → DMT_ROLE → herdr pane label）；只治理
 #     director|devm|anam|director-helper|devm-helper|anam-helper，其它角色静默 exit 0；
@@ -51,7 +54,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 # 台账内核：绝对路径常量（禁止相对路径 —— cwd 不受控，相对路径会 miss）
 KERNEL="/home/panxiaoyong/pxy/projects26h2/max-subagents/ledger.py"
 
-CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|check|report|status|ledger-path|inject|nudge> <role> ...}"
+CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|append|check|report|status|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
 
@@ -127,6 +130,17 @@ case "$CMD" in
     kernel_pass done --ledger-path "$LEDGER" --session "$ROLE" --unit "$1" || rc=$?
     exit "$rc"
     ;;
+  append)
+    # 一子代理一单元队列（2026-10-27 事故 P3）：SendMessage 追加的新单元必须过账，
+    # 使「派 M」等于实际在途数。逐个 inc --unit：账内 planned 就地认领；账外单元
+    # 追加一行 dispatched（ledger.py 原生语义），不动既有行 —— 所以不走 plan 重排。
+    [ "$#" -ge 1 ] || { echo "append needs at least one unit" >&2; exit 2; }
+    rc=0
+    for u in "$@"; do
+      kernel_pass inc --ledger-path "$LEDGER" --session "$ROLE" --unit "$u" || rc=$?
+    done
+    exit "$rc"
+    ;;
   check)
     # 契约 6：>24h 旧账不阻断 —— 按行内 ISO 时间判过期（内核支持），绝不看文件 mtime
     export MAX_SUBAGENTS_LEDGER_TTL_HOURS="${MAX_SUBAGENTS_LEDGER_TTL_HOURS:-24}"
@@ -182,7 +196,7 @@ case "$CMD" in
   inject)
     # 契约 9：保留 dmt 原有文案（含 CAP 与 team.md 口径）
     cap="$(bash "$DIR/probe-cap.sh" 2>/dev/null || echo 8)"
-    echo "并行纪律（dmt）：无依赖单元并发派 min(N, CAP) 个子代理（按需求开，上限 min(8, cap)，N 超上限分批；当前 CAP=$cap，probe-cap.sh 探测；唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）。"
+    echo "并行纪律（dmt）：无依赖单元并发派 min(N, CAP) 个子代理（按需求开，上限 min(8, cap)，N 超上限分批；当前 CAP=$cap，probe-cap.sh 探测；唤醒后先补派再收口）；先派后干——开工先列单元清单并 dispatch-ledger.sh plan 落账再动手；子代理一律 run_in_background: true；收口立即向上级回报（完成即报，不傻等）；SendMessage 追加新单元必须先 `append` 过账（派 M = 实际在途），不得把新单元堆进在途子代理的队列。"
     exit 0
     ;;
   nudge)

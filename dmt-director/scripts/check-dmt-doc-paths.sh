@@ -312,7 +312,8 @@ fi
 echo
 echo
 echo "== 4n) 一子代理一单元队列必须登记（2026-10-27 事故后立规） =="
-for f in "$CONTRACT" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md"; do
+# pde 是子代理技能、不派发，不在此列（用户裁定 2026-10-27）
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md"; do
   if grep -q '一子代理一单元队列' "$f" 2>/dev/null; then
     echo "OK   一子代理一单元队列        $(basename "$(dirname "$f")")/$(basename "$f")"
   else
