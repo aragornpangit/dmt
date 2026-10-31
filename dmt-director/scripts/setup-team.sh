@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 # director 用：给自己正名，建 devm（本 tab 右侧）/ anam（独立 tab）两个 pane 并代启动 cbc（创建与启动都幂等）
-# 用法：bash setup-team.sh [--dry-run] [--no-start] [--force-start] [--reload]
+# 用法：bash setup-team.sh [--dry-run] [--no-start] [--force-start] [--reload] [--harness <name>]
 #   --no-start     只建 pane，不启动
 #   --force-start  即使 agent 已在跑也重发启动命令（默认跳过：对运行中的 agent 发启动命令会被当成用户提问）
 #   --reload       对已在跑的 pane 只补发技能命令（重载技能，不重发启动命令）
+#   --harness      harness 名：codebuddy（默认）| pi | opencode | codex（亦可 $DMT_HARNESS；$DMT_HARNESS_CMD 整体覆盖）
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_TAB_ID、HERDR_WORKSPACE_ID
 set -eu
-DRY=0; START=1; FORCE=0; RELOAD=0
-for a in "$@"; do
-  case "$a" in
+DRY=0; START=1; FORCE=0; RELOAD=0; HARNESS_ARG=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --dry-run) DRY=1 ;;
     --no-start) START=0 ;;
     --force-start) FORCE=1 ;;
     --reload) RELOAD=1 ;;
-    *) echo "unknown arg: $a" >&2; exit 2 ;;
+    --harness) HARNESS_ARG="${2:-}"; shift ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
+  shift
 done
 missing=""
 [ -n "${HERDR_ENV:-}" ] || missing="$missing HERDR_ENV"
@@ -24,6 +27,9 @@ missing=""
 [ -z "$missing" ] || { echo "缺少环境变量:$missing（在 director pane 内执行本脚本）" >&2; exit 2; }
 
 . "$(cd "$(dirname "$0")" && pwd)/lib-dmt.sh"
+
+HARNESS="$(dmt_harness_name "$HARNESS_ARG")" || exit 2
+HARNESS_CMD="$(dmt_harness_cmd "$HARNESS")" || exit 2
 
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 pane_by_label() { dmt_pane_by_label "$1"; }
@@ -36,7 +42,7 @@ ensure_started() {
   local pane="$1" skill="$2" st
   [ "$START" = 1 ] || { echo "skip start: $pane"; return 0; }
   if [ "$DRY" = 1 ]; then
-    echo "+ [dry] start $pane: codebuddy --permission-mode auto  then  $skill" >&2
+    echo "+ [dry] start $pane: $HARNESS_CMD (harness=$HARNESS)  then  $skill" >&2
     return 0
   fi
   st="$(pane_status "$pane")"
@@ -49,7 +55,7 @@ ensure_started() {
     fi
     return 0
   fi
-  h env HERDR_ENV=1 herdr pane send-text "$pane" 'codebuddy --permission-mode auto'
+  h env HERDR_ENV=1 herdr pane send-text "$pane" "$HARNESS_CMD"
   h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
   wait_ready "$pane" || true
   h env HERDR_ENV=1 herdr pane send-text "$pane" "$skill"

@@ -50,3 +50,27 @@ dmt_wait_ready() {
   echo "WARN: $pane still unknown after ${limit}s" >&2
   return 1
 }
+
+# harness 白名单与启动命令（用户 2026-10-31 裁定：默认 codebuddy，备选 pi / opencode / codex）。
+# 解析优先级：显式参数 ⇒ $DMT_HARNESS ⇒ codebuddy。非法值 rc=2（错误写 stderr，便于调用方 fail-fast）。
+dmt_harness_name() {
+  local h="${1:-}"
+  case "$h" in ""|-) h="${DMT_HARNESS:-codebuddy}" ;; esac
+  case "$h" in
+    codebuddy|pi|opencode|codex) printf '%s' "$h" ;;
+    *) echo "bad harness: $h (want codebuddy|pi|opencode|codex)" >&2; return 2 ;;
+  esac
+}
+
+# harness 启动命令。$DMT_HARNESS_CMD 可整体覆盖（逃生舱：任意 harness / 额外参数）。
+dmt_harness_cmd() {
+  local h="${1:-codebuddy}"
+  if [ -n "${DMT_HARNESS_CMD:-}" ]; then printf '%s' "$DMT_HARNESS_CMD"; return 0; fi
+  case "$h" in
+    codebuddy) printf '%s' 'codebuddy --permission-mode auto' ;;
+    pi)        printf '%s' 'pi' ;;
+    opencode)  printf '%s' 'opencode' ;;
+    codex)     printf '%s' 'codex' ;;
+    *) echo "bad harness: $h" >&2; return 2 ;;
+  esac
+}

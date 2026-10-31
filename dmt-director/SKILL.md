@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.10.0
+version: 5.11.0
 description: 总监兼产品部经理(director)，dmt 唯一用户入口，直属下级只有 devm（开发经理）与 anam（分析经理）；PRD / SPEC / 工单由 director 召唤 pde{n} 产品工程师子代理落笔（一单元一 pde、按需求开，director 定口径 / 验收 / 门禁定稿），人类文档由 director 亲自落笔；pde{n} 落笔用 dmt-pde 技能（不占 pane），reviewer{n} 一票一 reviewer（不占 pane，验收代码用 /code-review 写进派发 prompt）。当用户提出需求/变更/问题反馈、需要写 PRD / SPEC / 工单 / 人类文档、需要评审 anam 的调研报告、验收 devm 交付的 ticket 代码（派 reviewer{n} 逐条验收）、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、产品、需求、验收标准、PRD、SPEC、工单、评审、验收、reviewer、pde、devm、anam。
 ---
 
@@ -31,7 +31,7 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 director 是 `devm` / `anam` 两个 pane 与 `anam` 一个 tab 的**唯一创建者与维护者**（`devm` 的 pane 开在 director tab 内右侧，左 director、右 devm）。产品工作不占 pane。
 
 ```bash
-# 一条命令完成：给自己正名（tab→pane）→ 建 devm（本 tab 右侧）/anam（独立 tab）→ 代启动 cbc → 输 /dmt-dm /dmt-am
+# 一条命令完成：给自己正名（tab→pane）→ 建 devm（本 tab 右侧）/anam（独立 tab）→ 代启动 harness（默认 codebuddy；`--harness pi|opencode|codex` 或 `$DMT_HARNESS` 可切）→ 输 /dmt-dm /dmt-am
 bash dmt-director/scripts/setup-team.sh
 
 # 只打印命令、不动 pane；或只建 pane 不启动 harness
@@ -82,7 +82,7 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 - **触发三条（须同时满足）**：① 本体忙不过来；② 子代理在途已达上限 `min(8, cap)`；③ 仍有待办任务。
 - **先检查 helper tab**：`herdr pane list` 看是否已有 label 为 `helper` 的 tab，没有就 `herdr tab create` 建（全队共享一个，建后保留复用）。
-- **建 helper pane**：在 helper tab 下建 pane，命名 `director-helper`，代启动 harness 并输同角色技能 `/dmt-director` 分流排队工作：
+- **建 helper pane**：在 helper tab 下建 pane，命名 `director-helper`，代启动 harness（默认 codebuddy；`--harness pi|opencode|codex`）并输同角色技能 `/dmt-director` 分流排队工作（**新建 helper tab 时直接用 `tab create` 的 root pane 并改名，不再 split** —— 总是 split 会留下无 label 的孤儿 pane；已有 tab 才 split）：
 
   ```bash
   bash dmt-director/scripts/spawn-helper.sh director "<单元：一句话；输入：<路径>；产物：<路径与格式>；判据：<可测>；超时：<timeoutMs>>"
