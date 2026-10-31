@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 本体角色用：开 helper pane（{角色}-helper）并代启动 cbc、装载同角色技能分流
 # helper 机制（用户裁定）：{总监|经理}忙不过来、且子代理在途已达上限 min(8, cap)、且仍有待办任务
-#   ⇒ 找/建 helper tab（label 固定 helper，全队共享一个，没有就建）→ 在 helper tab 内 split 出 pane 并 rename 为 {角色}-helper
+#   ⇒ 找/建 helper tab（label 固定 helper，全队共享一个，没有就建；新建时把 root pane 标为锚点 `helper-anchor`）→ 在 helper tab 内 split 出 pane 并 rename 为 {角色}-helper
 #   ⇒ 代启动 harness 并输同角色技能命令（director→/dmt-director、devm→/dmt-dm、anam→/dmt-am）
 #   harness：默认 codebuddy；备选 pi / opencode / codex（--harness 或 $DMT_HARNESS；$DMT_HARNESS_CMD 可整体覆盖）
 # 生命周期由创建者（本体角色）维护：建立、改名（label 漂移自愈）、任务完成回收（close-helper.sh 关 pane；helper tab 保留复用）
@@ -96,10 +96,22 @@ if [ -z "$TAB" ]; then
   echo "created helper tab $TAB"
 fi
 
-# 3) helper tab 内的锚点 pane（新建 tab 用 root pane，已有 tab 取其中一个 pane 做 split）
-base="$ROOT_PANE"
-if [ -z "$base" ]; then
-  base="$(list_panes | jq -r --arg t "$TAB" '.result.panes[]? | select(.tab_id==$t) | .pane_id' 2>/dev/null | head -1 || true)"
+# 3) helper tab 的**锚点 pane**
+#    新建 tab 的 root pane ⇒ rename 为 $ANCHOR_LABEL（锚点，不启动 agent）：
+#      · 有 label ⇒ 不违反「身份 = pane label」，也便于定位（不是无名孤儿）；
+#      · 它保证 tab 始终 ≥1 pane ⇒ close-helper 关掉 helper 后 **tab 不会整tab消失**。
+#        （实测 2026-10-31：无锚点时关掉最后一个 pane ⇒ helper tab 一并消失，破坏「tab 保留复用」。）
+#    已有 tab ⇒ 优先用锚点 pane 作 split 的 base，退而用其首个 pane。
+ANCHOR_LABEL="helper-anchor"
+base="${ROOT_PANE:-}"
+if [ -n "$base" ]; then
+  h env HERDR_ENV=1 herdr pane rename "$base" "$ANCHOR_LABEL"
+  echo "labeled anchor pane $base as $ANCHOR_LABEL"
+else
+  base="$(pane_by_label "$ANCHOR_LABEL")"
+  if [ -z "$base" ]; then
+    base="$(list_panes | jq -r --arg t "$TAB" '.result.panes[]? | select(.tab_id==$t) | .pane_id' 2>/dev/null | head -1 || true)"
+  fi
 fi
 if [ -z "$base" ]; then
   if [ "$DRY" = 1 ]; then
@@ -111,23 +123,15 @@ if [ -z "$base" ]; then
   fi
 fi
 
-# 4) 取本次 helper 的 pane 并 rename 为 {角色}-helper
-#    新建 tab ⇒ **直接用 root pane**（与 setup-team.sh 建 anam tab 同做法；
-#    此前总是 split 会多切一刀、并留下无法用 label 定位的孤儿 pane）
-#    已有 tab（root 可能已被别的角色 helper 占用）⇒ 才 split 新 pane
-if [ -n "${ROOT_PANE:-}" ]; then
-  pane="$ROOT_PANE"
-  h env HERDR_ENV=1 herdr pane rename "$pane" "$LABEL"
-  echo "use existing root pane of new helper tab: $pane"
+# 4) split 出本次 helper 的 pane 并 rename 为 {角色}-helper
+#    锚点 pane 不承载 helper ⇒ 同一 tab 可容纳多角色 helper，且关一个 helper 不会带走 tab。
+if [ "$DRY" = 1 ]; then
+  h herdr pane split "$base" --direction right --cwd "$PWD" --no-focus
+  h herdr pane rename "<new-pane>" "$LABEL"
+  pane="<new-pane>"
 else
-  if [ "$DRY" = 1 ]; then
-    h herdr pane split "$base" --direction right --cwd "$PWD" --no-focus
-    h herdr pane rename "<new-pane>" "$LABEL"
-    pane="<new-pane>"
-  else
-    pane="$(HERDR_ENV=1 herdr pane split "$base" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"
-    HERDR_ENV=1 herdr pane rename "$pane" "$LABEL"
-  fi
+  pane="$(HERDR_ENV=1 herdr pane split "$base" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id')"
+  HERDR_ENV=1 herdr pane rename "$pane" "$LABEL"
 fi
 
 # 5) 代启动 harness 并装载同角色技能分流
