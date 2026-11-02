@@ -27,23 +27,7 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 ## 建 pane、打 label 与启动（固定顺序）
 
-**身份＝pane label**：伙伴一律按 `herdr pane list` 的 `label` 定位，**不按 tab 内位置**（位置会被 `pane swap` 打乱），也不记 pane id。
-director 是 `devm` / `anam` 两个 pane 与 `anam` 一个 tab 的**唯一创建者与维护者**（`devm` 的 pane 开在 director tab 内右侧，左 director、右 devm）。产品工作不占 pane。
-
-```bash
-# 一条命令完成：给自己正名（tab→pane）→ 建 devm（本 tab 右侧）/anam（独立 tab）→ 代启动 harness（默认 codebuddy；`--harness pi|opencode|codex` 或 `$DMT_HARNESS` 可切）→ 输 /dmt-dm /dmt-am
-bash dmt-director/scripts/setup-team.sh
-
-# 只打印命令、不动 pane；或只建 pane 不启动 harness
-bash dmt-director/scripts/setup-team.sh --dry-run
-bash dmt-director/scripts/setup-team.sh --no-start
-```
-
-脚本按 label 幂等：已存在的 pane 不重建；缺失/漂移时用 `pane rename` 或重建。
-- **顺序**：先正名自己（tab 再 pane），再建 devm（**director tab 内、director pane 右侧**），再建 anam（独立 tab）；产品工作不需要 pane。
-- **维护**：每次开工前巡检 `devm` / `anam` 两个 label；label 缺失或漂移 ⇒ `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」；**pane 已死则重建**，不要让下级自己找位置。
-- **禁止 `herdr tab close`**：director 的 tab 里有 devm，关 tab 会连带杀掉 devm 与自己；只许关 pane。
-- 就绪判据一律轮询 `herdr pane get <pane>` 的 `.result.pane.agent_status` 直到不再是 `unknown`（`unknown` = 该 pane 没有 agent 在跑）；**不要用 `wait-output --match` 匹配屏幕文字** —— 对已在跑的 pane 它会立刻命中历史输出，等于没有判据。投递首条任务后用 `pane read` 核验输入框已清空。
+**一律用脚本**：`bash dmt-director/scripts/setup-team.sh`（幂等）。要点：给自己正名（**tab label → pane label，顺序不可颠倒**）→ split 出 `devm`（本 tab 右侧）→ 建 `anam` tab → 两 pane 由 director 代启动 harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex`）→ 输 `/dmt-dm` / `/dmt-am`。身份＝**`pane label`**（不按 tab 位置、不抄 pane id），漂移即 `pane rename` 自愈。**禁止 `herdr tab close`**（会连带杀掉 devm 与自己）。完整判据、例外与 helper 布局见 `dmt-director/OPS.md` §1。
 
 ## 并行（director 自己也要用子代理）
 
@@ -76,25 +60,7 @@ bash dmt-director/scripts/setup-team.sh --no-start
 
 ## helper 分身（忙不过来时）
 
-helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技能代本体承接 spawn 一次性下发的那份任务；**每角色至多一个**，全队共享一个 helper tab（tab label 固定 `helper`）。
-
-- **触发三条（须同时满足）**：① 本体忙不过来；② 子代理在途已达上限 `min(8, cap)`；③ 仍有待办任务。
-- **先检查 helper tab**：`herdr pane list` 看是否已有 label 为 `helper` 的 tab，没有就 `herdr tab create` 建（全队共享一个，建后保留复用）。
-- **建 helper pane**：在 helper tab 下建 pane，命名 `director-helper`，代启动 harness（默认 codebuddy；`--harness pi|opencode|codex`）并输同角色技能 `/dmt-director` 分流排队工作（**新建 helper tab 时直接用 `tab create` 的 root pane 并改名，不再 split** —— 总是 split 会留下无 label 的孤儿 pane；已有 tab 才 split）：
-
-  ```bash
-  bash dmt-director/scripts/spawn-helper.sh director "<单元：一句话；输入：<路径>；产物：<路径与格式>；判据：<可测>；超时：<timeoutMs>>"
-  # 任务文本**必填**：helper 此后不接受任何输入框内容，省略等于开一个没有任务的空分身
-  ```
-
-- **生命周期由创建者（本体）维护**：建立、改名（label 漂移即 `pane rename` 自愈）、任务完成即回收关 pane（helper tab 保留复用）：
-
-  ```bash
-  bash dmt-director/scripts/close-helper.sh director
-  ```
-
-- **纯分身、单向汇报**：helper 任务随 spawn（`spawn-helper.sh` 任务文本位）一次性下发，此后不接受任何输入框内容；成果单向汇报主体（`inbox/director/`，方向 `{seq}-director-helper2director-{slug}-{YYMMDDHHMM}.md`，只此一个方向）；helper 没有自己的 inbox、不走门铃（写箱不按铃，本体扫箱收取）。
-- **独占动作不移交**：**装机（`adb install` 等设备写操作）只归 director 本体**，`director-helper` 不代行（helper 不碰设备）。
+**触发三条同时成立才开**（① 本体忙不过来；② 子代理在途已达 `min(8, cap)`；③ 仍有待办）。形态＝helper tab（label `helper`，全队共享）+ `{角色}-helper` pane（每角色至多一个），由 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam> "<任务>"` 建立并**一次性下发**任务，收口用 `close-helper.sh`。helper 是本体纯分身：**没有自己的 inbox**、不走门铃，成果单向汇报。**独占动作不移交**：装机归 director 本体、merge / push 归 devm 本体。完整语义与回收顺序见 `dmt-director/OPS.md` §1。
 
 ## 产物
 
@@ -112,19 +78,7 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 ## 编辑前检查占用（硬规则）
 
-编辑任何文件前先跑占用检查，**rc=3 就停手**：
-
-```bash
-bash dmt-director/scripts/file-claim.sh check   <path> <owner>   # 0 可写 / 3 他人占用
-bash dmt-director/scripts/file-claim.sh claim   <path> <owner>   # 重复调用＝续期
-bash dmt-director/scripts/file-claim.sh release <path> <owner>
-```
-
-- `<owner>` 用「角色:实例」（如 `director`、`devm`、`anam`、`dev-e3`）。
-- 记录在项目根 `locks/`（不入库）；TTL 30 分钟，过期可抢占，但必须在回报里写明原持有者。
-- `inbox/` 的消息文件不登记（文件名含 seq 与时刻，天然不冲突）。
-- Orca runtime 可连通时（`orca status`），再跑 `orca worktree ps` 看同 worktree 是否有活跃 agent。
-- 细则见 `dmt-director/OPS.md` §3。
+编辑任何文件前先 `bash dmt-director/scripts/file-claim.sh check <path> <owner>`，占用到手才改，改完 `release`。`rc=3` ⇒ 停手（等释放 / 换文件 / 回报上级协调），**不得绕过、不得删别人的锁**。细则（TTL 30 分钟、worktree 不豁免、例外）见 `dmt-director/OPS.md` §3。
 
 ## 指针
 

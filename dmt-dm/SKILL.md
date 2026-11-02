@@ -66,25 +66,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级只有
 
 ## helper 分身（忙不过来时）
 
-helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技能代本体承接 spawn 时下发的那份任务；**每角色至多一个**。任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果**单向汇报给主体**（`devm`）；helper **没有自己的 inbox**（不收件），**不走门铃互通**。全队共享一个 helper tab（tab label 固定 `helper`）。
-
-- **触发三条（须同时满足）**：① 本体忙不过来；② 子代理在途已达上限 `min(8, cap)`；③ 仍有待办任务。
-- **先检查 helper tab**：`herdr pane list` 看是否已有 label 为 `helper` 的 tab，没有就 `herdr tab create` 建（全队共享一个，建后保留复用）。
-- **建 helper 分身**：在 helper tab 下建 pane，命名 `devm-helper`，代启动 harness 并输同角色技能 `/dmt-dm`，**任务随 spawn 一次性下发**（此后不再向其输入框投递任何内容）：
-
-  ```
-  bash dmt-director/scripts/spawn-helper.sh devm "<单元：一句话；输入：<路径>；产物：<路径与格式>；判据：<可测>；超时：<timeoutMs>>"
-  # 任务文本**必填**：helper 此后不接受任何输入框内容，省略等于开一个没有任务的空分身
-  ```
-
-- **成果单向回报**：helper 完成后把工作成果**单向汇报主体**（写 `inbox/devm/`，只此一个方向，写箱不按铃，本体扫箱收取）；helper **没有自己的 inbox**、不走门铃互通。
-- **生命周期由创建者（本体）维护**：建立、改名（label 漂移即 `pane rename` 自愈）、任务完成即回收关 pane（helper tab 保留复用）：
-
-  ```
-  bash dmt-director/scripts/close-helper.sh devm
-  ```
-
-- **独占动作不移交**：**merge 与 `git push` 只归 devm 本体**（代码库归 devm 管理），`devm-helper` 不代行。
+`devm-helper` 的开法、语义与回收见 `dmt-director/OPS.md` §1：`bash dmt-director/scripts/spawn-helper.sh devm "<任务>"`（**一次性下发**）、收口 `close-helper.sh`；helper 是纯分身（无自己的 inbox、不走门铃、成果单向汇报）。**merge / push 不移交 helper**（只归 devm 本体）。
 
 ## 强制技能（mattpocock，必须使用）
 
@@ -95,19 +77,7 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 ## 编辑前检查占用（硬规则）
 
-编辑任何文件前先跑占用检查，**rc=3 就停手**：
-
-```
-bash dmt-director/scripts/file-claim.sh check   <path> <owner>   # 0 可写 / 3 他人占用
-bash dmt-director/scripts/file-claim.sh claim   <path> <owner>   # 重复调用＝续期
-bash dmt-director/scripts/file-claim.sh release <path> <owner>
-```
-
-- `<owner>` 用「角色:实例」（如 `director`、`devm`、`dev-e3`、`devm-helper`）。
-- 记录在项目根 `locks/`（不入库）；TTL 30 分钟，过期可抢占，但必须在回报里写明原持有者。
-- `inbox/` 的消息文件不登记（文件名含 seq 与时刻，天然不冲突）。
-- Orca runtime 可连通时（`orca status`），再跑 `orca worktree ps` 看同 worktree 是否有活跃 agent。
-- 细则见 `dmt-director/OPS.md` §3。
+编辑任何文件前先 `bash dmt-director/scripts/file-claim.sh check <path> <owner>`，占用到手才改，改完 `release`。`rc=3` ⇒ 停手并回报上级，**不得删别人的锁**。细则见 `dmt-director/OPS.md` §3。
 
 ## 指针
 

@@ -38,7 +38,7 @@ pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1
 
 ## 文件占用
 
-- **落笔类单元**（PRD / SPEC / 工单）写文件前先 `bash dmt-director/scripts/file-claim.sh claim <path> pde{n}`，rc=3 停手，写完 `release`；**取证类单元不落盘**，证据与结论随回报交 director；除上述两类不碰其它文件。
+编辑任何文件前 `bash dmt-director/scripts/file-claim.sh check <path> <owner>`，到手才改，改完 `release`；`rc=3` ⇒ 停手并回报派发者。细则见 `dmt-director/OPS.md` §3。
 
 ## 指针
 
