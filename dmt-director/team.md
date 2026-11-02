@@ -59,9 +59,9 @@ director            总监兼产品部经理（label director，屏幕左侧）
 **身份＝pane label，不是位置、不是 tab。** 每个常驻角色占一个 **pane**（`pde{n}` / `dev-e` / `ana-e` 是子代理、不占 pane），pane label 与角色/实例名同名（`director` / `devm` / `anam`；helper 为 `{角色}-helper`），在同一 workspace 内**唯一**。
 
 - **tab 只是视觉分组**：**`anam` 占一个 tab**（tab label 与本人 pane label 同名）；**`devm` 不占 tab**，它的 pane 开在 **`director` 的 tab 内、director pane 右侧**（左 director、右 devm）。
-- **识别伙伴一律按 pane label**（`herdr pane list` 过滤 `label`），**不按 tab 内位置、不按 pane id 记忆**：pane id 随重启变化，pane 顺序随 `pane swap` / `pane move` 变化（实测交换后 `pane list` 顺序立即翻转），**只有 label 稳定**。
+- **识别伙伴一律按 pane label**（`herdr pane list` 过滤 `label`），**不按 tab 内位置、不按 pane id 记忆**：pane id 随重启变化，pane 顺序与 pane id 都会变，**只有 label 稳定**。
 - **工程师仍是子代理**：`pde{n}` / `dev-e` / `ana-e` 不占 pane、不装技能（技能随派发 prompt 下发）、不走跨 pane 通信。
-- **团队启动顺序（director 全自动拉起经理层）**：用户先备好 `director` tab 并在其中启动 harness；**director 第一件事是给自己正名 —— 先把 tab label 改成 `director`，再把 pane label 改成 `director`（顺序不可颠倒）**。随后 director **在右侧 split 出 `devm` pane**（`pane split <director pane> --direction right`，herdr 0.9.5 无 `pane create`，建 pane 的等价动作就是 split），再**创建 `anam` tab 并给其 root pane 打上 label `anam`**。两个 pane 都由 director **代启动** harness（`pane send-text '<启动命令>'` + `send-keys enter`，就绪判据 `herdr pane get <pane>` 的 `agent_status` 非 `unknown`；**harness 可参数化**：默认 `codebuddy --permission-mode auto`，`--harness pi|opencode|codex` 或 `$DMT_HARNESS` 可切，`$DMT_HARNESS_CMD` 整体覆盖，白名单在 `lib-dmt.sh`），就绪后输入角色斜杠命令 **`/dmt-dm`**（devm pane）、**`/dmt-am`**（anam pane）装载角色技能。产品工作不需要 pane —— director 需要产品支撑时自派 `pde{n}` 子代理（prompt 里下发 `/dmt-pde` 技能）。**不请用户手动启动经理 harness**（命令细节见本节 `setup-team.sh`，不手敲）；经理 pane 同样不走 `shift+Tab` 切权限模式那套流程（启动命令已带 `--permission-mode auto`）。
+- **团队启动（director 全自动、幂等）**：用户备好 `director` tab 并启动 harness；director 先给自己正名（**tab label → pane label，顺序不可颠倒**），再在右侧 split 出 `devm`、另建 `anam` tab，两个 pane 由 director **代启动** harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex` 或 `$DMT_HARNESS` 切换、`$DMT_HARNESS_CMD` 覆盖，白名单在 `lib-dmt.sh`），就绪判据＝`herdr pane get <pane>` 的 `agent_status` 非 `unknown`，随后输 `/dmt-dm` / `/dmt-am` 装载技能。**命令一律走 `bash dmt-director/scripts/setup-team.sh`，不手敲**。产品工作不需要 pane（director 自派 `pde{n}`，prompt 里下发 `/dmt-pde`）。
 - **director 独占创建与维护**：`devm` / `anam` 的 pane、tab 与 label 只由 director 建、只由 director 改；开工前巡检两个 label，缺失/漂移就 `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」。下级**不得**自行新建或改名自己的 pane/tab。
 - **director 的 tab 内常驻 director 与 devm 两个 pane** ⇒ **禁止 `herdr tab close`**：关 tab 会连带杀掉 devm 与 director 自己；只许关 pane，且 director 不关 devm（devm 常驻）。
 - **helper tab / helper pane（纯分身分流）**：**触发三条同时成立才开** —— ① {总监|经理}忙不过来；② 子代理在途已达上限 `min(8, cap)`；③ 仍有待办任务。**流程**：先检查是否已有 **helper tab**（tab label 固定 `helper`，**全队共享一个**；没有就 `herdr tab create` 建）→ 在 helper tab 下建 pane，命名 **`{角色}-helper`**（`director-helper` / `devm-helper` / `anam-helper`，**每角色至多一个**）→ 用 `spawn-helper.sh` 代启动 harness、输同角色技能命令，并把**任务随 spawn 一次性下发**。**helper 是本体的纯分身**：技能同主体，**任务随 spawn 一次性下发，此后不接受任何输入框内容**（不再追加任务、补充说明或中途改单）；工作成果**单向汇报给主体**（`{角色}`）——只出不进，写 `inbox/<本体>/`（方向 `{角色}-helper2{角色}`）由本体扫箱收取；helper **没有自己的 inbox**（不收件）、**不走门铃互通**（无门铃往返、无回程消息）。**生命周期由创建者（本体角色）维护**：建立、改名（label 漂移自愈）、任务完成回收（用 `close-helper.sh` 关 pane；**helper tab 保留复用，禁 `herdr tab close` 误杀**）。**独占动作不移交**：装机只归 `director` 本体、merge / push 只归 `devm` 本体，helper 不得代做。helper 是 **pane 角色（非子代理）**。
@@ -77,46 +77,21 @@ HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
 
 **身份自愈**（每个角色启动后第一件事）：`herdr pane get "$HERDR_PANE_ID"` 读到的 label 与角色名不符（含为空）时，立即 `herdr pane rename "$HERDR_PANE_ID" <角色名>`。`devm` **不得**用 `herdr tab list` 认自己 —— 它的 tab label 是上级 `director` 的（devm 的 pane 在 director tab 内）。
 
-**创建 pane（用脚本，不手敲）**：
-
-```bash
-# director：给自己正名（tab→pane）+ 建 devm（本 tab 右侧）/anam（独立 tab）+ 代启动 + 输角色技能（幂等）
-bash dmt-director/scripts/setup-team.sh
-
-# 本体：helper 分流 —— helper tab（label `helper`，全队共享，无则建）下开 `{角色}-helper` pane + 代启动 + 输同角色技能 + 任务随 spawn 一次性下发（幂等；角色位只收 director|devm|anam，每角色至多一个）
-bash dmt-director/scripts/spawn-helper.sh devm "<任务文本>"
-
-# 本体：关自己的 helper pane（本体收件箱有 {角色}-helper 方向未收口会拒绝，确需强关加 --force；helper tab 保留复用）
-bash dmt-director/scripts/close-helper.sh devm
-```
-
-脚本内部仍是 `herdr pane split/rename/send-text/send-keys`，并做 label 幂等检查与就绪等待（轮询 `pane get` 的 `agent_status`，不是 `wait-output`）；`--dry-run` 只打印命令、`--no-start` 只建 pane 不启动 harness。**布局只能在 split 时定对**：实测同一 tab 内 `pane move` 返回 `changed:false`／`reason:same_tab`。
+**创建 pane 一律用脚本（不手敲）**：`setup-team.sh`（给自己正名 + 建 `devm`/`anam` + 代启动 + 输技能，幂等）、`spawn-helper.sh <角色> "<任务>"`（helper tab 下开 `{角色}-helper` 并**一次性下发**任务）、`close-helper.sh <角色>`（本体收口后关 helper pane；helper tab 保留复用）。脚本内部用 `herdr pane split/rename/send-text/send-keys`，自带 label 幂等检查与就绪轮询（`pane get` 的 `agent_status`，不是 `wait-output`）；`--dry-run` 只打印命令，`--no-start` 只建 pane 不启动。**布局只能在 split 时定对**（同 tab 内 `pane move` 返回 `changed:false`）。
 
 **让 helper pane 进入角色**：由 `spawn-helper.sh` 一并完成（代启动 → 等 `agent_status` 非 `unknown` → 输同角色技能命令 → **任务随 spawn 一次性下发**），并用 `pane read` 核验输入框已清空。此后**不再**向 helper 的输入框投递任何内容。
 
-**投递首条任务之前，必须先切好权限模式（仅限用户手动启动的会话）。** 顺序不可颠倒：
-
-1. harness 启动后、**发第一条消息前**，按 `shift+Tab` 切到 `auto mode`；
-2. 读一次面板底部，**确认出现 `auto mode on`**；
-3. 再投递首条任务。
-
-**为什么必须在第一条消息之前**：会话一旦开始，权限模式即锁定，之后切换会报 `Mode cannot be changed after the conversation starts`。事后补救只能 `/clear` 重开，而那会丢掉正在运行的工程师子代理与已产生的上下文。
-
-> 注意区分两个东西：`/agent-mode`（PTC / 普通模式）在会话启动后不可改，与本节无关；本节说的是 `shift+Tab` 循环的**权限模式**。两者互不影响，PTC 会话同样可以开 `auto mode`。
-
-**遗漏的代价**：会话会在 `High risk operation detected - requires confirmation every time` 这类弹窗上停住等人，而这类弹窗里往往只是 `cmake` / `ctest` 这类常规构建命令。
-
-> **由创建者代启动的 pane（`setup-team.sh` / `spawn-helper.sh`）不走这条流程**：启动命令里已经带了 `--permission-mode auto`，不存在"会话开始后锁死"的窗口期，**不要**再去按 `shift+Tab`（按了反而会切走）。
+**权限模式（仅用户手动启动的会话）**：harness 启动后、**发第一条消息前**按 `shift+Tab` 切到 `auto mode`，并确认面板底部出现 `auto mode on` —— **顺序不可颠倒**（会话一旦开始权限模式即锁定：`Mode cannot be changed after the conversation starts`，事后只能 `/clear` 重开，会丢掉在跑的子代理与上下文）。`setup-team.sh` / `spawn-helper.sh` **代启动的 pane 不走这条流程**（启动命令已带 `--permission-mode auto`，再按 `shift+Tab` 反而会切走）。
 
 #### helper 实例的回收（任务完成即收）
 
-只有 helper 是「**按需实例**」；`director` / `devm` / `anam` 本体 pane（`devm` 的 pane 在 director tab 内）**常驻**，不随任务关闭。
+只有 helper 是**按需实例**；`director` / `devm` / `anam` 本体 pane **常驻**。
 
-- **责任人**：**创建者本人（本体）** —— 谁开谁关（`close-helper.sh`）。herdr 的安全规则是「不关闭非自己创建的 pane/tab」，故 director 与其它角色**不得代关**别人的 helper。
-- **时机（任务完成即收）**：helper 承接的任务一收口就**立即关闭 pane**，不留到下一批；**同一批内可复用**同一 helper。
-- **关闭前置（顺序固定）**：① helper 单向汇报的成果（含逐条判据读数 / 一手出处）已并入票面或报告；② 名下 worktree（如有）已 `git worktree remove`；③ `inbox/<本体>/` 中该 helper 方向（`{角色}-helper2{角色}`）消息已全部收口（`close-helper.sh` 自动判，不满足则拒关，确需强关加 `--force`）。
-- **禁止 `herdr tab close`**：helper tab 全队共享、保留复用，只许关 pane。
-- **风险条款**：关闭 pane 会终止其中 agent 的会话，**context 不可恢复、动作不可逆** ⇒ **禁止先关后收**；关闭必须发生在成果入账与 worktree 回收**之后**。关闭后向用户一句话报告（关了哪个 helper、原因）。
+- **责任人**：创建者本人（谁开谁关，用 `close-helper.sh`）；他人不得代关。
+- **时机**：任务一收口**立即关 pane**，不留到下一批（同批内可复用）。
+- **关闭前置（顺序固定）**：① 成果（逐条判据读数 / 一手出处）已并入票面或报告；② 名下 worktree 已 `git worktree remove`；③ `inbox/<本体>/` 中该 helper 方向消息已全部收口（`close-helper.sh` 自动判，不满足拒关，`--force` 可强关）。
+- **禁止 `herdr tab close`**（helper tab 全队共享、保留复用，**只许关 pane**）。
+- **禁止先关后收**：关 pane 会终止会话、**context 不可恢复**；关闭必须在成果入账与 worktree 回收**之后**，并向用户一句话报告。
 
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
@@ -135,7 +110,7 @@ bash dmt-director/scripts/close-helper.sh devm
 **第二步 写收件箱文件**
 
 - 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `director` / `devm` / `anam`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
-- `{seq}`：自累计流水号，001 起，一条消息一个号（与 SPEC 的 `spec-seq` 无关）。**取号 = max(扫描 `inbox/<收件角色>/**`（含 `.doing/`）现有最大号, `inbox/<收件角色>/.seq` 高水位) + 1**；`.seq` 是单行文本，内容是**不带前导零**的十进制整数（bash 会把 `037` 当八进制 31、`008` 直接报错），由 `send-msg.sh` 自动维护，**不要手改**
+- `{seq}`：自累计流水号，001 起（与 SPEC 的 `spec-seq` 无关）。**取号 = max(`inbox/<收件角色>/**` 含 `.doing/` 的最大号, `.seq` 高水位) + 1**；`.seq` 存**无前导零**十进制整数（防 bash 八进制误读），由 `send-msg.sh` 维护，**不要手改**
 - **两个运行时子项**：`inbox/<收件角色>/.doing/`（已认领、在做）与 `inbox/<收件角色>/.seq`（序号高水位）；都在 `inbox/*/` 的 gitignore 覆盖内，不是交付物
 - `{方向}`：见上表；跨部门事项由 director 转派，不出现 `devm2anam` 之类
 - `{slug}`：英文小写短横线，不超过 5 个词
