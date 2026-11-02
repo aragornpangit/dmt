@@ -243,6 +243,7 @@ check_links() {
       fail=1; bad=1
     fi
   done < <(grep -oE '\[`?/[a-z-]+`?\]\(https://raw\.githubusercontent\.com/mattpocock/skills/main/skills/[a-z-]+/[a-z-]+/SKILL\.md\)' "$file")
+  if [ "$n" -eq 0 ]; then echo "FAIL $who 未校验到任何技能链接（判据空转）"; fail=1; return; fi
   [ "$bad" = 1 ] || echo "OK   $who 的 $n 条技能链接文字与上游目录名一致"
 }
 check_links "$CONTRACT" '团队契约'

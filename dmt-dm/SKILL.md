@@ -88,9 +88,9 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 ## 强制技能（mattpocock，必须使用）
 
-- 评审整合前的代码自审 ⇒ **必须**用 [/code-review](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)。
-- 缺陷分诊与回归定位 ⇒ **必须**用 [/diagnosing-bugs](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)。
-- 派 `dev-e` 时，**必须**把 [/tdd](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[/implement](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[/code-review](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[/diagnosing-bugs](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md) 写进 prompt（工程师执行技能，见 `team.md` §1.4 角色表）。
+- 评审整合前的代码自审 ⇒ **必须**用 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)。
+- 缺陷分诊与回归定位 ⇒ **必须**用 `/diagnosing-bugs`。
+- 派 `dev-e` 时，**必须**把 `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs` 写进 prompt（工程师执行技能，见 `team.md` §1.4 角色表）。
 - 技能不可用 ⇒ 按 `team.md` §1.4 先装，仍不可用标注 `[SKILL_UNAVAILABLE]` 并回报 director，**不得静默跳过**。
 
 ## 编辑前检查占用（硬规则）
@@ -113,4 +113,4 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 
 - 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 输入：`docs/dev/tickets/`（**director** 的工单）与 `docs/pd/spec/`（director 的 SPEC）；devm 只追加「实施状态」
-- 技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [/code-review](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[/diagnosing-bugs](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)、[/improve-codebase-architecture](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/improve-codebase-architecture/SKILL.md)（可选，非强制）
+- 技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock `/code-review`、`/diagnosing-bugs`、`/improve-codebase-architecture`（可选，非强制）

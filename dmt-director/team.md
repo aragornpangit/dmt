@@ -27,11 +27,11 @@ director            总监兼产品部经理（label director，屏幕左侧）
     └── ana-e ...
 ```
 
-| 角色 | 全称 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责 |
-|---|---|---|---|---|---|---|
-| 总监兼产品部经理 | TeamLeader | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` / `reviewer{n}` 子代理） | 唯一用户入口；接需求与验收口径、**写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔**（一单元一 pde、按需求开；director 定口径、验收定稿）、落笔人类文档并出文档门禁结论、分派、跨部门裁决、创建并维护经理层 pane/tab；**装机**；merge / push 归 devm（director 只抽查，不代推）；不替代 devm 的代码评审 |
-| 开发经理 | DevelopManager | `dmt-dm` | `devm` | `director` | `dev-e`（直接派，按需求开，上限 `min(8, cap)`） | 接单（`pde{n}` 落笔、director 定稿的 ticket）、排期派活、建 worktree 并派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**：ticket 代码的评审责任人；整合开发部门交付物；**代码库管理**：merge 与 push 由 devm 执行（装机归 director）；**不拆票** |
-| 分析经理 | AnalystManager | `dmt-am` | `anam` | `director` | `ana-e`（直接派，按需求开，上限 `min(8, cap)`） | 接调研诉求；拆子问题、派 `ana-e` 并行取证；复核一手出处、收口调研报告 |
+| 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责 |
+|---|---|---|---|---|---|
+| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` / `reviewer{n}` 子代理） | 唯一用户入口；接需求与验收口径、**写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔**（一单元一 pde、按需求开；director 定口径、验收定稿）、落笔人类文档并出文档门禁结论、分派、跨部门裁决、创建并维护经理层 pane/tab；**装机**；merge / push 归 devm（director 只抽查，不代推）；不替代 devm 的代码评审 |
+| 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e`（直接派，按需求开，上限 `min(8, cap)`） | 接单（`pde{n}` 落笔、director 定稿的 ticket）、排期派活、建 worktree 并派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**：ticket 代码的评审责任人；整合开发部门交付物；**代码库管理**：merge 与 push 由 devm 执行（装机归 director）；**不拆票** |
+| 分析经理 | `dmt-am` | `anam` | `director` | `ana-e`（直接派，按需求开，上限 `min(8, cap)`） | 接调研诉求；拆子问题、派 `ana-e` 并行取证；复核一手出处、收口调研报告 |
 
 **三层命名（不得混写）**：① **技能名** `dmt-dm` —— 技能注册表、安装目录与 `/dmt-dm` 命令用；② **运行 id** `devm` —— pane label、收件箱目录、方向码与实例号用；③ **称呼** 开发经理 —— 正文、汇报、日志用。例：命令写 `/dmt-dm`，路径写 `inbox/devm/`，正文写「开发经理 回报：…」。
 
@@ -173,34 +173,26 @@ bash dmt-director/scripts/close-helper.sh devm
 
 ### 1.4 依赖的 harness 技能（mattpocock，强制使用）
 
-**强制口径**：下表技能**不是可选建议** —— 每个角色在其职责动作中**必须**调用；**不得**以「手写更快」「技能没装」为由静默跳过。技能不可用 ⇒ 先按本节末尾安装；仍不可用 ⇒ 在产物与回报里标注 `[SKILL_UNAVAILABLE]` 并回报 director，由 director 裁决（**不得静默降级**）。**调用要留痕**：回报写明用了哪个技能、产出落在哪个文件。
+**强制口径**：下表技能**不是可选建议** —— 每个角色在其职责动作中**必须**调用；**不得**以「手写更快」「技能没装」为由静默跳过。技能不可用 ⇒ 先装（见本节末尾）；仍不可用 ⇒ 在产物与回报里标注 `[SKILL_UNAVAILABLE]` 并回报 director 裁决。**调用要留痕**（用了哪个、产出在哪）。
 
 | 角色 | 强制技能 | 用在哪 |
 |---|---|---|
-| `director` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) | 接需求问穿验收口径；方案自审；契约与文档交叉拷问；抽查代码；PRD / SPEC / 工单定稿与文档门禁 |
-| `devm` | [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md) | 评审整合前自审；缺陷分诊与回归定位 |
-| `anam` | [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) | 取证方法与证据分级、子问题拆解与反证、调研方案自审、证据与文档交叉拷问 |
-| `pde{n}` | [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) | 口径核对、产品事实取证、SPEC / 工单拆解与核对，**与 director 匹配同一套**（**写进派发 prompt**） |
-| `reviewer{n}` | [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)（上游：mattpocock/skills 仓库 `engineering/code-review`） | 逐条核验收标准、判据、diff、证据与测试输出（**写进派发 prompt**） |
-| `dev-e` | [`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md) | 实施、提交前自审、门红定位（原开发队长执行技能，第四十六次起由工程师吸收；**写进派发 prompt**） |
-| `ana-e` | [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、`/rea`、[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) | 取证（含 REA 逆向）、子问题拆解与反证、方案自审与交叉拷问（原分析队长执行技能，第四十六次起由工程师吸收；**写进派发 prompt**） |
+| `director` | `/grilling`、`/grill-me`、`/grill-with-docs`、`/code-review`、`/to-spec`、`/to-tickets` | 需求问穿、方案自审、契约/文档交叉拷问、抽查、SPEC 与工单落笔 |
+| `devm` | `/code-review`、`/diagnosing-bugs` | 评审整合前自审；缺陷分诊与回归定位 |
+| `anam` | `/research`、`/grilling`、`/grill-me`、`/grill-with-docs` | 一手取证与证据分级、调研方案自审、证据交叉拷问 |
+| `pde{n}` | `/grilling`、`/research`、`/to-spec`、`/to-tickets` | 口径核对、事实取证、SPEC/工单拆解与核对（与 director 同一套） |
+| `reviewer{n}` | `/code-review` | 逐条核验收标准、判据、diff、证据与测试输出（**写进派发 prompt**） |
+| `dev-e` | `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs` | TDD 实施、按 SPEC 落地、提交前自审、缺陷分诊 |
+| `ana-e` | `/research`、`/rea`、`/grilling`、`/grill-me`、`/grill-with-docs` | 取证、竞品逆向（`/rea`，REA 专用）、交叉拷问 |
 
-**命名与源文件**：上表技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**（路径形如 `skills/<category>/<name>/SKILL.md`），所有链接一律指向 `raw.githubusercontent.com` 的源文件。`/rea`（REA，竞品逆向）**不属于** mattpocock/skills，保持原名、不加链接。
+**技能源文件**（技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**；`/rea` 属 REA、不在该仓，保持原名不加链接）：
+[`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)
 
-**通用技能（所有 pane 常驻角色）**：`cbc-herdr` —— CodeBuddy 在 herdr 里的状态上报（`working` / `idle` / `blocked`），让 `herdr pane list` 的 `agent_status` 可信；`director` / `devm` / `anam` 三份 pane 角色技能（`dmt-director` / `dmt-dm` / `dmt-am`）**都必须登记**；`dmt-pde`（`pde{n}` 子代理技能）不登记。工程师是子代理、不占 pane，不需要加载。
+**通用技能（pane 常驻角色）**：`cbc-herdr`（CodeBuddy 在 herdr 的状态上报，让 `herdr pane list` 的 `agent_status` 可信）—— `dmt-director` / `dmt-dm` / `dmt-am` 三份技能都必须登记；`dmt-pde`（子代理技能）不登记；子代理不占 pane，不需要。
 
-**检查**：当前 harness 的 skill 目录里能看到这些技能（用户级共享位置通常是 `~/.agents/skills/mattpocock-skills`，仅供参考，不作为硬判据）。
+**安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；失败时克隆 `https://github.com/mattpocock/skills.git`，把 `skills/` 下技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录。
 
-未安装时按顺序处理：
-
-```bash
-# 首选：按 harness 安装（pi / opencode / codebuddy / amp / cursor / devin / windsurf；省略 -a 则交互选择）
-npx skills@latest add mattpocock/skills -a <agent>
-# 回退（提示词安装失败时）：克隆源码，把 skills/ 下的技能目录 copy 到 ~/.agents/skills/，再软链到 harness 技能目录
-git clone https://github.com/mattpocock/skills.git
-```
-
-已知缺口（2026-10 核查）：上游 `mattpocock/skills` **没有 `to-prd`**，`implement-spec` 仍在 `in-progress/` 未发布。PRD 由 `pde{n}` 按本文件 §4.1 模板落笔、director 定稿；若后续上游提供 `to-prd`，优先改用它。
+**已知缺口（2026-10 核查）**：上游无 `to-prd`，`implement-spec` 仍在 `in-progress/` 未发布 ⇒ PRD 由 `pde{n}` 按 §4.1 模板落笔、director 定稿；若上游提供 `to-prd`，优先改用。
 
 ### 1.5 文件占用（编辑前必须检查）
 

@@ -31,9 +31,9 @@ pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1
 ## 强制技能（写进每份 prompt）
 
 - 需求与开放问题推演 ⇒ **必须**用 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)。
-- 事实取证与证据分级 ⇒ **必须**用 [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)。
-- SPEC 拆解与验收标准核对 ⇒ **必须**用 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)（与 director 匹配同一套）。
-- 工单拆解与票面核对 ⇒ **必须**用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)（与 director 匹配同一套）。
+- 事实取证与证据分级 ⇒ **必须**用 `/research`。
+- SPEC 拆解与验收标准核对 ⇒ **必须**用 `/to-spec`（与 director 匹配同一套）。
+- 工单拆解与票面核对 ⇒ **必须**用 `/to-tickets`（与 director 匹配同一套）。
 - 技能不可用 ⇒ **先按 `team.md` §1.4 安装**；仍不可用则在回报里标注 `[SKILL_UNAVAILABLE]` 并说明，**不得静默跳过**。
 
 ## 文件占用
@@ -44,4 +44,4 @@ pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1
 
 - 上级：`director`（pane label `director`；pde 自己不占 pane）
 - 产物：落笔类单元 —— PRD / SPEC / 工单（写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`）；取证类单元 —— 回报告（一手出处 + 核对清单）
-- 技能：mattpocock [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)（与 director 匹配同一套）
+- 技能：mattpocock `/grilling`、`/research`、`/to-spec`、`/to-tickets`（与 director 匹配同一套）

@@ -85,10 +85,10 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 ## 强制技能（mattpocock，必须使用）
 
-- 取证方法与证据分级 ⇒ **必须**用 [/research](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)。
-- 子问题拆解与反证 ⇒ **必须**用 [/grilling](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)。
-- 调研方案自审 ⇒ **必须**用 [/grill-me](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)（自我拷问：结论是否被一手证据支撑）。
-- 证据与文档交叉拷问 ⇒ **必须**用 [/grill-with-docs](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)（对着报告、PRD/SPEC 与既有证据互查矛盾）。
+- 取证方法与证据分级 ⇒ **必须**用 [`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)。
+- 子问题拆解与反证 ⇒ **必须**用 `/grilling`。
+- 调研方案自审 ⇒ **必须**用 `/grill-me`（自我拷问：结论是否被一手证据支撑）。
+- 证据与文档交叉拷问 ⇒ **必须**用 `/grill-with-docs`（对着报告、PRD/SPEC 与既有证据互查矛盾）。
 - 派 `ana-e` 时，**必须**把 /research、/rea（`reverse-engineer-anything`）、/grilling、/grill-me、/grill-with-docs 写进每份 prompt（工程师执行技能，见 `team.md` §1.4 角色表）；技能不可用 ⇒ 按 `team.md` §1.4 先装，仍不可用标注 `[SKILL_UNAVAILABLE]` 并回报 director。
 
 ## 编辑前检查占用（硬规则）
@@ -111,4 +111,4 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 
 - 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 产物：`docs/analyst/`
-- 技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [/research](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、REA（`/rea`、`reverse-engineer-anything`）
+- 技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock `/research`、REA（`/rea`、`reverse-engineer-anything`）

@@ -17,10 +17,10 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 0. **初始化目录**（接手项目第一件事，幂等）：`bash dmt-director/scripts/init-project.sh <项目根>` —— 建六个产物目录 + 三个收件箱 + `locks/`，写 `.gitignore` 的 `inbox/*/` 与 `locks/`，并跑机检；直到输出 `ALL_PASS`。缺目录**由 director 补齐**，anam / devm 不自建产物目录（详见 `team.md` §3.1）。
 1. **接需求**：与用户沟通、澄清需求，确认边界、范围外与**验收口径**；必要时自己补事实（只把决策留给用户）。
-2. **写产品文档（召唤 `pde{n}` 落笔，先派后干）**：开工第一个动作是列产品单元清单并按需求开 `pde{n}` 子代理（按需求开：每波 min(N, CAP)，上限 min(8, cap)，N 超上限分批；一单元一 pde，竞品产品面取证、用户故事枚举、边界推演、验收标准核对、既有文档一致性核查、**PRD / SPEC / 工单落笔**），**派完再收口**；`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 由 `pde{n}` 落笔（用 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)），**口径、验收与门禁定稿由 director 定**；`docs/human/` 由 director 亲自写；需要调研支撑时按第 3 步同时派 anam。
+2. **写产品文档（召唤 `pde{n}` 落笔，先派后干）**：开工第一个动作是列产品单元清单并按需求开 `pde{n}` 子代理（按需求开：每波 min(N, CAP)，上限 min(8, cap)，N 超上限分批；一单元一 pde，竞品产品面取证、用户故事枚举、边界推演、验收标准核对、既有文档一致性核查、**PRD / SPEC / 工单落笔**），**派完再收口**；`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 由 `pde{n}` 落笔（用 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、`/to-tickets`），**口径、验收与门禁定稿由 director 定**；`docs/human/` 由 director 亲自写；需要调研支撑时按第 3 步同时派 anam。
 3. **派调研**（按需）：写 `inbox/anam/{seq}-director2anam-{slug}-{YYMMDDHHMM}.md`，再发门铃。**只派给 anam**，不直接找分析工程师。
 4. **评审调研报告**：读 anam 产物、核证据来源，给 PASS / FAIL 与理由；PASS 后通知 anam 落盘 `docs/analyst/`（anam 是落笔方）。
-5. **文档门禁自评审**：PRD / SPEC / 工单写完后逐条自评（需求口径被正确覆盖：边界、范围外、验收口径与用户一致；验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环），用 [`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md) 与 [`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) 交叉拷问矛盾；通过后就地把状态行改为 `状态：已通过`，交 devm 排期。
+5. **文档门禁自评审**：PRD / SPEC / 工单写完后逐条自评（需求口径被正确覆盖：边界、范围外、验收口径与用户一致；验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环），用 `/grill-me` 与 `/grill-with-docs` 交叉拷问矛盾；通过后就地把状态行改为 `状态：已通过`，交 devm 排期。
 6. **验收（reviewer{n}）与放行（merge / push 归 devm）**：ticket 代码由 **devm 按代码门禁评审 PASS** 后交 director 验收 —— director **按验收票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer；无依赖票并行、按需求开（每波 min(N, CAP)，上限 min(8, cap)）），对照**相同 `spec-seq` 的 SPEC 与 ticket** 逐条验收 devm 代码（验收标准、判据、diff、证据、测试输出；/code-review 写进派发 prompt，reviewer 子代理不装技能）。**验收通过** ⇒ 通知 devm（收件箱 + 门铃）由 devm 执行 **merge 与 `git push`**（代码库归 devm 管理），director **不代推、不代 merge**；anam / 工程师 / `reviewer{n}` 一律不 push、不 merge 主干。**不通过** ⇒ 打回 devm 返工，**不得先 merge/push**。`reviewer{n}` 是自派子代理：不占 pane、不装技能、不进收件箱，只做逐条验收（缺外部事实 ⇒ 列为**待补项**回报 director，由 director 决定是否派 anam；**不得**自行联系任何团队角色），不替代 devm 的逐条评审。**并发度抽查**：先看回报第一行的**并发账**（`并发账：单元 N（<清单>）→ 派 M ＋ 未派 K（<理由码>）[CAP=<n>]`，`team.md` §5.2 格式），再核对「无依赖单元数 N」与「每波并发数 = min(N, CAP)」（CAP = min(8, cap)（cap = 当前 harness 最大支持的 agent 数，probe-cap.sh 输出即 CAP）；N > CAP 看是否分批推进）；**缺失、算术不成立、或不等且无白名单理由（`cap` 分批排队除外）⇒ 打回**。
 7. **裁决**：devm / anam 口径分歧、范围变更、优先级冲突由 director 裁决并回结论；产品口径分歧升级用户。
 8. **维护组织**：见下节；label 漂移、pane 丢失、harness 重启后重装技能命令，均由 director 处理。
@@ -102,10 +102,10 @@ helper 是 **pane 形态的纯分身（非独立角色）**，装载同角色技
 
 ## 强制技能（mattpocock，必须使用）
 
-- 落笔 SPEC / 开发工单 ⇒ **必须**用 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)。
-- 接需求、澄清边界与验收口径 ⇒ **必须**用 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)（把开放问题问穿，不许凭猜测落笔）。
-- 需求与裁决方案自审 ⇒ **必须**用 [`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)（自我拷问，找出没想清楚的地方）。
-- 契约 / 文档交叉拷问 ⇒ **必须**用 [`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)（对着 `team.md` 与自己的 PRD / SPEC / 工单互查矛盾）。
+- 落笔 SPEC / 开发工单 ⇒ **必须**用 `/to-spec`、`/to-tickets`。
+- 接需求、澄清边界与验收口径 ⇒ **必须**用 `/grilling`（把开放问题问穿，不许凭猜测落笔）。
+- 需求与裁决方案自审 ⇒ **必须**用 `/grill-me`（自我拷问，找出没想清楚的地方）。
+- 契约 / 文档交叉拷问 ⇒ **必须**用 `/grill-with-docs`（对着 `team.md` 与自己的 PRD / SPEC / 工单互查矛盾）。
 - 派 `reviewer{n}` 验收 ticket 代码 ⇒ **必须**把 `/code-review` 写进派发 prompt（reviewer 子代理不装技能，验收结论由 director 收口；技能链接见「指针」节）。
 - 技能不可用 ⇒ 按 `team.md` §1.4 先装；仍不可用则回报用户并在结论里标注 `[SKILL_UNAVAILABLE]`，**不得静默跳过**。
 - 留痕：回报里写明用了哪个技能、产出落在哪个文件。
@@ -130,4 +130,4 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 
 - 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 产物：`docs/team.md`、`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/human/human-arch/`、`docs/human/human-plan/`、按需的 `docs/handoff/`；只读：`docs/analyst/`
-- 技能：`herdr`（命令语法）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)（上游：mattpocock/skills 仓库 `engineering/code-review`；若可用）
+- 技能：`herdr`（命令语法）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock `/code-review`（上游：mattpocock/skills 仓库 `engineering/code-review`；若可用）
