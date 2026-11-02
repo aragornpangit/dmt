@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ⚠️ 已停用（2026-10-27）：install-hooks.sh 不再注册本 hook，改由 SKILL.md 语义条款承担；
+#    本文件保留（机检 4j 仍要求可执行），需要时可一键恢复注册。
 # PreToolUse hook：治理角色在「还有未派单元」时，禁止同步（非后台）Agent 调用 —— 强制后台并行
 # 用法：parallel-guard.sh <role|->
 # hook payload（stdin JSON）含 .tool_name 与 .tool_input.run_in_background

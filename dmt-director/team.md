@@ -3,7 +3,7 @@
 > **版本 5.12.0 · 2026-10-31** —— 与四个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
 > **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
 > **不适用于技能仓自身的维护**：维护 `dmt` / `dmt-en` / 其他技能仓时，上述归属纪律**不生效** —— 维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权、也不需 devm 代推**；装机权限同理只约束「目标项目中的设备写操作」。
-> 本文件是 **dmt 的唯一团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；四个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
+> 本文件（规范层）与 [`OPS.md`](OPS.md)（操作层）**共同构成 dmt 的团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；四个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
 > 团队成员运行在终端多智能体复用器 Herdr 中；会话与 pane 随重启变化，本文件不登记 pane id。
 
 ## 0. 仓库结构
@@ -56,95 +56,11 @@ director            总监兼产品部经理（label director，屏幕左侧）
 
 ### 1.2 运行环境与 pane 生命周期
 
-**身份＝pane label，不是位置、不是 tab。** 每个常驻角色占一个 **pane**（`pde{n}` / `dev-e` / `ana-e` 是子代理、不占 pane），pane label 与角色/实例名同名（`director` / `devm` / `anam`；helper 为 `{角色}-helper`），在同一 workspace 内**唯一**。
-
-- **tab 只是视觉分组**：**`anam` 占一个 tab**（tab label 与本人 pane label 同名）；**`devm` 不占 tab**，它的 pane 开在 **`director` 的 tab 内、director pane 右侧**（左 director、右 devm）。
-- **识别伙伴一律按 pane label**（`herdr pane list` 过滤 `label`），**不按 tab 内位置、不按 pane id 记忆**：pane id 随重启变化，pane 顺序与 pane id 都会变，**只有 label 稳定**。
-- **工程师仍是子代理**：`pde{n}` / `dev-e` / `ana-e` 不占 pane、不装技能（技能随派发 prompt 下发）、不走跨 pane 通信。
-- **团队启动（director 全自动、幂等）**：用户备好 `director` tab 并启动 harness；director 先给自己正名（**tab label → pane label，顺序不可颠倒**），再在右侧 split 出 `devm`、另建 `anam` tab，两个 pane 由 director **代启动** harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex` 或 `$DMT_HARNESS` 切换、`$DMT_HARNESS_CMD` 覆盖，白名单在 `lib-dmt.sh`），就绪判据＝`herdr pane get <pane>` 的 `agent_status` 非 `unknown`，随后输 `/dmt-dm` / `/dmt-am` 装载技能。**命令一律走 `bash dmt-director/scripts/setup-team.sh`，不手敲**。产品工作不需要 pane（director 自派 `pde{n}`，prompt 里下发 `/dmt-pde`）。
-- **director 独占创建与维护**：`devm` / `anam` 的 pane、tab 与 label 只由 director 建、只由 director 改；开工前巡检两个 label，缺失/漂移就 `pane rename` 或重建 pane 并重走「代启动 + 输技能命令」。下级**不得**自行新建或改名自己的 pane/tab。
-- **director 的 tab 内常驻 director 与 devm 两个 pane** ⇒ **禁止 `herdr tab close`**：关 tab 会连带杀掉 devm 与 director 自己；只许关 pane，且 director 不关 devm（devm 常驻）。
-- **helper tab / helper pane（纯分身分流）**：**触发三条同时成立才开**（① 本体忙不过来；② 子代理在途达 `min(8, cap)`；③ 仍有待办）。**形态**：helper tab（label 固定 `helper`，**全队共享一个**，无则 `herdr tab create`）+ 其下 `{角色}-helper` pane（**每角色至多一个**），由 `spawn-helper.sh` 建、代启动、输同角色技能。**语义＝本体纯分身**：任务**随 spawn 一次性下发**，此后**不接受任何输入框内容**；成果**单向汇报给主体**（写 `inbox/<本体>/`，方向 `{角色}-helper2{角色}`）—— helper **没有自己的 inbox**、**不走门铃互通**。**生命周期归创建者**（建立 / 改名自愈 / 完成即回收 `close-helper.sh`；**helper tab 保留复用，禁 `herdr tab close`**）。**独占动作不移交**：装机只归 `director` 本体、merge / push 只归 `devm` 本体。helper 是 **pane 角色（非子代理）**。
-
-```bash
-# 按 pane label 解析（label 文字为准，不抄历史 pane id）
-HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
-  | jq -r --arg l "<角色名>" '.result.panes[] | select(.label==$l) | .pane_id'
-```
-
-若目标 label 不存在：**停下问用户**，不要猜测 pane id、不要对不存在的会话反复重试。
-**迁移兜底**（仅当 label 缺失）：存在同名 tab 且该 tab 只有一个 pane 时，用该 pane；否则仍须停下问用户。**`devm` 例外**：它与 `director` 同 tab，该 tab 恒不止一个 pane，**不得**用 tab 兜底，必须按 label 或请用户重建。
-
-**身份自愈**（每个角色启动后第一件事）：`herdr pane get "$HERDR_PANE_ID"` 读到的 label 与角色名不符（含为空）时，立即 `herdr pane rename "$HERDR_PANE_ID" <角色名>`。`devm` **不得**用 `herdr tab list` 认自己 —— 它的 tab label 是上级 `director` 的（devm 的 pane 在 director tab 内）。
-
-**创建 pane 一律用脚本（不手敲）**：`setup-team.sh`（给自己正名 + 建 `devm`/`anam` + 代启动 + 输技能，幂等）、`spawn-helper.sh <角色> "<任务>"`（helper tab 下开 `{角色}-helper` 并**一次性下发**任务）、`close-helper.sh <角色>`（本体收口后关 helper pane；helper tab 保留复用）。脚本内部用 `herdr pane split/rename/send-text/send-keys`，自带 label 幂等检查与就绪轮询（`pane get` 的 `agent_status`，不是 `wait-output`）；`--dry-run` 只打印命令，`--no-start` 只建 pane 不启动。**布局只能在 split 时定对**（同 tab 内 `pane move` 返回 `changed:false`）。
-
-**让 helper pane 进入角色**：由 `spawn-helper.sh` 一并完成（代启动 → 等 `agent_status` 非 `unknown` → 输同角色技能命令 → **任务随 spawn 一次性下发**），并用 `pane read` 核验输入框已清空。此后**不再**向 helper 的输入框投递任何内容。
-
-**权限模式（仅用户手动启动的会话）**：harness 启动后、**发第一条消息前**按 `shift+Tab` 切到 `auto mode`，并确认面板底部出现 `auto mode on` —— **顺序不可颠倒**（会话一旦开始权限模式即锁定：`Mode cannot be changed after the conversation starts`，事后只能 `/clear` 重开，会丢掉在跑的子代理与上下文）。`setup-team.sh` / `spawn-helper.sh` **代启动的 pane 不走这条流程**（启动命令已带 `--permission-mode auto`，再按 `shift+Tab` 反而会切走）。
-
-#### helper 实例的回收（任务完成即收）
-
-只有 helper 是**按需实例**；`director` / `devm` / `anam` 本体 pane **常驻**。
-
-- **责任人**：创建者本人（谁开谁关，用 `close-helper.sh`）；他人不得代关。
-- **时机**：任务一收口**立即关 pane**，不留到下一批（同批内可复用）。
-- **关闭前置（顺序固定）**：① 成果（逐条判据读数 / 一手出处）已并入票面或报告；② 名下 worktree 已 `git worktree remove`；③ `inbox/<本体>/` 中该 helper 方向消息已全部收口（`close-helper.sh` 自动判，不满足拒关，`--force` 可强关）。
-- **禁止 `herdr tab close`**（helper tab 全队共享、保留复用，**只许关 pane**）。
-- **禁止先关后收**：关 pane 会终止会话、**context 不可恢复**；关闭必须在成果入账与 worktree 回收**之后**，并向用户一句话报告。
+**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §1** —— pane/tab 形态、身份＝`pane label`、启动顺序、helper 生命周期、首条消息前的权限模式。
 
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
-**正文一律走文件，herdr 只发门铃一句。** 派单、回报、评审结论、裁决请求、缺陷退回，全部先落成收件方收件箱里的一份文件，再用 herdr 敲一句「你有新消息 <文件名>」。**消息里不贴长正文、不贴日志、不贴 diff。**
-
-**允许的直接通信只有上下级这一条线**（其余一律经上级转派）；helper 例外：只有 **helper → 本体** 的单向汇报（不走门铃、无回程）：
-
-| 发送方 | 收件方 | 方向码 |
-|---|---|---|
-| `director` | `devm` / `anam` | `director2devm` / `director2anam` |
-| `devm` / `anam` | `director` | `devm2director` / `anam2director` |
-| `devm-helper` / `anam-helper` / `director-helper` | 本体（`devm` / `anam` / `director`） | `{角色}-helper2{角色}`（**单向汇报，无门铃、无回程**；helper 无自己的 inbox） |
-
-**第一步 定位伙伴**（每次重跑，禁止复用上一次的 pane id）：`herdr pane list` 按 **pane label** 取**当前** pane id（label 与角色名同名、全 workspace 唯一）。label 不在列表里 ⇒ **停下问用户**，不猜 pane id、不按 tab 内位置兜底。
-
-**第二步 写收件箱文件**
-
-- 路径：**项目根目录**下的 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（`<收件角色>` ∈ `director` / `devm` / `anam`；**不在 `docs/` 下**；目录不存在先 `mkdir -p`）
-- `{seq}`：自累计流水号，001 起（与 SPEC 的 `spec-seq` 无关）。**取号 = max(`inbox/<收件角色>/**` 含 `.doing/` 的最大号, `.seq` 高水位) + 1**；`.seq` 存**无前导零**十进制整数（防 bash 八进制误读），由 `send-msg.sh` 维护，**不要手改**
-- **两个运行时子项**：`inbox/<收件角色>/.doing/`（已认领、在做）与 `inbox/<收件角色>/.seq`（序号高水位）；都在 `inbox/*/` 的 gitignore 覆盖内，不是交付物
-- `{方向}`：见上表；跨部门事项由 director 转派，不出现 `devm2anam` 之类
-- `{slug}`：英文小写短横线，不超过 5 个词
-- `{YYMMDDHHMM}`：落盘时刻，两位年 + 月 + 日 + 时 + 分，无分隔符（例 `2610201430`）
-- 正文**自包含**：一句话摘要 / 权威文档路径 / 请求动作 / 期望产物 / 回报要求
-
-**用脚本**：`bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文件>` —— 自动算 `{seq}`、时刻与方向码，写文件后按 label 发门铃（`agent prompt` 返回非 `agent_prompted` 时回退 `send-text` + `send-keys`；label 不存在时只写文件并告警）。
-
-**第三步 发门铃**（按**对端 harness** 选通道，消息只发一句：文件名 + 目录）
-
-| 对端 harness | 门铃 |
-|---|---|
-| **codebuddy / pi-coding-agent / codex / opencode2 / opencode** | 优先 `HERDR_ENV=1 herdr agent prompt <pane> '你有新消息 {文件名}，在 inbox/<收件角色>/'`（**一次调用自带 Enter 提交**，返回 `"type":"agent_prompted"` 即送达；**codebuddy 面板同样适用**，2026-10-24 实测） |
-| 回退（**仅当**对端是其它 harness，或 `agent prompt` 返回非 `agent_prompted`） | `HERDR_ENV=1 herdr pane send-text <pane> '…'` 紧跟 `HERDR_ENV=1 herdr pane send-keys <pane> enter`，投后 `pane read` 核验输入框已清空 |
-
-发送前**必须先读目标面板**（`herdr pane read`）；若对方输入区有用户未提交内容，不得注入，改为等待或请用户转达。
-
-**第四步 收件方处理（认领 → 处理 → 收口，三态）**
-
-1. **先认领**：收到门铃后立即 `bash dmt-director/scripts/msg-take.sh <自己> <文件名>`，把文件从 `inbox/<自己>/` 移入 `inbox/<自己>/.doing/`。**认领在前、读入在后**：`mv` 是原子动作，重扫不会重复处理；`.doing/` 就是重启后的待办清单。
-2. **再读入**：读 `.doing/` 里的该文件，**读入自己的 context window** 处理；读后**不发送回执**（**不回** `{文件名} 已经收到`、不发任何确认消息）。
-3. **办完收口**：`bash dmt-director/scripts/msg-done.sh <自己> <文件名>` 从 `.doing/` 删除。**收件箱根目录只允许存在未读消息，`.doing/` 只允许存在在做消息**。
-4. **重启 / 上下文压缩后**：`ls inbox/<自己>/*.md` = 未读，`ls inbox/<自己>/.doing/` = 续做清单；**不得因为重启而丢单**——`.doing/` 里有文件就说明有活没干完。
-5. **`.doing/` 超过 24h 未收口**：上报直属上级（可能卡住，也可能忘了收口），**不自动删**。
-6. 需要回正文时，按同样规则反向写文件 + 门铃，不把长正文塞进门铃消息。
-7. **任何超过 10 分钟的操作（合并 / 构建 / 真机长跑 / 批量验证），开工前扫一次收件箱，收工后再扫一次。** 长操作期间不回看收件箱，是**已知会漏消息**的行为，不是意外。
-   - **Why**：2026-10-23 devm 在 16:00–16:45 做 T6 合并验证（分支跑 ctest → 手工合成冲突 → 合并后再跑 ctest），期间没有回看收件箱，director 的一封裁决信（037）与某下级的三封缺口报告（042/043/044）在里面躺了 2.5 小时。**信没丢、门铃也送到了，是收件方在干活时看不见门铃。**
-   - **How to apply**：把「扫收件箱」当成操作的**前后置动作**，不是独立任务；扫的时候看两处 `ls inbox/<自己>/ inbox/<自己>/.doing/`，有文件就当场认领处理，**不要攒着**。攒着的后果是：你基于过时的状态继续决策，而对方以为你已经知道了。
-
-**完成即报（不傻等）**：`devm` / `anam` 本批工作一收口，或遇阻塞 / 超时 / 需要上级裁决，**立即**向直接上级发回报（收件箱正文 + 门铃），不等上级来问、不静默挂着；`director` 完成用户交办事项后同理主动向用户回报。收工前自查一句：「我有没有把结果告诉该告诉的人？」
-
-**送达判定**：以 `herdr agent prompt` 返回 `"type":"agent_prompted"` 为「已送达」；走回退通道时以 `send-text + send-keys` 返回 exit 0 **且** `pane read` 见正文为「已送达」；**收件方不回执**，故不再以回执判定。发送方不确定是否已被读取时，**口头问用户**，不重复投递。
-
-**不入库**：收件箱与 `locks/` 都是运行时通道，不是交付物；被服务项目的 `.gitignore` 必须含 `inbox/*/` 与 `locks/`。
+**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §2** —— 方向码表、收件箱路径与 `{seq}`、门铃通道（`agent prompt` 优先 / `send-text` 回退）、三态（`.doing/` / `.seq`）。
 
 ### 1.4 依赖的 harness 技能（mattpocock，强制使用）
 
@@ -172,24 +88,7 @@ HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
 
 ### 1.5 文件占用（编辑前必须检查）
 
-**模型参考 Orca**：Orca 的做法是先看「谁在这个 worktree / 终端里活跃」，再决定能不能动手；它没有文件级锁 API，而 dmt 跑在 herdr，所以本团队在「看活跃会话」之上再加一层**文件级占用登记**。
-
-**硬规则：任何角色在编辑（写入 / 追加 / 删除）任何文件之前，必须先 `check`；占用到手才能改；改完立刻 `release`。**
-
-```bash
-bash dmt-director/scripts/file-claim.sh check   <path> <owner>   # rc=0 可写；rc=3 他人占用
-bash dmt-director/scripts/file-claim.sh claim   <path> <owner>   # 登记占用（重复调用＝续期）
-bash dmt-director/scripts/file-claim.sh release <path> <owner>   # 释放（只有持有者能释放）
-bash dmt-director/scripts/file-claim.sh list                     # 看全部占用
-```
-
-- `<owner>` 写「角色:实例」，如 `director`、`devm`、`dev-e3`、`devm-helper`。
-- 记录固定落在**主工作树**根的 `locks/`（运行时通道，**不入库**，`.gitignore` 含 `locks/`）；在 worktree 里跑也写回 `<main>/locks/`，否则 director 在项目根巡检 `locks/dispatch-*.tsv` 会看不到。
-- **rc=3 ⇒ 停手**：等对方释放、改做别的文件，或回报上级协调；**不得绕过、不得删别人的锁**。
-- **TTL 默认 30 分钟**：过期锁视为可抢占，抢占时必须在回报里写明「接管过期锁 `<path>`（原持有者 `<owner>`）」。超过 30 分钟的任务在收工前重新 `claim` 续期。
-- **Orca 附加检查**：`orca status` 可连通时，编辑前再跑 `orca worktree ps`，看同一 worktree 是否有 `live:>0` 的 agent；有则在回报里说明「同 worktree 有活跃会话，已确认不冲突」再动手。
-- **例外**：`inbox/` 的消息文件由发送方新建、收件方删除，**不走占用登记**（文件名含 seq 与时刻，天然不冲突）；`locks/` 自身也不登记。
-- **worktree 不是豁免**：一票一 worktree 只保证分支隔离，同一 worktree 仍可能有多个写者（例如交接前后的工程师），照样要登记。
+**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §3** —— `file-claim.sh` 的 check / claim / release、`rc=3` 处置、TTL 30 分钟、worktree 不豁免。
 
 ## 2. 文件命名规范（权威）
 
@@ -210,8 +109,7 @@ bash dmt-director/scripts/file-claim.sh list                     # 看全部占�
 1. **spec 与 ticket 必须对齐 `spec-seq`**：同一需求的 SPEC 与其 ticket 用同一个 `spec-seq` 前缀。
 2. **版本语义**：版本内小步更新**就地改同一文件**；实质修订**另立新版本号文件**（新时间戳、`v{N+1}`），并在旧文件头部就地标注「已被 v N+1 取代」。
 3. PRD 按需求方给定的格式只有日期（`YYMMDD`），无时刻；其余产物一律带时刻。
-4. **独立编号**：`{prd-seq}` / `{research-seq}` / `{human-arch-seq}` / `{human-plan-seq}` / `{spec-seq}` 各自独立、类别内自累计；只有 SPEC 与 ticket 必须共用同一个 `spec-seq`。
-5. 历史笔误留痕：需求原文的 `ver{seq}`、`YYMMDD-v{seq}` 写法**已作废**，一律以本表为准，历史文件不改名。
+4. 历史笔误留痕：需求原文的 `ver{seq}`、`YYMMDD-v{seq}` 写法**已作废**，一律以本表为准，历史文件不改名。
 
 ## 3. 目录职责
 
@@ -228,11 +126,11 @@ bash dmt-director/scripts/file-claim.sh list                     # 看全部占�
 | `docs/human/human-plan/` | director | 人类计划文档 | 无 |
 | `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` **软链**到 `docs/team.md` 供机检读取） | director | 团队契约（本文件） | 软链跟随正本、恒同版本（`--copy` 模式除外） |
 | `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
-| `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 §1.3 |
+| `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 `OPS.md` §2 |
 
 1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/human/`（除 `human-arch/`、`human-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
 2. 各部门的产物目录**互不越界**：只读引用可以，移动/改名不可以。
-3. **工程师不写 `docs/`**：`dev-e` / `ana-e` 的回报走**子代理返回值**（§1.3 的方向码只覆盖 pane 角色，工程师不写收件箱、不发门铃），证据文件由上级并入票面 / 报告；`docs/` 内的产物只由 `pde{n}`（落笔）/ 经理 / 总监写入。
+3. **工程师不写 `docs/`**：`dev-e` / `ana-e` 的回报走**子代理返回值**（`OPS.md` §2 的方向码只覆盖 pane 角色，工程师不写收件箱、不发门铃），证据文件由上级并入票面 / 报告；`docs/` 内的产物只由 `pde{n}`（落笔）/ 经理 / 总监写入。
 4. **旧体系只保留历史**：`docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/test/`、`docs/dev/arch/` 均**不再接收新产物**；历史文件不改名、不搬迁（留痕）。**现行落盘口径见上表**（2026-10-21 起的路径变更史见 `CHANGELOG.md` / §8）。
 5. **目录初始化由 director 负责**：director 接手一个项目时先检查再补齐（见 §3.1），产物目录不由 anam / devm 自建。
 6. 机检口径：§7 的脚本按该节列出的十八项逐条断言；它**不校验单个文件的落盘路径**，新产物靠本表与评审把关。
@@ -249,7 +147,7 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
 - **只建目录、不建产物**：空目录不预置占位文件，避免被误认为已有交付物。
-- **`locks/` 是运行时通道**：文件占用登记（§1.5），不入库；缺失时脚本会自建，director 初始化时顺手建好。
+- **`locks/` 是运行时通道**：文件占用登记（`OPS.md` §3），不入库；缺失时脚本会自建，director 初始化时顺手建好。
 - **anam / devm 不自建产物目录**：发现自己的目标目录缺失，回报 director（收件箱目录属运行时通道，可按需 `mkdir -p` 兜底）。
 - 契约文件 `dmt-director/team.md` 与技能安装不在本步骤内（安装见 `README.md`）。
 
@@ -259,7 +157,7 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 2. **director 召唤 `pde{n}` 出 PRD、SPEC 与工单**：director 与用户谈定边界、范围外与验收口径后，列产品单元清单并**按需求开 `pde1…pde{n}`**（一单元一 pde，上限 `min(8, cap)`），由 `pde{n}` **落笔**写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`，director 逐份验收定稿：基于调研报告写 PRD 与 SPEC（[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)，含逐条可测的验收标准），再用 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md) 把 SPEC 拆成开发工单，分别写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`（文件头 `状态：待评审`），**按文档门禁自评审**（验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环；用 [`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md) 与 [`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md) 拷问），通过后就地改状态行为 `状态：已通过` 并交 devm 排期。
 3. **devm 接单**：devm 读 `docs/dev/tickets/` 的本批票面（`pde{n}` 落笔、director 定稿、已过文档门禁），核 `spec-seq` 对齐与判据齐备后按依赖排期；**devm 不拆票、不改判据**，缺项回报 director 补。devm 负责评审、整合本部门交付物。
 4. **devm 直接派工程师（按需求开，上限 `min(8, cap)`）**：devm **直接派生 `dev-e` 子代理**（一票一 worktree、按需求开），把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给工程师实施；devm 自己建 worktree、收 diff 做**实施层初检**、复核一手出处。anam 同理**直接派 `ana-e`**（拆子问题、并行取证，复核一手出处）。
-5. **devm 验收整合（实施层）**：核 diff 与初检读数（自己收子代理回报并自做初检）→ 构建与测试 → 不合格打回原实施者；**本步不 merge、不写「实施状态」**（merge 的唯一时点见第 6 条）；**任务收口即报（§1.3），该批 `dev-e` 子代理随收口回收**。
+5. **devm 验收整合（实施层）**：核 diff 与初检读数（自己收子代理回报并自做初检）→ 构建与测试 → 不合格打回原实施者；**本步不 merge、不写「实施状态」**（merge 的唯一时点见第 6 条）；**任务收口即报（`OPS.md` §2），该批 `dev-e` 子代理随收口回收**。
 6. **（唯一 merge 时点：director 代码验收通过之后）** devm 评审 → director 验收 → devm merge/push：ticket 代码干完后由 devm 按代码门禁评审（逐条对照 SPEC 判据、核 diff 与证据，先不 merge）→ 交 director；director 按票数派 reviewer1…reviewer{n} 子代理（一票一 reviewer，无依赖票并行、按需求开）对照相同 spec-seq 的 SPEC 验收标准与 ticket 判据逐条验收；验收通过 ⇒ 通知 devm（收件箱 + 门铃）执行 merge 与 push（每 ticket 一推）；不通过 ⇒ 打回 devm 返工，不得先 merge/push。装机仍归 director。reviewer{n} 是子代理、不占 pane、不装技能（/code-review 写进派发 prompt），逐条核验收标准、判据、diff、证据与测试输出；director 不代推、不代 merge。
 7. **并行**：对无依赖关系的任务，各角色**只在直属下级之间并行**（director 在 devm/anam 之间，产品单元在多个 `pde{n}` 之间；devm 在多个 `dev-e` 之间；anam 在多个 `ana-e` 之间），优先级：dynamic workflow > 多个 subagents 并行；**不得为省事而串行，也不得越级派发**。**director 自己的无依赖工作（评审前证据预检、文档交叉核对、外部事实取证、产品取证）同样用子代理并行**，结论由本人落笔。
 
@@ -285,12 +183,12 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**；`director` 保留抽查权（抽查后由 devm 推送）；`anam` / 工程师**一律不得 push、不得 merge 主干**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
 3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff -- <显式路径>` 复核改动内容（第 15 条强化：`git commit -m … -- <路径>` 不经索引，故不查 `--cached`）。
 4. **同一 worktree 单一写者（无豁免）**：一个 worktree 从开工到收工，**只有被派到该票的那一个 agent 可以提交**。任何人要提交自己的文档 / 记录，**不得**在工程师正在施工的 worktree 里做——走主工作树或另开 worktree。**并发提交不会报错，只会把别人的改动扫进自己的提交**，事后靠 `git show --stat` 才能发现，而那时已经进了历史。
-   - **Why**：2026-10-23 一名下级在 dev-e13 施工的同一 worktree 上并行提交了 4 个 docs commit，没有造成损失，但它自己指出「结果侥幸没事不代表流程对」。**这条规则此前只存在于 director 的记忆里、没写进本文件**——没写下来的规则不算规则。
+
    - **How to apply**：提交前先 `git status` 看有没有别人的未提交改动；有则改用 `git commit -- <自己的路径>` 且**不先 `add`**；发现同 worktree 已有他人改动，停下问 devm，不要自行判断「应该没事」。
 5. **推送节奏（devm）**：① **至少每完成一个 ticket 推送一次**到 GitLab（`10.223.36.12:808`），推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果（`publish.sh` 默认推 `gitlab origin` 双远端：GitLab 为主、GitHub 镜像；只推 GitLab 时用 `--remotes gitlab`）；② **至少每小时**巡检一次 `git status --porcelain`，有新建或修改文件就按显式路径提交并推送（不必等 ticket 收口）。巡检与推送结果在下一次回报里一句话说明（推了什么、跳过什么、为什么）。
    - 命令：`bash dmt-director/scripts/publish.sh -m '<message>' -- <显式路径...>`；`--auto` 由 `git status --porcelain` 枚举改动路径（仍是显式路径，不使用 `git add -A`），`--no-push` 只提交。
 6. **合并冲突时「取 main」（`checkout --ours`）只在 main 是分支的严格超集时成立。** 判断办法不是看谁改得多，是**逐项比对「两侧各有哪些行是对方没有的」**；只要有一项只有分支有，就必须手工合成。
-   - **Why**：T4 那次 main 是分支票面的严格超集，`--ours` 安全；T6 那次不是——main 有「不劣+最简」「21% vs 85% 口径隔离」，分支有「实测读数 + 2×2 六张表 + 配对 σ 修正」，**取任何一侧都会丢东西**。同一个动作在两次合并里安全性相反，**说明「上次就是这么干的」不构成理由**。
+
    - **How to apply**：合并前跑一次两侧差异清单（`git diff --stat main...branch` 逐文件看，或直接 `git merge-tree` 预判）；合成后**与分支版本再 diff 一次**，确认差异只剩「main 独有的行」与「人工合成的那几行」，其余逐字节相同。
 
 ### 5.2 并行子代理
@@ -317,7 +215,6 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
     `你是 <角色> 的子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`
     > reviewer{n} 变体（验收专用，`/code-review` 为模板常量，不得替换或省略）：`你是 director 的 reviewer{n} 子代理。必须调用 /code-review 技能逐条验收。票：<ticket 路径>。SPEC：<对应 spec-seq 路径>。输入：<diff、证据、测试输出路径>。判据：照 ticket 验收标准逐条核。回报：逐条通过/不通过 + 结论。超时：<timeoutMs>。`
 
-
 10. **一子代理一单元队列（2026-10-27 事故后立规，复盘见 `logs/2026-10-27-serial-queue-incident.md`）**：
     - **在途子代理只收同一单元的纠正 / 收窄**；**新单元一律另派子代理**（另开 worktree），**不得**用 `SendMessage` 追加成队列。
     - **追加前先做「文件面矩阵」**：逐条写 `单元 | 触达文件 | 与在途单元是否重叠`。重叠才可排队（理由码 `files`，**必须列出具体文件路径**）；不重叠 ⇒ **立即另派**。
@@ -326,7 +223,6 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
     - **队列水位巡检（每小时，与第 9 条巡检同批）**：① 看各在途子代理界面读数 `N queued`，`≥ 2` 即违规、立即按文件面拆分；② 账实核对：`dispatch-ledger.sh report <角色>` 的「派 M」必须 ≥ 实际在途子代理数，缺额即有追加未过账。
     - **判据（违规即打回）**：同一子代理 `N queued ≥ 2`；或账本「派 M」< 实际在途数；或理由码写 `files` 却列不出重叠文件路径。
     - **复用 vs 新派的唯一判据**：问「这条要求会不会改变他正在做的事的**验收面**？」不会 ⇒ 复用（缺陷修正 / 收窄）；会 ⇒ 新派（哪怕同票同主题）。
-
 
 ### 5.3 评审门禁
 
@@ -347,10 +243,8 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 1. **dump 开关必须随窗登记**：`obb_roi_dump_enabled`（`yolo11ncnn.cpp:1063`，默认 off）开时每帧算 raw sha256，占全进程 CPU **13.3%**、detect 线程约 95% ⇒ 实测 `detect_fps_measured` **1.79**（原记 0.76，经 004 订正 —— 0.76 属跨轮残留快照）vs 生产档 **3.86**。**dump-on 窗的 fps／耗时对比一律作废**，不得进任何结论；开窗前必须核 `diagnostics_state` 并把该值写进口径行。
 2. **跨构建绝对值禁比**：不同 so／APK 的毫秒数不可互比（设备现装、语料、仓内 APK 三者不同源）；比值（如 detect 前向占比 f）可跨构建比，但须挂横幅说明。
 3. **「停」要复验**：`force-stop` 后必须 `pidof <pkg>` 为空才算停；下级回报的「已停」不可直接采信。
-4. **快照必须同时满足两条才算本窗**：① 在本窗 `new.list` 内；② `build_sha256` 与同窗其余快照**一致**。任一条不满足 ⇒ **跨轮残留**，禁用于任何对账（含 `detect_ms`／`fps`／`decode_ms`）。**Why**：`new.list` 只能证明「文件是这次新出现的」，证明不了「它属于这次会话」——2026-10-24 004 窗就有 1 份 `a676c083`（旧构建）快照混在 `new.list` 里（`detect_frames=172`、`window_ms=30106`，比同窗第 2 份早 33.8 s）；同一坑此前已三次（62 s 窗、`keys.tsv` 混入、`67528008`）。
-5. **装机权限（只归 director）**：`adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**写操作，只许 `director` 执行**；`devm`／`anam`／工程师**一律禁装、禁写设备**（需要装机时回报 director，由 director 自己动手，不转授权）。装机后必报 **APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空**。**Why**：2026-10-24 T1（host-only 票）的 dev-e 自行装机、覆写 calib 并 force-stop 了他人 `pid=23862` 的进程；用户随后裁定装机与推送收归 director 一人（2026-10-26 第三十九次：merge 与 push 改归 devm，装机仍归 director）。
-
-**Why**：2026-10-24 的 f 补测窗（dump 开）一度被当作性能窗；同日某下级报「App 已 force-stop」，实测 pid 仍在。**没写下来的纪律不算纪律**。
+4. **快照必须同时满足两条才算本窗**：① 在本窗 `new.list` 内；② `build_sha256` 与同窗其余快照**一致**。任一条不满足 ⇒ **跨轮残留**，禁用于任何对账（含 `detect_ms`／`fps`／`decode_ms`）。
+5. **装机权限（只归 director）**：`adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**写操作，只许 `director` 执行**；`devm`／`anam`／工程师**一律禁装、禁写设备**（需要装机时回报 director，由 director 自己动手，不转授权）。装机后必报 **APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空**。
 
 ## 6. 表达（全角色）
 

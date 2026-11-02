@@ -59,10 +59,10 @@ bash dmt-director/scripts/setup-team.sh --no-start
 
 ## 通信（收件箱文件 + herdr 门铃）
 
-全文见 `dmt-director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
+全文见 `dmt-director/OPS.md` §2。一句话：**正文写文件，herdr 只发门铃**。
 
 - 用脚本：`bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文件>`（自动算 `{seq}` / 时刻 / 方向，写文件后发门铃）。
-- 收件：读 `inbox/<自己>/` 新文件 → `msg-take.sh` 移到 `.doing/`（认领在前、读入在后）→ 读入 → **不回执** → 办完 `msg-done.sh` 删除。门铃通道与三态细则见 `dmt-director/team.md` §1.3。
+- 收件：读 `inbox/<自己>/` 新文件 → `msg-take.sh` 移到 `.doing/`（认领在前、读入在后）→ 读入 → **不回执** → 办完 `msg-done.sh` 删除。门铃通道与三态细则见 `dmt-director/OPS.md` §2。
 - 定位伙伴：`herdr pane list` 按 **pane label** 取 pane id（label 文字为准，全 workspace 唯一）。
 本角色差异：
 
@@ -124,7 +124,7 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 - 记录在项目根 `locks/`（不入库）；TTL 30 分钟，过期可抢占，但必须在回报里写明原持有者。
 - `inbox/` 的消息文件不登记（文件名含 seq 与时刻，天然不冲突）。
 - Orca runtime 可连通时（`orca status`），再跑 `orca worktree ps` 看同 worktree 是否有活跃 agent。
-- 细则见 `dmt-director/team.md` §1.5。
+- 细则见 `dmt-director/OPS.md` §3。
 
 ## 指针
 

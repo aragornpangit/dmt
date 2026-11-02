@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook：经理还有未派单元时，不许自己写交付物（先派后干的牙）
+# ⚠️ 已停用（2026-10-27）：install-hooks.sh 不再注册本 hook，改由 SKILL.md 语义条款承担；
+#    本文件保留（机检 4j 仍要求可执行），需要时可一键恢复注册。
 # 用法：self-work-guard.sh <role> <file>
 set -eu
 DIR="$(cd "$(dirname "$0")" && pwd)"

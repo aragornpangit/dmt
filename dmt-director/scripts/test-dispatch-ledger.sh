@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dispatch-ledger.sh（max-subagents ledger.py 薄壳）自测
 # 在临时 git 仓库 + 独立临时 ROOT 上跑，绝不触碰真实 dmt 仓库的 locks 目录。
-# 用法：bash scripts/test-dispatch-ledger.sh
+# 用法：bash dmt-director/scripts/test-dispatch-ledger.sh
 set -u
 
 REAL_SCRIPTS="$(cd "$(dirname "$0")" && pwd)"

@@ -10,6 +10,7 @@ SKILLS_DIR="${DMT_SKILLS_DIR:-$ROOT/.agents/skills}"
 # 契约定位：项目内 docs/team.md（安装副本）优先；只有脚本本身就在 $ROOT 的技能仓里时才回退到仓内正本。
 # 回退不能无条件：否则目标项目缺契约时会被技能仓的 team.md 顶替，机检报假绿。
 CONTRACT="$ROOT/docs/team.md"
+OPS="${CONTRACT%/*}/OPS.md"   # 操作手册（§1.2/§1.3/§1.5 内容所在）
 if [ ! -f "$CONTRACT" ] && [ "$(cd "$(dirname "$(readlink -f "$0")")/../.." && pwd)" = "$ROOT" ]; then
   CONTRACT="$ROOT/dmt-director/team.md"
 fi
@@ -109,22 +110,22 @@ check "$CONTRACT" '| `dmt-pde` | `pde{n}` |' '团队契约'
 
 echo
 echo "== 3) helper 纯分身语义与回收动作必须登记（任务完成即关；只有创建者能关；只关 pane 不关 tab） =="
-check "$CONTRACT" 'close-helper.sh' '团队契约'
+check "$OPS" 'close-helper.sh' '团队契约'
 check "$SKILLS_DIR/dmt-director/SKILL.md" 'close-helper.sh' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'close-helper.sh' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'close-helper.sh' 'anam'
-check "$CONTRACT" '禁止先关后收' '团队契约'
-check "$CONTRACT" '只许关 pane' '团队契约'   # 禁则本体：只许关 pane（'herdr tab close' 在 §8 历史里也会出现，不能拿它当判据）
-check "$CONTRACT" '一次性下发' '团队契约'
-check "$CONTRACT" '不接受任何输入框内容' '团队契约'
-check "$CONTRACT" '单向汇报' '团队契约'
-check "$CONTRACT" '没有自己的 inbox' '团队契约'
+check "$OPS" '禁止先关后收' '团队契约'
+check "$OPS" '只许关 pane' '团队契约'   # 禁则本体：只许关 pane（'herdr tab close' 在 §8 历史里也会出现，不能拿它当判据）
+check "$OPS" '一次性下发' '团队契约'
+check "$OPS" '不接受任何输入框内容' '团队契约'
+check "$OPS" '单向汇报' '团队契约'
+check "$OPS" '没有自己的 inbox' '团队契约'
 check "$(dirname "$(readlink -f "$0")")/spawn-helper.sh" '一次性下发' 'spawn-helper.sh'
 
 echo
 echo "== 3b) 身份识别必须按 pane label（不得按 tab 内位置） =="
-check "$CONTRACT" 'pane label' '团队契约'
-check "$CONTRACT" '不按 tab 内位置' '团队契约'
+check "$OPS" 'pane label' '团队契约'
+check "$OPS" '不按 tab 内位置' '团队契约'
 for role in dmt-director dmt-pde dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" 'pane label' "$role"
 done
@@ -150,8 +151,8 @@ check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate 方式' 'anam'
 
 echo
 echo "== 4c) 门铃通道必须登记（五种 harness 优先 agent prompt，其余回退） =="
-check "$CONTRACT" 'opencode2' '团队契约'
-check "$CONTRACT" 'agent prompt' '团队契约'
+check "$OPS" 'opencode2' '团队契约'
+check "$OPS" 'agent prompt' '团队契约'
 
 echo
 echo "== 4d) 装机只归 director、merge 与 push 只归 devm（每 ticket 一推；每小时巡检） =="
@@ -195,8 +196,8 @@ check "$SKILLS_DIR/dmt-director/SKILL.md" '/code-review' 'director'
 
 echo
 echo "== 4f) 文件占用（编辑前检查）必须登记 =="
-check "$CONTRACT" '文件占用' '团队契约'
-check "$CONTRACT" 'file-claim' '团队契约'
+check "$OPS" '文件占用' '团队契约'
+check "$OPS" 'file-claim' '团队契约'
 for role in dmt-director dmt-pde dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" 'file-claim' "$role"
 done
@@ -258,10 +259,10 @@ done
 
 echo
 echo "== 4k) 收件箱三态必须登记（认领 .doing/、收口删除、.seq 高水位） =="
-check "$CONTRACT" '.doing/' '团队契约'
-check "$CONTRACT" '.seq' '团队契约'
-check "$CONTRACT" 'msg-take.sh' '团队契约'
-check "$CONTRACT" 'msg-done.sh' '团队契约'
+check "$OPS" '.doing/' '团队契约'
+check "$OPS" '.seq' '团队契约'
+check "$OPS" 'msg-take.sh' '团队契约'
+check "$OPS" 'msg-done.sh' '团队契约'
 for role in dmt-director dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" 'msg-take.sh' "$role"
 done
@@ -275,7 +276,7 @@ for role in dmt-director dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" '先派后干' "$role"
   check "$SKILLS_DIR/$role/SKILL.md" '并发账' "$role"
 done
-check "$CONTRACT" '完成即报' '团队契约'
+check "$OPS" '完成即报' '团队契约'
 for role in dmt-director dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" '完成即报' "$role"
 done
