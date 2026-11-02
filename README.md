@@ -64,7 +64,7 @@ bash dmt-director/scripts/install-skills.sh <项目根>
 bash dmt-director/scripts/install-skills.sh <项目根> --copy
 ```
 
-脚本做四件事：① 建 `.agents/skills/` 并软链或复制四个技能目录；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 复制到 `docs/team.md`（机检读这份副本，须与正本同版本）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做四件事：① 建 `.agents/skills/` 并软链或复制四个技能目录；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` **软链**到 `docs/team.md`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness（codebuddy / codex / opencode 等）的用户级技能目录时，规则同样是**目录名即技能名**。
@@ -80,7 +80,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 
 ## 维护
 
-- 本仓是 dmt 的**唯一维护地**。技能目录（`.agents/skills/<角色>/`）以**软链**安装，随本仓更新、改完即生效；**`docs/team.md` 是复制副本**（`install-skills.sh` 用 `cp`，不是软链）⇒ **正本 `team.md` 变更后须重跑 `bash dmt-director/scripts/install-skills.sh <项目根>`（或重新复制）才同步**，否则副本落后、机检 4m 报版本不一致。
+- 本仓是 dmt 的**唯一维护地**。技能目录（`.agents/skills/<角色>/`）与 **`docs/team.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
 - 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步四个技能与机检 4m。
 - 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。

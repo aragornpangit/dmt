@@ -226,7 +226,7 @@ bash dmt-director/scripts/file-claim.sh list                     # 看全部占�
 | `docs/analyst/evidence/{research-seq}-{slug}/` | anam | 调研一手证据（采样产物／原始日志／manifest） | 与报告同号；须带 `manifest.txt`（文件名＋大小＋sha256＋采样命令） |
 | `docs/human/human-arch/` | director | 人类架构文档 | 无 |
 | `docs/human/human-plan/` | director | 人类计划文档 | 无 |
-| `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` 另复制一份到 `docs/team.md` 供机检读取） | director | 团队契约（本文件） | 副本与正本同版本号 |
+| `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` **软链**到 `docs/team.md` 供机检读取） | director | 团队契约（本文件） | 软链跟随正本、恒同版本（`--copy` 模式除外） |
 | `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 §1.3 |
 

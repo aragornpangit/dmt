@@ -44,7 +44,10 @@ fi
 chmod +x "$TARGET/dmt-director/scripts/"*.sh 2>/dev/null || true
 
 mkdir -p "$TARGET/docs"
-cp "$REPO/dmt-director/team.md" "$TARGET/docs/team.md"
+# 契约以**软链**落到 docs/team.md：跟随 <target>/dmt-director/team.md
+# ⇒ link 模式（默认）下即跟随本仓正本，正本变更自动生效、不再产生「需手动刷新」的副本。
+rm -f "$TARGET/docs/team.md"
+ln -sfn ../dmt-director/team.md "$TARGET/docs/team.md"
 
 bash "$TARGET/dmt-director/scripts/init-project.sh" "$TARGET"
 echo "installed ($MODE) into $TARGET"
