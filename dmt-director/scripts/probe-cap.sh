@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 探测当前 harness 最大支持的 agent 数（cap），输出团队有效并发上限 CAP = min(8, cap)。
-# 优先级：DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > 已知 harness 默认 > 8
+# 优先级：DMT_SUBAGENT_CAP > CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS > 8（无已知 harness 默认分支）
 #   codebuddy 原始 20（官方 sub-agents 文档）；探测不到的 harness 一律 8。
 #   团队并发上限 8（用户裁定 2026-10-26）：cap > 8 按 8 算，总监/经理一律 min(8, cap)。
 set -u

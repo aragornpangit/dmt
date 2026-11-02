@@ -13,6 +13,10 @@ case "$MODE" in
 esac
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="$(cd "$TARGET" && pwd)"
+# 防自引用：target 落在技能仓内时拒绝（否则会把软链建到自身，造出 <repo>/dmt-director/dmt-director 之类残留）
+case "$TARGET" in
+  "$REPO"|"$REPO"/*) echo "拒绝：target 落在技能仓内（$TARGET）—— 技能仓是维护地，不是安装目标" >&2; exit 2 ;;
+esac
 SKILLS="dmt-director dmt-pde dmt-dm dmt-am"
 
 mkdir -p "$TARGET/.agents/skills"

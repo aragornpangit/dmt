@@ -58,7 +58,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 # 台账内核：绝对路径常量（禁止相对路径 —— cwd 不受控，相对路径会 miss）
 KERNEL="/home/panxiaoyong/pxy/projects26h2/max-subagents/ledger.py"
 
-CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|append|check|report|status|ledger-path|inject|nudge> <role> ...}"
+CMD="${1:?usage: dispatch-ledger.sh <plan|inc|excuse|done|append|check|report|status|is-subagent|ledger-path|inject|nudge> <role> ...}"
 ROLE="${2:?missing role}"
 shift 2 || true
 

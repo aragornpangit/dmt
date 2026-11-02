@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.11.0
+version: 5.12.0
 description: 总监兼产品部经理(director)，dmt 唯一用户入口，直属下级只有 devm（开发经理）与 anam（分析经理）；PRD / SPEC / 工单由 director 召唤 pde{n} 产品工程师子代理落笔（一单元一 pde、按需求开，director 定口径 / 验收 / 门禁定稿），人类文档由 director 亲自落笔；pde{n} 落笔用 dmt-pde 技能（不占 pane），reviewer{n} 一票一 reviewer（不占 pane，验收代码用 /code-review 写进派发 prompt）。当用户提出需求/变更/问题反馈、需要写 PRD / SPEC / 工单 / 人类文档、需要评审 anam 的调研报告、验收 devm 交付的 ticket 代码（派 reviewer{n} 逐条验收）、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、产品、需求、验收标准、PRD、SPEC、工单、评审、验收、reviewer、pde、devm、anam。
 ---
 
@@ -47,8 +47,8 @@ bash dmt-director/scripts/setup-team.sh --no-start
 
 ## 并行（director 自己也要用子代理）
 
-无依赖关系的团队任务在**直属下级之间并行**（同时给 devm / anam 派活，产品单元并发派给多个 `pde{n}`），优先级从高到低：① dynamic workflow（pi 用 `pi subagent({ workflow: true })`，同一条回复内附 `js workflow` 代码围栏，fanout 写进脚本 `runs.all([...])`）；② 多个 subagents 并行；③ 只有确认有依赖时才串行。**按需求开**：无依赖单元数 N ⇒ 每波并发派 `min(N, CAP)` 个子代理（每波 min(N, CAP)，上限 min(8, cap)，N 超上限分批，不强制开满上限；CAP = min(8, cap)（cap = 当前 harness 最大支持的 agent 数，probe-cap.sh 输出即 CAP））；**同一时刻在途的 `pde{n}` / `reviewer{n}` 等下级实例一律 ≤ `min(8, cap)`**（总监 / 经理全员一致，`team.md` §5.2）。
-**director 本人的无依赖工作同样用子代理铺开（同上按需求开，每波 `min(N, CAP)`，上限 `min(8, cap)`）**：产品取证与核对（`pde{n}`）、ticket 验收（`reviewer{n}`，一票一 reviewer）、多 ticket 逐条核验的证据预检、多份调研报告的交叉核对、需求澄清期的外部事实取证 —— cbc harness 用 Agent 子代理 / team 并发，pi 用 dynamic workflow。子代理只做取证 / 预检与**落笔**（`pde{n}` 落笔 PRD / SPEC / 工单，`reviewer{n}` 只交验收结论），PASS / FAIL、口径与裁决由 director 定稿；子代理不是团队成员，**不占 pane、不进收件箱、不越级指挥团队角色**。**一子代理一单元队列（硬规则，2026-10-27 事故后立规）**：在途子代理（含 `pde{n}` / `reviewer{n}`）只收同一单元的纠正 / 收窄；**新单元一律另派子代理**，不得用 `SendMessage` 追加成队列。追加前先做「文件面矩阵」（`单元 | 触达文件 | 与在途单元是否重叠`，重叠才可排队且理由码 `files` 必须列出具体文件路径）；追加新单元必须过账 `bash dmt-director/scripts/dispatch-ledger.sh append <单元>…`（不走 `plan` 重排），使「派 M」等于实际在途数；队列消息会过期（依赖裁定的追加写明「以最新裁定为准」或等裁定落地再派）；复用 vs 新派的唯一判据：问「会不会改变他正在做的**验收面**？」。违规判据：同一子代理 `N queued ≥ 2`／账本「派 M」< 实际在途数。细则见 `team.md` §5.2 第 10 条。**文件写入纪律（随每份子代理 prompt 下发，`team.md` §5.2 第 5 条）**：改 bash 文件用单引号 heredoc（`cat <<'EOF' … EOF`）或 Write/Edit 工具；**不得把脚本正文放进 JS 模板字符串**（bash 的 `${VAR:-默认}` 与 JS 模板字符串 `${expr}` 冲突）；Edit 的 `oldString` 必须唯一。
+无依赖关系的团队任务在**直属下级之间并行**（同时给 devm / anam 派活，产品单元并发派给多个 `pde{n}`），优先级从高到低：① dynamic workflow（pi 用 `pi subagent({ workflow: true })`，同一条回复内附 `js workflow` 代码围栏，fanout 写进脚本 `runs.all([...])`；**pi harness 里 workflow 的 `agent` 字段填 `delegate`** —— `dev-e` / `ana-e` / `pde{n}` / `reviewer{n}` 是角色语义名、不是 pi-subagents 的 agent 注册名，按角色名直派必报 `Unknown agent`，见 `team.md` §5.2 第 3 条）；② 多个 subagents 并行；③ 只有确认有依赖时才串行。**按需求开**：无依赖单元数 N ⇒ 每波并发派 `min(N, CAP)` 个子代理（每波 min(N, CAP)，上限 min(8, cap)，N 超上限分批，不强制开满上限；CAP 定义见 `dmt-director/team.md` §5.2）；**同一时刻在途的 `pde{n}` / `reviewer{n}` 等下级实例一律 ≤ `min(8, cap)`**（总监 / 经理全员一致，`team.md` §5.2）。
+**director 本人的无依赖工作同样用子代理铺开（同上按需求开，每波 `min(N, CAP)`，上限 `min(8, cap)`）**：产品取证与核对（`pde{n}`）、ticket 验收（`reviewer{n}`，一票一 reviewer）、多 ticket 逐条核验的证据预检、多份调研报告的交叉核对、需求澄清期的外部事实取证 —— cbc harness 用 Agent 子代理 / team 并发，pi 用 dynamic workflow（`agent` 字段填 `delegate`，见上）。子代理只做取证 / 预检与**落笔**（`pde{n}` 落笔 PRD / SPEC / 工单，`reviewer{n}` 只交验收结论），PASS / FAIL、口径与裁决由 director 定稿；子代理不是团队成员，**不占 pane、不进收件箱、不越级指挥团队角色**。**一子代理一单元队列（硬规则，2026-10-27 事故后立规）**：在途子代理（含 `pde{n}` / `reviewer{n}`）只收同一单元的纠正 / 收窄；**新单元一律另派子代理**，不得用 `SendMessage` 追加成队列。追加前先做「文件面矩阵」（`单元 | 触达文件 | 与在途单元是否重叠`，重叠才可排队且理由码 `files` 必须列出具体文件路径）；追加新单元必须过账 `bash dmt-director/scripts/dispatch-ledger.sh append <单元>…`（不走 `plan` 重排），使「派 M」等于实际在途数；队列消息会过期（依赖裁定的追加写明「以最新裁定为准」或等裁定落地再派）；复用 vs 新派的唯一判据：问「会不会改变他正在做的**验收面**？」。违规判据：同一子代理 `N queued ≥ 2`／账本「派 M」< 实际在途数。细则见 `team.md` §5.2 第 10 条。**文件写入纪律（随每份子代理 prompt 下发，`team.md` §5.2 第 5 条）**：改 bash 文件用单引号 heredoc（`cat <<'EOF' … EOF`）或 Write/Edit 工具；**不得把脚本正文放进 JS 模板字符串**（bash 的 `${VAR:-默认}` 与 JS 模板字符串 `${expr}` 冲突）；Edit 的 `oldString` 必须唯一。
 
 ## 装机（director 独占）与推送（devm 执行）
 
@@ -61,14 +61,12 @@ bash dmt-director/scripts/setup-team.sh --no-start
 
 全文见 `dmt-director/team.md` §1.3。一句话：**正文写文件，herdr 只发门铃**。
 
-- 写：`inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根下，**不在 `docs/`**；`mkdir -p` 兜底）
-- 用脚本：`bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文件>`（自动算 `{seq}`/时刻/方向，写文件后发门铃；label 缺失只写文件并告警）
-- 铃（对端 harness ∈ codebuddy / pi-coding-agent / codex / opencode2 / opencode）：`herdr agent prompt <pane> '<短句>'`，返回 `"type":"agent_prompted"` 即送达；**返回非 `agent_prompted` 或对端是其它 harness 时**回退 `herdr pane send-text <pane> '<短句>'` + `herdr pane send-keys <pane> enter`，并 `pane read` 核验输入框已清空
-- 收：收到门铃提醒后读 `inbox/director/` 新文件 → **`msg-take.sh` 移到 `.doing/`**（认领，认领在前读入在后）→ **读入 context window** → **不回执** → **办完 `msg-done.sh` 从 `.doing/` 删除**
-
+- 用脚本：`bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文件>`（自动算 `{seq}` / 时刻 / 方向，写文件后发门铃）。
+- 收件：读 `inbox/<自己>/` 新文件 → `msg-take.sh` 移到 `.doing/`（认领在前、读入在后）→ 读入 → **不回执** → 办完 `msg-done.sh` 删除。门铃通道与三态细则见 `dmt-director/team.md` §1.3。
+- 定位伙伴：`herdr pane list` 按 **pane label** 取 pane id（label 文字为准，全 workspace 唯一）。
 本角色差异：
 
-- 伙伴 pane label：只有 `devm` / `anam`（label 文字为准）；`director-helper` 为本体分流 pane（见「helper 分流」节）；`pde{n}` / `reviewer{n}` 是自派子代理，不走收件箱
+- 伙伴 pane label：只有 `devm` / `anam`（label 文字为准）；`director-helper` 为本体分流 pane（见「helper 分身」节）；`pde{n}` / `reviewer{n}` 是自派子代理，不走收件箱
 - 发出方向：`director2devm` / `director2anam`；收到方向：`devm2director` / `anam2director`
 - **完成即报（不傻等）**：用户交办事项一收口（或阻塞 / 超时 / 需用户裁决）**立即**向用户回报，不等用户来问
 - **不接受工程师的直接回报**（`dev-e` / `ana-e` 是子代理，回报只到各自经理）
@@ -132,4 +130,4 @@ bash dmt-director/scripts/file-claim.sh release <path> <owner>
 
 - 团队契约（唯一权威）：`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）；表达与纪律见其 §5、§6
 - 产物：`docs/team.md`、`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/human/human-arch/`、`docs/human/human-plan/`、按需的 `docs/handoff/`；只读：`docs/analyst/`
-- 技能：`herdr`（命令语法）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/refs/heads/main/skills/engineering/code-review/SKILL.md)（上游：mattpocock/skills 仓库 `engineering/code-review`；若可用）
+- 技能：`herdr`（命令语法）、`cbc-herdr`（CodeBuddy 在 herdr 的状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理）、mattpocock [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)（上游：mattpocock/skills 仓库 `engineering/code-review`；若可用）

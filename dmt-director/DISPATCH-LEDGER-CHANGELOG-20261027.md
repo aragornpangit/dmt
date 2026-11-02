@@ -1,6 +1,6 @@
 # dispatch-ledger.sh 变更通知（2026-10-27）
 
-**一句话**：`scripts/dispatch-ledger.sh` 已改为 max-subagents「台账内核」的**薄壳**；原实现在 `scripts/dispatch-ledger.sh.orig-20261027`（一份 `cp` 即可回滚）。
+**一句话**：`dmt-director/scripts/dispatch-ledger.sh` 已改为 max-subagents「台账内核」的**薄壳**；旧实现在 git 历史中（`git log -- dmt-director/scripts/dispatch-ledger.sh` 可回溯）。
 
 ## 为什么改
 
@@ -8,8 +8,8 @@
 
 ## 对外契约不变（hook 配置无需改动）
 
-- 子命令全集不变：`plan / inc / excuse / done / check / report / status / ledger-path / inject / nudge`
-- 调用形式不变：`bash scripts/dispatch-ledger.sh <cmd> <role> [args...]`（`inc`/`check`/`nudge` 从 stdin 读 hook payload）
+- 子命令全集：`plan / inc / excuse / done / append / check / report / status / is-subagent / ledger-path / inject / nudge`
+- 调用形式：`bash dmt-director/scripts/dispatch-ledger.sh <cmd> <role> [args...]`（`inc`/`check`/`nudge` 从 stdin 读 hook payload）
 - 角色解析与治理白名单不变（`dmt_role`；只治理 director/devm/anam/*-helper；`DMT_DISPATCH_ALL=1` 绕过）
 - 账本路径不变：`$(dmt_root)/locks/dispatch-<ROLE>.tsv`（旧账本文件可直接继续用，含老 `HHMMSS` 时间列）
 - `excuse` 理由码不变：`dep|files|build|order|device|rea`
@@ -36,8 +36,8 @@
 ## 自测与回滚
 
 ```bash
-bash scripts/test-dispatch-ledger.sh     # 10 条自测（含锁接管 / 子代理不销账 / 旧账本可读 / 非治理角色静默）
-cp scripts/dispatch-ledger.sh.orig-20261027 scripts/dispatch-ledger.sh   # 一键回滚
+bash dmt-director/scripts/test-dispatch-ledger.sh   # 自测（含锁接管 / 子代理不销账 / 旧账本可读 / 非治理角色静默）
+git checkout <旧 sha> -- dmt-director/scripts/dispatch-ledger.sh   # 一键回滚（旧实现见 git 历史）
 ```
 
 ## 参考

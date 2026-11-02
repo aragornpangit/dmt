@@ -179,7 +179,7 @@ check "$SKILLS_DIR/dmt-pde/SKILL.md" '/to-spec' 'dmt-pde'
 check "$SKILLS_DIR/dmt-pde/SKILL.md" '/to-tickets' 'dmt-pde'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-me' 'anam'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '/grill-with-docs' 'anam'
-# 工程师吸收的原队长执行技能（登记在契约角色表 dev-e / ana-e 行）
+# 工程师执行技能（登记在契约角色表 dev-e / ana-e 行）
 check_row "$CONTRACT" 'dev-e' '/tdd' 'dev-e 行'
 check_row "$CONTRACT" 'dev-e' '/implement' 'dev-e 行'
 check_row "$CONTRACT" 'dev-e' '/code-review' 'dev-e 行'
@@ -326,7 +326,7 @@ for k in '文件面矩阵' '派 M' '验收面'; do
     echo "FAIL 队列纪律要素缺失          $k"; fail=1
   fi
 done
-if [ -f "${DMT_REPO_ROOT:-/nonexistent}/logs/2026-10-27-serial-queue-incident.md" ] || [ -f "$(dirname "$CONTRACT")/../logs/2026-10-27-serial-queue-incident.md" ]; then
+if [ -f "$(dirname "$CONTRACT")/../logs/2026-10-27-serial-queue-incident.md" ]; then
   echo "OK   事故复盘档在位"
 else
   echo "INFO 事故复盘档仅在技能仓内（目标项目不安装，不判红）"
@@ -350,6 +350,16 @@ if grep -q '文件写入纪律' "$(dirname "$(readlink -f "$0")")/fanout.sh" 2>/
 else
   echo "FAIL 缺文件写入纪律            fanout.sh"; fail=1
 fi
+
+echo
+# 4p) pi harness 的 agent 名承载：角色语义名 ≠ pi-subagents 的 agent 注册名（agent 字段填 delegate）
+echo "== 4p) pi harness agent 名承载必须登记（角色语义名 ≠ pi agent 注册名，agent 字段填 delegate） =="
+check "$CONTRACT" 'agent 名承载' '团队契约'
+check "$CONTRACT" 'delegate' '团队契约'
+check "$SKILLS_DIR/dmt-director/SKILL.md" 'delegate' 'director'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" 'delegate' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" 'delegate' 'anam'
+check "$SKILLS_DIR/dmt-pde/SKILL.md" 'delegate' 'pde'
 
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then

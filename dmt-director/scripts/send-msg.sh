@@ -31,7 +31,6 @@ esac
 DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
 ROOT="$(dmt_root)"
 # 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
-DIR="$(cd "$(dirname "$0")" && pwd)"
 superior_of() {
   case "$1" in
     devm|anam) echo director ;;
