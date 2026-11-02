@@ -252,7 +252,7 @@ for role in dmt-director dmt-pde dmt-dm dmt-am; do check_links "$SKILLS_DIR/$rol
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh self-work-guard.sh parallel-guard.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done
