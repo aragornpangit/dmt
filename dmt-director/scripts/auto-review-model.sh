@@ -46,10 +46,13 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-say() { [ "$QUIET" = 1 ] || echo "$@"; }
+# --quiet：只在「有变化 / 异常」时输出；常规叙述静默。（历史上本函数把变化行也一并吞掉，
+# 与「--quiet 只在有变化时输出一行」的文档不符 —— 2026-11-03 修正。）
+say_change() { echo "$@"; }
+say()        { [ "$QUIET" = 1 ] || echo "$@"; }
 
 if [ "$OFF" = 1 ]; then
-  say "[auto-review-model] 健康门已关闭（--off / DMT_AUTO_REVIEW_GATE=off）⇒ 不动设置"
+  say_change "[auto-review-model] 健康门已关闭（--off / DMT_AUTO_REVIEW_GATE=off）⇒ 不动设置"
   exit 0
 fi
 
@@ -62,7 +65,7 @@ if command -v curl >/dev/null 2>&1; then
   probe="HTTP $code"
 else
   probe="no curl"
-  say "[auto-review-model] 警告：本机无 curl，无法探活 ⇒ 按不可达处理（可用性优先）"
+  say_change "[auto-review-model] 警告：本机无 curl，无法探活 ⇒ 按不可达处理（可用性优先）"
 fi
 
 # ---- 决策 ----
@@ -79,7 +82,7 @@ fi
 
 # ---- 落盘（python3 原子写 + 保留文件权限）----
 if ! command -v python3 >/dev/null 2>&1; then
-  say "[auto-review-model] 警告：无 python3，无法改写 settings ⇒ 保持现状（$PLAN 未生效）"
+  say_change "[auto-review-model] 警告：无 python3，无法改写 settings ⇒ 保持现状（$PLAN 未生效）"
   exit 0
 fi
 
@@ -149,8 +152,8 @@ case "$out" in
   noop)
     say "[auto-review-model] 无变化（$PLAN）" ;;
   pinned-*|unpinned)
-    say "[auto-review-model] $out · settings=$SETTINGS · $PLAN" ;;
+    say_change "[auto-review-model] $out · settings=$SETTINGS · $PLAN" ;;
   *)
-    say "[auto-review-model] 改写失败：$out（保持原设置）" ;;
+    say_change "[auto-review-model] 改写失败：$out（保持原设置）" ;;
 esac
 exit 0
