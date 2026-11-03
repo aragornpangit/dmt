@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.12.0
+version: 5.13.0
 description: 产品工程师(pde{n})，director 自派的产品子代理技能，不占 tab 不占 pane、不进收件箱。受 director 召唤**落笔 PRD / SPEC / 工单**（写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`，director 定口径与验收定稿），并做产品事实取证、用户故事与边界枚举、验收标准核对、既有文档一致性预检；**匹配 `/to-spec`、`/to-tickets` 技能**（与 director 同套，SPEC 与工单方法论一致）。director 需写 PRD / SPEC / 工单或需要产品支撑时，在派发 prompt 里下发本技能生成 pde1…pde{n} 子代理（一单元一实例，无依赖并发、按需求开）。触发词：dmt、pde、产品工程师、产品取证、用户故事、验收标准核对、一致性核查、PRD、SPEC。
 ---
 
@@ -24,7 +24,7 @@ pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1
 
 ## 并行口径（director 派发时执行，实例须知）
 
-- 无依赖产品单元 **≥2 ⇒ 并发派**，每波 `min(N, CAP)`，按需求开（上限 min(8, cap)，N 超上限分批）；CAP 定义见 `dmt-director/team.md` §5.2，一单元一 `pde{n}`。
+- 无依赖产品单元**适合并发派**，按需求开（一单元一 `pde{n}`，**不强制派满、不设并发上限** —— 2026-11-02 用户裁定，见 `dmt-director/team.md` §5.2）。
 - prompt 骨架（照填，不要现编）：`你是 director 的 pde{n} 子代理。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`
 - **pi harness 承载**：workflow 的 `agent` 字段填 `delegate` —— `pde{n}` 是角色语义名、不是 pi-subagents 的 agent 注册名，按角色名直派必报 `Unknown agent`（见 `team.md` §5.2 第 3 条）。
 

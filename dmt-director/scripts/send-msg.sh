@@ -27,24 +27,9 @@ esac
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
-# 收件箱定位到主工作树根（与 dispatch-ledger 同口径；在 worktree 里跑也指回主树）
+# 收件箱定位到主工作树根（在 worktree 里跑也指回主树）
 DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
 ROOT="$(dmt_root)"
-# 并发账门禁：向上级回报前必须交账 —— 有未派单元且并发位空闲时拒发（DMT_MSG_FORCE=1 强发）
-superior_of() {
-  case "$1" in
-    devm|anam) echo director ;;
-    *) echo "" ;;
-  esac
-}
-SUP="$(superior_of "$FROM")"
-if [ -n "$SUP" ] && [ "$SUP" = "$TO" ] && [ "${DMT_MSG_FORCE:-0}" != 1 ]; then
-  if ! bash "$DIR/dispatch-ledger.sh" check "$FROM" >/dev/null 2>&1; then
-    echo "[send-msg] 并发账门禁：还有未派单元且并发位空闲，按需求开，上限 min(8, cap)，先派发再回报（DMT_MSG_FORCE=1 可强发）。" >&2
-    bash "$DIR/dispatch-ledger.sh" report "$FROM" >&2 || true
-    exit 2
-  fi
-fi
 BOX="$ROOT/inbox/$TO"
 mkdir -p "$BOX/.doing"
 

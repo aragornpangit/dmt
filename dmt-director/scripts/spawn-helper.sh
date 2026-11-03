@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 本体角色用：开 helper pane（{角色}-helper）并代启动 cbc、装载同角色技能分流
-# helper 机制（用户裁定）：{总监|经理}忙不过来、且子代理在途已达上限 min(8, cap)、且仍有待办任务
+# helper 机制（用户裁定）：本体忙不过来、且在途子代理已饱和（忙不过来收不过来回报）、且仍有待办任务
 #   ⇒ 找/建 helper tab（label 固定 helper，全队共享一个，没有就建；新建时把 root pane 标为锚点 `helper-anchor`）→ 在 helper tab 内 split 出 pane 并 rename 为 {角色}-helper
 #   ⇒ 代启动 harness 并输同角色技能命令（director→/dmt-director、devm→/dmt-dm、anam→/dmt-am）
 #   harness：默认 codebuddy；备选 pi / opencode / codex（--harness 或 $DMT_HARNESS；$DMT_HARNESS_CMD 可整体覆盖）

@@ -2,7 +2,7 @@
 
 dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维护地**。层级：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e` / `pde{n}`）。
 **产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
-**经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开，上限 `min(8, cap)`）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
+**经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开、不强制派满）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
 
 > **作用域（Scope，必读）**：本仓全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（用 `init-project.sh <项目根>` 初始化的那个 project root）。
 > **维护 `dmt` / `dmt-en` 等技能仓自身时不适用**：维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权，也不需 devm 代推**。
@@ -30,12 +30,12 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 **三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**
 
-**单线指挥**：每个角色只与直属上下级通信；director 不越级指挥工程师，经理之间不横向直连，跨部门一律经 director 转派。**工程师永远是子代理**（不占 pane、不走跨 pane 通信）：一律由经理直接开（`devm` 开 `dev-e`、`anam` 开 `ana-e`，按需求开、上限 `min(8, cap)`）—— 经理与工程师之间没有 pane 级通道，只有父子代理关系；`pde{n}` 由 `director` 直接开。
+**单线指挥**：每个角色只与直属上下级通信；director 不越级指挥工程师，经理之间不横向直连，跨部门一律经 director 转派。**工程师永远是子代理**（不占 pane、不走跨 pane 通信）：一律由经理直接开（`devm` 开 `dev-e`、`anam` 开 `ana-e`，按需求开、不强制派满）—— 经理与工程师之间没有 pane 级通道，只有父子代理关系；`pde{n}` 由 `director` 直接开。
 **helper（`{角色}-helper`，本体的纯分身，每角色至多一个）**：`director-helper` / `devm-helper` / `anam-helper` 是本体的**纯分身**——任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果**单向汇报给主体**（`{角色}`）；helper **没有自己的 inbox**（不收件），**不走门铃互通**。**生命周期由创建者（本体角色）维护**：用 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam>` 建立（幂等，支持 `--dry-run` / `--no-start`；helper tab label 固定 `helper`（全队共享一个），pane label 固定 `{角色}-helper`，代启动 harness 并装载**同角色技能**）、label 漂移自愈改名、任务完成用 `bash dmt-director/scripts/close-helper.sh <director|devm|anam>` 回收（支持 `--force` / `--dry-run`；**helper tab 保留复用，不随 pane 关闭**）。**独占动作不移交**：装机只归 `director` 本体、merge / push 只归 `devm` 本体。
 
 成员运行在 Herdr（终端多智能体复用器）中，**按 pane label 识别伙伴**（label 与角色名同名、全 workspace 唯一；不看 tab 内位置，pane id 每次发送前重查）。
 **角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**：先 `msg-take.sh` 移到 `inbox/<自己>/.doing/`（认领），办完 `msg-done.sh` 删除（详见 `OPS.md` §2）。
-工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开，上限 `min(8, cap)`）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → director 按票数派 reviewer1…reviewer{n} 对照同 spec-seq 的 SPEC+ticket 逐条验收 → 通过通知 devm merge/push（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt，按需求开、上限 `min(8, cap)`；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 devm 返工、不得先 merge/push。装机（`adb install` 等）**只许 `director` 执行**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
+工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开、不强制派满）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → director 按票数派 reviewer1…reviewer{n} 对照同 spec-seq 的 SPEC+ticket 逐条验收 → 通过通知 devm merge/push（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 devm 返工、不得先 merge/push。装机（`adb install` 等）**只许 `director` 执行**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
 
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
 
@@ -48,7 +48,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
 │   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，60 条）
 │   ├── README.md                       # 角色目录说明（正文见根 README.md）
-│   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 派发账本 / hooks / CAP 探测 / 并行派发 / 推送 / 安装（+ lib-dmt.sh 公共库）
+│   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
 ├── dmt-dm/SKILL.md                     # 开发经理
 └── dmt-am/SKILL.md                     # 分析经理
@@ -78,7 +78,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖（默认值见脚本第 9 行）
 ```
 
-判据 **十八项**（机检共 24 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发纪律或脚本接口后必须重跑。
+判据 **十八项**（机检共 25 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发纪律或脚本接口后必须重跑。
 
 ## 维护
 

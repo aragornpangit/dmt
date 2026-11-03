@@ -9,7 +9,7 @@ case "$ROLE" in
   director|devm|anam) ;;
   *) echo "bad role: $ROLE (want director|devm|anam)" >&2; exit 2 ;;
 esac
-# 收件箱定位到主工作树根（与 dispatch-ledger 同口径）
+# 收件箱定位到主工作树根
 DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
 ROOT="$(dmt_root)"
 BOX="$ROOT/inbox/$ROLE"

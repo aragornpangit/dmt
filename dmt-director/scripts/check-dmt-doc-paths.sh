@@ -131,18 +131,18 @@ for role in dmt-director dmt-pde dmt-dm dmt-am; do
 done
 
 echo
-echo "== 4) 经理层并行判据必须登记（无依赖任务一律派子代理） =="
-check "$SKILLS_DIR/dmt-dm/SKILL.md" '必须并行' 'devm'
-check "$SKILLS_DIR/dmt-am/SKILL.md" '必须并行' 'anam'
-check "$CONTRACT" '无依赖任务一律派子代理' '团队契约'
-check "$CONTRACT" 'min(N, CAP)' '团队契约'
+echo "== 4) 并行判据必须登记（依赖分析在前；并行按需、不强制派满，2026-11-02 用户裁定） =="
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '依赖分析' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" '依赖分析' 'anam'
+check "$CONTRACT" '依赖分析' '团队契约'
+check "$CONTRACT" '不强制派满' '团队契约'
+check "$CONTRACT" '不设并发上限' '团队契约'
 
 echo
-echo "== 4b) 经理层路径与按需求并发必须登记（一律直接派工程师子代理） =="
+echo "== 4b) 经理层路径必须登记（一律直接派工程师子代理，按需求开） =="
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '直接派' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '直接派' 'anam'
 check "$CONTRACT" '经理一律直接派工程师子代理' '团队契约'
-check "$CONTRACT" 'min(8, cap)' '团队契约'
 check "$CONTRACT" '按需求开' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '按需求开' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '按需求开' 'anam'
@@ -252,7 +252,7 @@ for role in dmt-director dmt-pde dmt-dm dmt-am; do check_links "$SKILLS_DIR/$rol
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh dispatch-ledger.sh probe-cap.sh fanout.sh install-hooks.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
+for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done
@@ -268,17 +268,21 @@ for role in dmt-director dmt-dm dmt-am; do
 done
 
 echo
-echo "== 4l) 先派后干、并发账与完成即报必须登记 =="
-check "$CONTRACT" '先派后干' '团队契约'
-check "$CONTRACT" '并发账' '团队契约'
-check "$CONTRACT" '派发合规' '团队契约'
-for role in dmt-director dmt-dm dmt-am; do
-  check "$SKILLS_DIR/$role/SKILL.md" '先派后干' "$role"
-  check "$SKILLS_DIR/$role/SKILL.md" '并发账' "$role"
-done
+echo "== 4l) 完成即报与按需派发必须登记 =="
 check "$OPS" '完成即报' '团队契约'
 for role in dmt-director dmt-dm dmt-am; do
   check "$SKILLS_DIR/$role/SKILL.md" '完成即报' "$role"
+done
+for role in dmt-director dmt-dm dmt-am; do
+  check "$SKILLS_DIR/$role/SKILL.md" '依赖分析' "$role"
+done
+
+echo
+echo "== 4l-b) max-subagents / 饱和派发机制不得回潮（2026-11-02 用户裁定：不强制派满、不设并发上限） =="
+# 负向断言：契约正文与四份技能正文里不得再出现 CAP 探测、派发账本、先派后干、并发账、每波 min(N, CAP) 等饱和派发表述。
+# （§7 / §8 会复述这些字面，_body 只查正文，历史记录不判红）
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md"; do
+  check_absent "$f" 'min\(8, cap\)|min\(N, CAP\)|并发账|先派后干|饱和派发|probe-cap|dispatch-ledger|fanout\.sh|install-hooks|MAX_SUBAGENTS' "$(basename "$(dirname "$f")") 饱和机制回潮"
 done
 
 echo
@@ -321,7 +325,7 @@ for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKI
     echo "FAIL 缺一子代理一单元队列      $f"; fail=1
   fi
 done
-for k in '文件面矩阵' '派 M' '验收面'; do
+for k in '文件面矩阵' '验收面'; do
   if sed -n '1,/^## 8\./p' "$CONTRACT" | grep -q -- "$k"; then
     echo "OK   队列纪律要素              $k"
   else
@@ -336,7 +340,7 @@ fi
 
 echo
 echo "== 4o) 派发 prompt 文件写入纪律必须登记（改 bash 用单引号 heredoc／禁 JS 模板字符串／Edit 锚点唯一） =="
-# 三份派发技能 + pde（子代理技能：同样收 prompt、同样用 Edit）与生成器 fanout.sh 均须带该纪律
+# 三份派发技能 + pde（子代理技能：同样收 prompt、同样用 Edit）均须带该纪律
 for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md"; do
   if grep -q '文件写入纪律' "$f" 2>/dev/null; then
     echo "OK   文件写入纪律              $(basename "$(dirname "$f")")/$(basename "$f")"
@@ -347,11 +351,6 @@ done
 check "$CONTRACT" '单引号 heredoc' '团队契约'
 check "$CONTRACT" '模板字符串' '团队契约'
 check "$CONTRACT" 'oldString' '团队契约'
-if grep -q '文件写入纪律' "$(dirname "$(readlink -f "$0")")/fanout.sh" 2>/dev/null; then
-  echo "OK   文件写入纪律              fanout.sh"
-else
-  echo "FAIL 缺文件写入纪律            fanout.sh"; fail=1
-fi
 
 echo
 # 4p) pi harness 的 agent 名承载：角色语义名 ≠ pi-subagents 的 agent 注册名（agent 字段填 delegate）

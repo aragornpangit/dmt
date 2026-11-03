@@ -2,23 +2,20 @@
 # director 用：一键拉起 dmt 团队（幂等，可分阶段跳过）
 # 用法：bash launch.sh [项目根目录] [选项]（项目根默认当前目录）
 #   --copy          技能改为复制安装（默认软链）
-#   --user-hooks    hooks 装用户级 ~/.codebuddy（默认装项目级 <root>/.codebuddy）
 #   --skip-skills   跳过技能安装
-#   --skip-hooks    跳过 hooks 安装
 #   --skip-team     跳过建团队 pane（无 herdr 环境时也会自动跳过）
 #   --dry-run       只打印将执行的动作，不实际执行
-# 阶段（顺序固定）：① install-skills → ② init-project → ③ install-hooks → ④ setup-team
+# 阶段（顺序固定）：① install-skills → ② init-project → ③ setup-team
+# （hooks / 派发账本机制已于 2026-11-02 随「取消 max-subagents、不强制派满」裁定整体删除，不再安装）
 # 请在目标项目根执行：bash dmt-director/scripts/launch.sh [项目根目录]（省略参数＝当前目录）。
 set -eu
 ROOT="."
-COPY=0; USERHOOKS=0; DOSKILLS=1; DOHOOKS=1; DOTEAM=1; DRY=0
+COPY=0; DOSKILLS=1; DOTEAM=1; DRY=0
 ARGS=()
 for a in "$@"; do
   case "$a" in
     --copy) COPY=1 ;;
-    --user-hooks) USERHOOKS=1 ;;
     --skip-skills) DOSKILLS=0 ;;
-    --skip-hooks) DOHOOKS=0 ;;
     --skip-team) DOTEAM=0 ;;
     --dry-run) DRY=1 ;;
     -*) echo "unknown option: $a" >&2; exit 2 ;;
@@ -47,13 +44,6 @@ else
 fi
 
 run bash "$SCRIPT_DIR/init-project.sh" "$ROOT"
-
-if [ "$DOHOOKS" = 1 ]; then
-  if [ "$USERHOOKS" = 1 ]; then run bash "$SCRIPT_DIR/install-hooks.sh" --user
-  else run bash "$SCRIPT_DIR/install-hooks.sh" "$ROOT"; fi
-else
-  echo "[launch] 跳过 hooks 安装"
-fi
 
 if [ "$DOTEAM" = 1 ]; then
   # 建团队守卫：四个 herdr 变量齐备才建（缺一则 setup-team.sh 会在 : "$VAR" 处直接断掉）
