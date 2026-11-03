@@ -3,6 +3,9 @@
 # 用法：DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
 # 目的：同一判据只有一份实现 —— 复制粘贴出来的副本已经分叉过（dry-run 守卫、fail-closed 修复各漏一处）。
 
+# 本库所在目录（source 时解析一次；用于拼「同目录脚本」的绝对路径，免受调用方后续 cd 影响）
+DMT_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # 主工作树根：git common dir 的父目录（在 worktree 里跑也指回主树）；非 git 目录回退当前目录
 dmt_root() {
   local r
@@ -63,14 +66,18 @@ dmt_harness_name() {
 }
 
 # harness 启动命令。$DMT_HARNESS_CMD 可整体覆盖（逃生舱：任意 harness / 额外参数）。
-# codebuddy 前置 CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS：auto 模式下每个需审批的工具调用都要过一次
-# 复核器（默认 90s 硬上限，含整段会话上下文），企业网关抖动/429 时极易 no verdict ⇒ 整条命令被判失败。
-# 300s 给复核留缓冲；用户级 settings.json 的 env 块同样下发该键（两条路都留，任一失效仍生效）。
+# codebuddy 分支在启动前做两件事（机队所有 pane 共用这一处实现）：
+#   ① `auto-review-model.sh` 健康门 —— 探活本地复核端点：可达 ⇒ 复核器钉本地（避开企业网关限流）；
+#      不可达 ⇒ 摘钉、回退 cbc 内置链路（网关模型）。**钉了模型会禁用 cbc 内置 fallback**
+#      （二进制 `resolveAutoReviewModels()` 一钉即 early-return），所以才需要这道门（详见脚本头注释）。
+#   ② 前置 `CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000` —— auto 模式下每个需审批的工具调用都要过一次
+#      复核器（默认 90s 硬上限，含整段会话上下文），企业网关抖动/429 时极易 no verdict ⇒ 整条命令被判失败。
+#      用户级 settings.json 的 `env` 块同键兜底（覆盖手动启动的会话），两条路都留，任一失效仍生效。
 dmt_harness_cmd() {
   local h="${1:-codebuddy}"
   if [ -n "${DMT_HARNESS_CMD:-}" ]; then printf '%s' "$DMT_HARNESS_CMD"; return 0; fi
   case "$h" in
-    codebuddy) printf '%s' 'CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto' ;;
+    codebuddy) printf '%s' "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto" ;;
     pi)        printf '%s' 'pi' ;;
     opencode)  printf '%s' 'opencode' ;;
     codex)     printf '%s' 'codex' ;;
