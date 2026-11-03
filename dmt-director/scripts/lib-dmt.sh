@@ -63,11 +63,14 @@ dmt_harness_name() {
 }
 
 # harness 启动命令。$DMT_HARNESS_CMD 可整体覆盖（逃生舱：任意 harness / 额外参数）。
+# codebuddy 前置 CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS：auto 模式下每个需审批的工具调用都要过一次
+# 复核器（默认 90s 硬上限，含整段会话上下文），企业网关抖动/429 时极易 no verdict ⇒ 整条命令被判失败。
+# 300s 给复核留缓冲；用户级 settings.json 的 env 块同样下发该键（两条路都留，任一失效仍生效）。
 dmt_harness_cmd() {
   local h="${1:-codebuddy}"
   if [ -n "${DMT_HARNESS_CMD:-}" ]; then printf '%s' "$DMT_HARNESS_CMD"; return 0; fi
   case "$h" in
-    codebuddy) printf '%s' 'codebuddy --permission-mode auto' ;;
+    codebuddy) printf '%s' 'CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto' ;;
     pi)        printf '%s' 'pi' ;;
     opencode)  printf '%s' 'opencode' ;;
     codex)     printf '%s' 'codex' ;;

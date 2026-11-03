@@ -33,6 +33,8 @@ HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
 
 **权限模式（仅用户手动启动的会话）**：harness 启动后、**发第一条消息前**按 `shift+Tab` 切到 `auto mode`，并确认面板底部出现 `auto mode on` —— **顺序不可颠倒**（会话一旦开始权限模式即锁定：`Mode cannot be changed after the conversation starts`，事后只能 `/clear` 重开，会丢掉在跑的子代理与上下文）。`setup-team.sh` / `spawn-helper.sh` **代启动的 pane 不走这条流程**（启动命令已带 `--permission-mode auto`，再按 `shift+Tab` 反而会切走）。
 
+**auto 模式复核（`autoModeClassifier`）的已知坑与现行配置**：auto 模式下每个**需审批**的工具调用都要过一次自动复核（prompt 为整段会话上下文，默认 **90s 硬上限**）；企业网关抖动 / 限流时会以 `no verdict ... failure=timeout` 收场、命令被判失败，而表象像「脚本坏了」（2026-11-03 实测一次 `file-claim.sh check` 即如此，脚本本体 57ms 正常）。现行加固三条（2026-11-03 · 第六十次）：① `lib-dmt.sh` 的 `dmt_harness_cmd()` 为 codebuddy 前置 `CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000`，用户级 `~/.codebuddy/settings.json` 的 `env` 块同键兜底（覆盖手动启动的会话）；② `subagents.agents.autoModeClassifier.model = custom-local:Qwen3.8-27b`（复核流量走本地 sglang `http://10.223.32.29:30000`，避开企业网关限流；代价是判定质量弱于网关模型）；③ 用户级 `permissions.allow` 48 条覆盖 `dmt-director/scripts/*.sh`（命中即直接放行、不进复核）。**规则只认 `Bash(<前缀>:*)`**（去掉 `:*` 后按「首词相等／全等／前缀+空格」匹配）；**带 `*` 通配的规则在 auto 模式下会被判危险而整条忽略**，含重定向的命令不套规则。
+
 #### helper 实例的回收（任务完成即收）
 
 只有 helper 是**按需实例**；`director` / `devm` / `anam` 本体 pane **常驻**。
