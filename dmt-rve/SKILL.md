@@ -1,6 +1,6 @@
 ---
 name: dmt-rve
-version: 5.16.5
+version: 5.16.6
 description: 审核工程师(reviewer{n})，director 直接派生的验收子代理技能，不占 tab 不占 pane、不进收件箱。受 director 召唤**一票一 reviewer** 逐条验收 devm 交付的 ticket 代码：对照**相同 spec-seq** 的 SPEC 验收标准与 ticket 判据，核 diff、证据与测试输出；**必须调用 `/code-review`**（技能写进派发 prompt，不占 pane、不装 harness 技能）。当需要对 ticket 代码做逐条验收、核判据与证据时使用。触发词：dmt、reviewer、评审、验收、审核工程师、rve、code-review、逐条核验。
 ---
 

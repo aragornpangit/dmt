@@ -1,6 +1,6 @@
 ---
 name: dmt-ae
-version: 5.16.5
+version: 5.16.6
 description: 分析工程师(ana-e)，anam 直接派生的分析取证子代理技能，不占 tab 不占 pane、不进收件箱。受 anam 召唤执行**单个取证单元**：一手来源优先、命令可复现、结论带证据分级（[OBS]/[INF]/[UNK]）；竞品逆向走 REA（`/rea`）；**必须使用 `/research`、`/rea`、`/grilling`、`/grill-me`、`/grill-with-docs`**（见 `dmt-director/team.md` §1.4）。当需要市场调研、竞品逆向、技术选型取证、APK/AAR/ELF 证据分析时使用。触发词：dmt、ana-e、分析工程师、取证、竞品、逆向、REA、research、一手出处。
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.16.5
+version: 5.16.6
 description: 开发工程师(dev-e)，devm 直接派生的开发子代理技能，不占 tab 不占 pane、不进收件箱。受 devm 召唤实施**单张 ticket**：一票一 worktree、按 SPEC 与票面判据落地、TDD 优先、提交前自审；**必须使用 `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs`**（技能名与用法见 `dmt-director/team.md` §1.4）。当需要实施开发工单、修复缺陷、跑 TDD 时使用。触发词：dmt、dev-e、开发工程师、实施、ticket、TDD、worktree、tdd。
 ---
 
@@ -13,7 +13,7 @@ dev-e 是 **`devm` 的开发子代理**：一张 ticket 一个实例，**不占 
 **边界（硬约束）**：
 
 - 只在**自己的 worktree**（`.worktrees/{ticket-id}`，分支 `feat/{ticket-id}`）内编辑与提交；主工作树**只读**。
-- **不 `git push`、不 merge 主干、不碰设备**（装机只归 director）、**不改**票面判据 / 编号 / Files 边界、**不改 SPEC**。
+- **不 `git push`、不 merge 主干、不碰设备**（装机归 devm）、**不改**票面判据 / 编号 / Files 边界、**不改 SPEC**。
 - 票面或 SPEC 有缺口 ⇒ 回报 `devm`（由 director 补），**不自行补全、不越界改文件**。
 
 ## 技能加载（两种 harness，2026-11-04 实测）
