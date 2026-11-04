@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.16.9
+version: 5.16.10
 description: 开发工程师(dev-e)，devm 直接派生的开发子代理技能，不占 tab 不占 pane、不进收件箱。受 devm 召唤实施**单张 ticket**：一票一 worktree、按 SPEC 与票面判据落地、TDD 优先、提交前自审；**必须使用 `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs`**（技能名与用法见 `dmt-director/team.md` §1.4）。当需要实施开发工单、修复缺陷、跑 TDD 时使用。触发词：dmt、dev-e、开发工程师、实施、ticket、TDD、worktree、tdd。
 ---
 

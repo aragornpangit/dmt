@@ -28,6 +28,7 @@ HERDR_ENV=1 herdr pane list --workspace "$HERDR_WORKSPACE_ID" \
 **身份自愈**（每个角色启动后第一件事）：`herdr pane get "$HERDR_PANE_ID"` 读到的 label 与角色名不符（含为空）时，立即 `herdr pane rename "$HERDR_PANE_ID" <角色名>`。`devm` **不得**用 `herdr tab list` 认自己 —— 它的 tab label 是上级 `director` 的（devm 的 pane 在 director tab 内）。
 
 **创建 pane 一律用脚本（不手敲）**：`setup-team.sh`（给自己正名 + 建 `devm`/`anam` + 代启动 + 输技能，幂等）、`spawn-helper.sh <角色> "<任务>"`（helper tab 下开 `{角色}-helper` 并**一次性下发**任务）、`close-helper.sh <角色>`（本体收口后关 helper pane；helper tab 保留复用）。脚本内部用 `herdr pane split/rename/send-text/send-keys`，自带 label 幂等检查与就绪轮询（`pane get` 的 `agent_status`，不是 `wait-output`）；`--dry-run` 只打印命令，`--no-start` 只建 pane 不启动。**布局只能在 split 时定对**（同 tab 内 `pane move` 返回 `changed:false`）。
+- **技能落点 / 技能名变更后必须重载**（2026-11-04 第七十二次）：`install-skills.sh` 铺好新技能、或技能改名 / 升版后，**已在跑的 pane 不会自动看到** —— 用 `bash dmt-director/scripts/setup-team.sh --reload`（对已在跑 pane 只补发技能命令、不重发启动命令）或重开 pane。**落点新了、pane 还是旧的**，是「改了技能却像没生效」的常见原因。
 
 **让 helper pane 进入角色**：由 `spawn-helper.sh` 一并完成（代启动 → 等 `agent_status` 非 `unknown` → 输同角色技能命令 → **任务随 spawn 一次性下发**），并用 `pane read` 核验输入框已清空。此后**不再**向 helper 的输入框投递任何内容。
 

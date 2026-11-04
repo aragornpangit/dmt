@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.16.9
+version: 5.16.10
 description: 总监兼产品部经理(director)，dmt 唯一用户入口，直属下级只有 devm（开发经理）与 anam（分析经理）；PRD / SPEC / 工单由 director 召唤 pde{n} 产品工程师子代理落笔（一单元一 pde、按需求开、不强制派满，director 定口径 / 验收 / 门禁定稿），人类文档由 director 亲自落笔；pde{n} 落笔用 dmt-pde 技能（不占 pane）；**代码验收由 devm 派 reviewer{n}（技能 dmt-reviewer）执行**，director 保留抽查权与高风险票复验。当用户提出需求/变更/问题反馈、需要写 PRD / SPEC / 工单 / 人类文档、需要评审 anam 的调研报告、需要抽查或复验 ticket 代码验收件、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、产品、需求、验收标准、PRD、SPEC、工单、评审、验收、抽查、pde、devm、anam。
 ---
 
@@ -28,6 +28,8 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 ## 建 pane、打 label 与启动（固定顺序）
 
 **一律用脚本**：`bash dmt-director/scripts/setup-team.sh`（幂等）。要点：给自己正名（**tab label → pane label，顺序不可颠倒**）→ split 出 `devm`（本 tab 右侧）→ 建 `anam` tab → 两 pane 由 director 代启动 harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex|claude`）→ 输技能命令装载角色（claude / codebuddy / codex / opencode 为 `/dmt-dm`、`/dmt-am`；**pi 为 `/skill:dmt-dm`**，由 `dmt_skill_cmd` 按 harness 生成）。身份＝**`pane label`**（不按 tab 位置、不抄 pane id），漂移即 `pane rename` 自愈。**禁止 `herdr tab close`**（会连带杀掉 devm 与自己）。**启动后必须复验权限档位**：`agent_status` 就绪只证明有 agent 在跑，不证明在自动档 —— 脚本已自动调 `dmt_pane_auto_mode`，见 `WARN` 就说明该 pane 每次工具调用都会撞审批（现象是「脚本超时/命令失败」），用 `--force-start` 重开。详见 `OPS.md` §1「档位复验」。
+
+**技能落点 / 技能名变更后**：已在跑的 pane **不会自动看到** —— 用 `setup-team.sh --reload`（只补发技能命令、不重发启动命令）或重开 pane（见 `OPS.md` §1）。
 
 完整判据、例外与 helper 布局见 `dmt-director/OPS.md` §1。
 

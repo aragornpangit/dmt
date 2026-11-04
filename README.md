@@ -50,7 +50,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，73 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，74 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
@@ -99,5 +99,6 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 
 - 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
+- **`dmt-en`（早期英文镜像仓）已停更**（末版 `5.7.1 · 2026-10-27`）：自 2026-11-04 起**以本仓（`dmt`）为准**，不再双仓并行维护；需要英文版时按本仓当期内容另行翻译，**不要把 `dmt-en` 当权威**。
 - 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步七个技能与机检 4m。
 - 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。
