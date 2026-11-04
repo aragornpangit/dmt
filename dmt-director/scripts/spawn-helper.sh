@@ -2,15 +2,15 @@
 # 本体角色用：开 helper pane（{角色}-helper）并代启动 cbc、装载同角色技能分流
 # helper 机制（用户裁定）：本体忙不过来、且在途子代理已饱和（忙不过来收不过来回报）、且仍有待办任务
 #   ⇒ 找/建 helper tab（label 固定 helper，全队共享一个，没有就建；新建时把 root pane 标为锚点 `helper-anchor`）→ 在 helper tab 内 split 出 pane 并 rename 为 {角色}-helper
-#   ⇒ 代启动 harness 并输同角色技能命令（director→/dmt-director、devm→/dmt-dm、anam→/dmt-am）
-#   harness：默认 codebuddy；备选 pi / opencode / codex（--harness 或 $DMT_HARNESS；$DMT_HARNESS_CMD 可整体覆盖）
+#   ⇒ 代启动 harness 并输同角色技能命令（director→dmt-director、devm→dmt-dm、anam→dmt-am；前缀按 harness 走 `dmt_skill_cmd`）
+#   harness：默认 codebuddy；备选 pi / opencode / codex / claude（--harness 或 $DMT_HARNESS；$DMT_HARNESS_CMD 可整体覆盖）
 # 生命周期由创建者（本体角色）维护：建立、改名（label 漂移自愈）、任务完成回收（close-helper.sh 关 pane；helper tab 保留复用）
 # 独占动作不移交：装机只归 director 本体、merge/push 只归 devm 本体
 # 分身语义（用户裁定）：技能同主体（director→/dmt-director、devm→/dmt-dm、anam→/dmt-am）；任务随 spawn 一次性下发，此后不接受任何输入框内容；
 # 工作成果单向汇报主体（inbox/<主体>/，方向 {seq}-{角色}-helper2{角色}-）；helper 没有自己的 inbox、不收件
 # 用法：bash spawn-helper.sh <director|devm|anam> [任务文本] [--dry-run] [--no-start] [--harness <name>]
 #   任务文本：可选，随启动一次性下发给分身（此后不再发任何输入框内容）
-#   --harness：codebuddy（默认）| pi | opencode | codex
+#   --harness：codebuddy（默认）| pi | opencode | codex | claude
 #   幂等：label {角色}-helper 已存在 ⇒ echo 已存在 exit 0
 #   需要 HERDR_ENV=1、HERDR_WORKSPACE_ID
 set -eu
@@ -30,14 +30,16 @@ done
 case "$ROLE" in director|devm|anam) ;; *) echo "role must be director|devm|anam" >&2; exit 2 ;; esac
 LABEL="${ROLE}-helper"
 case "$ROLE" in
-  director) SKILL='/dmt-director' ;;
-  devm) SKILL='/dmt-dm' ;;
-  anam) SKILL='/dmt-am' ;;
+  director) SKILL_NAME='dmt-director' ;;
+  devm) SKILL_NAME='dmt-dm' ;;
+  anam) SKILL_NAME='dmt-am' ;;
 esac
 
 . "$(cd "$(dirname "$0")" && pwd)/lib-dmt.sh"
 
 HARNESS="$(dmt_harness_name "$HARNESS_ARG")" || exit 2
+# 技能调用行按 harness 生成（pi 要 /skill:<name>，其余 /<name>）；写死一种会在别的 harness 上静默失效
+SKILL="$(dmt_skill_cmd "$HARNESS" "$SKILL_NAME")"
 HARNESS_CMD="$(dmt_harness_cmd "$HARNESS")" || exit 2
 
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
@@ -48,6 +50,17 @@ pane_by_label() { dmt_pane_by_label "$1"; }
 pane_status() { dmt_pane_status "$1"; }
 # 就绪判据：轮询 agent_status 不再是 unknown（与 setup-team.sh 同判据）
 wait_ready() { dmt_wait_ready "$1" 60 || true; }
+# 档位复验（第六十三次，与 setup-team.sh 同一判据）：非自动档的 pane 每次工具调用都要人批准
+verify_auto_mode() {
+  local pane="$1" rc=0
+  dmt_pane_auto_mode "$pane" || rc=$?
+  case "$rc" in
+    0) echo "auto-mode OK: $pane" ;;
+    2) echo "INFO 无法判定权限档位（拿不到 argv）: $pane" >&2 ;;
+    *) echo "WARN $pane 不在自动批准档位 —— 每次工具调用都可能撞审批；请用 --harness 重开该 helper（argv: $(dmt_pane_argv "$pane")）" >&2 ;;
+  esac
+  return 0
+}
 start_pane() {
   local pane="$1"
   [ "$START" = 1 ] || { echo "skip start: $pane"; return 0; }
@@ -71,6 +84,7 @@ start_pane() {
     h env HERDR_ENV=1 herdr pane send-text "$pane" "$TASK"
     h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
   fi
+  verify_auto_mode "$pane"
 }
 
 # 1) 幂等：helper pane 已存在 ⇒ 不重建

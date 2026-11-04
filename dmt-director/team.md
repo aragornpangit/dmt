@@ -8,7 +8,7 @@
 
 ## 0. 仓库结构
 
-按角色分文件夹，一个角色一个目录：`dmt-director/`（技能、团队契约 `team.md`、说明与机检脚本）、`dmt-pde/`、`dmt-dm/`、`dmt-am/`。**目录树、安装与维护说明以 [`dmt-director/README.md`](dmt-director/README.md) 为准，此处不重复。**
+按角色分文件夹，一个角色一个目录：`dmt-director/`（技能、团队契约 `team.md`、说明与机检脚本）、`dmt-pde/`、`dmt-dm/`、`dmt-am/`。**目录树、安装与维护说明以根 [`README.md`](../README.md) 为准（`dmt-director/README.md` 只有本目录的脚本清单），此处不重复。**
 
 ## 1. 团队定义
 
@@ -43,7 +43,7 @@ director            总监兼产品部经理（label director，屏幕左侧）
 | `dmt-dm` | `devm` | 开发经理 | — |
 | `dmt-am` | `anam` | 分析经理 | — |
 | — | `dev-e` | 开发工程师 | 按序号，如「工程师3」 |
-| — | `ana-e` | 分析工程师 | 按序号，如「工程师3」 |
+| — | `ana-e` | 分析工程师 | 按序号，如「分析工程师3」 |
 
 **单线指挥（硬约束，任何角色不得越级或横向直连）：**
 
@@ -57,6 +57,26 @@ director            总监兼产品部经理（label director，屏幕左侧）
 ### 1.2 运行环境与 pane 生命周期
 
 **操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §1** —— pane/tab 形态、身份＝`pane label`、启动顺序、helper 生命周期、首条消息前的权限模式。
+
+**harness 兼容（五个，2026-11-03 第六十二次实测登记）**：
+
+| harness | 技能发现目录（实测） | 代启动命令 | 技能调用行 |
+|---|---|---|---|
+| `codebuddy` | `.codebuddy/skills/`（`~` 与项目级） | `codebuddy --permission-mode auto` | `/dmt-dm` |
+| `claude` | `.claude/skills/`、`.agents/skills/` | `claude --permission-mode auto` | `/dmt-dm` |
+| `codex` | `.codex/skills/`、`.agents/skills/` | `codex -a never` | `/dmt-dm` |
+| `opencode` | `.opencode/skills/`（**复数**）、`.agents/skills/` | `opencode --auto` | `/dmt-dm` |
+| `pi` | `~/.pi/agent/skills/`、`<项目>/.pi/skills/`、`.agents/skills/` | `pi --approve` | **`/skill:dmt-dm`** |
+
+**三条实测约束**（写进契约以免回退）：
+1. **斜杠前缀按 harness 分流**：pi 的技能命令是 `/skill:<name>`，其余四个是 `/<name>`。写死 `/<name>` 在 pi 上**静默降级为普通提问**（不报错、不装载）。统一由 `lib-dmt.sh` 的 `dmt_skill_cmd` 生成，`setup-team.sh` / `spawn-helper.sh` 一律经它取命令，**不得在脚本或文档里写死某一种前缀**。
+2. **`.agents/skills/` 是五个 harness 的交集**：`install-skills.sh` 装到这里即可被全体发现；其余目录是该 harness 的私有目录，按需另行软链。**pi 的项目级 `.agents/skills` 属 trust-requiring**，启动不带 `--approve` 就看不到 —— 这也是 `dmt_harness_cmd` 给 pi 固定带该参数的原因。
+3. **codex 首次进入项目目录需人工确认 trust（一次性）**；`-a never` 只免逐条审批，不免这一步。pane 卡在 trust 提示时由 director 手工确认后重跑 `setup-team.sh`。
+
+**4. 权限档位必须复验，不能只看「有没有 agent 在跑」**（2026-11-03 第六十三次，事故实证）：`agent_status` 非 `unknown` 只证明 pane 里有 agent，**不证明它在自动批准档**。2026-11-03 bcr-nh 实测三个常驻 pane（`director` / `devm` / `anam`）**全部落在 default 档**，当日日志 33 次工具栏 `ASK`；表象却是「脚本超时 / 命令失败」（另一 pane 标题直接写着 `file-claim.sh 审批超时`），而脚本本体 57ms 正常返回 —— 根因在权限层，现象在命令层，极易误判成脚本坏了。
+   - **判据读 argv，不读屏幕**：屏幕上的 `auto mode on` 只在手动会话首屏出现，之后被输出顶走；argv 是恒定事实。`lib-dmt.sh: dmt_pane_auto_mode <pane>` 逐 token 判（`--permission-mode auto` / `--dangerously-skip-permissions` / `--yolo` / `--approve` / `--auto` / `-a never` / `--ask-for-approval never`），**用子串匹配会把 `--autocompact auto` 误判成自动档**，故必须逐 token。
+   - **接线**：`setup-team.sh` / `spawn-helper.sh` 在「就绪 + 输技能」之后调 `verify_auto_mode`；rc=1 打 `WARN` 并指出 argv，rc=2（拿不到 argv）只打 `INFO`、不当违规。
+   - **既有 pane 也适用**：巡检发现非自动档 ⇒ 用 `setup-team.sh --force-start`（或重开 pane）修正；**不要**只在文档里写「应该用 auto」而不复验。
 
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
@@ -83,6 +103,8 @@ director            总监兼产品部经理（label director，屏幕左侧）
 **通用技能（pane 常驻角色）**：`cbc-herdr`（CodeBuddy 在 herdr 的状态上报，让 `herdr pane list` 的 `agent_status` 可信）—— `dmt-director` / `dmt-dm` / `dmt-am` 三份技能都必须登记；`dmt-pde`（子代理技能）不登记；子代理不占 pane，不需要。
 
 **安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；失败时克隆 `https://github.com/mattpocock/skills.git`，把 `skills/` 下技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录。
+
+**harness 差异（2026-11-03 实测）**：五个 harness 都读 `~/.agents/skills/`（用户级，交集）；**pi 的用户级私有目录是 `~/.pi/agent/skills/`（不是 `~/.pi/skills/`）**，**opencode 的项目级目录是 `.opencode/skills/`（复数）**，codex 另有 `.codex/skills/`。装到哪个 harness 就软链到哪个目录；只装 `~/.agents/skills/` 已足够五个 harness 共用。详见 §1.2「harness 兼容」。
 
 **已知缺口（2026-10 核查）**：上游无 `to-prd`，`implement-spec` 仍在 `in-progress/` 未发布 ⇒ PRD 由 `pde{n}` 按 §4.1 模板落笔、director 定稿；若上游提供 `to-prd`，优先改用。
 
@@ -243,11 +265,10 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 bash dmt-director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查**十八项（机检共 25 组断言：①–⑱–主判据 ＋ 2b / 3b / 4b–4p 专项组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 四个技能（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` 为 `pde{n}` 子代理技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与四个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `director` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；工程师执行技能已登记（`dev-e` 行含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`ana-e` 行含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，四个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与四个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与四个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
+检查**十八项（机检共 27 组断言：①–⑱–主判据 ＋ 2b / 3b / 4b–4r 专项组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 四个技能（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` 为 `pde{n}` 子代理技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与四个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `director` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；工程师执行技能已登记（`dev-e` 行含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`ana-e` 行含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，四个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与四个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与四个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
 
 ## 8. 变更记录
 
-**历史明细（第一次～第六十次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
+**历史明细（第一次～第六十三次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
 
-- **2026-11-03（用户要求·第六十一次：复核器模型健康门 —— 本地端点不可达时回退 cbc 内置链路，版本 `5.15.0`）**：第六十次把复核器钉到本地模型（`custom-local:Qwen3.8-27b`）以避开企业网关限流，但**钉模型会禁用 cbc 内置 fallback** —— 二进制 `resolveAutoReviewModels()` 的语义是：`subagents.agents.autoModeClassifier.model` 一旦命中（source ∈ `env-global|settings-project|settings-user`）就 early-return，只给 `{reviewer}`、不再生成 `{reviewer, fallback}`；内置的 `{reviewer: deepseek-flash(strict), fallback: shippedDefault}` 链只在「不钉」时才出现，且 `subagents.agents.<name>` 只支持 `.model` 一个字段（无 fallback 项）。于是本地端点一旦不可达，复核没有退路 ⇒ 直接 no verdict ⇒ 命令被判失败。本条按用户要求补退路：新增 `auto-review-model.sh`，**harness 启动前探活本地端点** —— 200 ⇒ 钉本地；否则 ⇒ **摘钉**，回退 cbc 内置链路（网关模型，即「cbc 能用的模型」）。① **脚本** —— `auto-review-model.sh`（`--check` 只报不写 / `--url` / `--timeout` / `--settings` / `--local-model` / `--quiet` / `--off`；环境变量 `DMT_AUTO_REVIEW_URL` / `DMT_AUTO_REVIEW_LOCAL_MODEL` / `CODEBUDDY_SETTINGS` / `DMT_AUTO_REVIEW_GATE=off`）；python3 原子写（`os.replace`）且**保留文件权限**（settings 是 `0600`，不能被改成 `0644`）；值未变则不写盘（幂等、无 churn）；退出码恒 0（绝不阻断启动）。② **接线** —— `lib-dmt.sh` 新增 `DMT_SCRIPTS_DIR`（source 时解析一次，免受调用方后续 `cd` 影响），`dmt_harness_cmd()` 的 codebuddy 分支改为 `bash '<同目录>/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto` ⇒ 机队所有 pane（`setup-team.sh` / `spawn-helper.sh`）共用这一处，不散进各地副本。③ **逃生舱** —— `--off` / `DMT_AUTO_REVIEW_GATE=off` 整门关闭、不碰设置（保留「就是要纯走网关」的人工选择；同时也兼容第六十次那条「把 `autoModeClassifier.model` 删掉即改回走网关」的建议 —— 不开关门就直接删行，会被健康门重新钉上）。④ **机检与文档** —— 4j 契约脚本清单加 `auto-review-model.sh`（十三 → 十四个），§7 ⑬ 同步，`README.md` 与根 `README.md` 脚本清单同步。**实测（可证伪，非「改完就算」）** —— 摘钉后跑非白名单命令 ⇒ 日志 `[auto-review] outcome=allow ... durationMs=49377 model=deepseek-v4.1-flash`（走网关、49s 放行 ⇒ 回退确实落到「cbc 能用的模型」）；钉回后同命令 ⇒ `durationMs=7334 model=custom-local:Qwen3.8-27b`（走本地、7s）。组装出的启动命令用 stub `codebuddy` 端到端验证：可达 ⇒ `settings.model=custom-local:Qwen3.8-27b` 且 `CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000` 传入；不可达 ⇒ 键被摘除且真实 settings 未被测试污染。`bash -n` 通过、`check-dmt-doc-paths.sh` 全绿（25 组断言）。**版本升 `5.15.0`**（四技能 `version:` 同号）。**Why**：第六十次解决了「网关限流把复核拖死」，代价是把复核可用性押在本地端点这**一个新的单点**上，且钉模型顺带禁用了 cbc 自带的 fallback；健康门把「本地优先」与「本地不可用时仍能复核」这对目标分开满足，判据只是一次 4ms 的探活。**已知边界**：健康门只在**启动时**跑；端点会话中途挂掉时，现役会话需重开 pane（或手工跑一次脚本，再靠 cbc 自身的 3 次尝试 ＋ 300s 预算撑过去）。
-
+- **2026-11-03（用户要求·第六十四次：`--quiet` 语义修正，版本 `5.16.2`）**：`auto-review-model.sh` 的 `--quiet` 文档承诺「只在有变化时输出一行」，但唯一输出函数 `say()` 被 `[ "$QUIET" = 1 ] ||` 全面闸住 ⇒ 连「有变化」那行也一起吞掉，机队 pane 启动日志看不出健康门钉没钉上。修复：新增 `say_change()`（恒输出）承担五处「有变化 / 异常」叙述（`--off` 关闭 / 无 `curl` / 无 `python3` / `pinned-*`|`unpinned` 落盘 / 改写失败），`say()` 只留给 noop。实测（临时 settings、端点不可达）：有变化时 `--quiet` 新版出一行、HEAD 版零行；noop 仍静默。**Why**：`--quiet` 该关的是「启动时刷屏」，不是可观测性 —— 两者须分开，别靠 `QUIET` 的默认值兜。

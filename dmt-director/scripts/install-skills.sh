@@ -7,10 +7,13 @@ set -eu
 TARGET="${1:?usage: install-skills.sh <project-root> [--copy]}"
 MODE="${2:-link}"
 case "$MODE" in
-  link) ;;
+  link) MODE=link ;;
   --copy|copy) MODE=copy ;;
   *) echo "unknown arg: $2（只认 --copy）" >&2; exit 2 ;;
 esac
+# 2026-11-03 修复：MODE 在上面的 case 里已被规范化成 link|copy，但下面几处还拿 '--copy' 比较
+# ⇒ --copy 永远走不到复制分支（实测连 .agents/skills 与 docs/team.md 都还是软链，
+#   与 README / team.md 承诺的「--copy 模式不跟随本仓」相反）。现在统一用 $MODE。
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="$(cd "$TARGET" && pwd)"
 # 防自引用：target 落在技能仓内时拒绝（否则会把软链建到自身，造出 <repo>/dmt-director/dmt-director 之类残留）
@@ -21,7 +24,7 @@ SKILLS="dmt-director dmt-pde dmt-dm dmt-am"
 
 mkdir -p "$TARGET/.agents/skills"
 for s in $SKILLS; do
-  if [ "$MODE" = "--copy" ]; then
+  if [ "$MODE" = "copy" ]; then
     rm -rf "$TARGET/.agents/skills/$s"
     cp -r "$REPO/$s" "$TARGET/.agents/skills/$s"
   else
@@ -33,7 +36,7 @@ done
 
 # 脚本目录固定为 <target>/dmt-director/scripts/ —— 与契约里所有命令写法一致。
 # 旧版曾复制到 <target>/scripts/，从项目根执行 $TARGET/scripts/… 会 rc=127（已废弃）。
-if [ "$MODE" = "--copy" ]; then
+if [ "$MODE" = "copy" ]; then
   rm -rf "$TARGET/dmt-director"
   cp -r "$REPO/dmt-director" "$TARGET/dmt-director"
 elif [ -e "$TARGET/dmt-director" ] && [ ! -L "$TARGET/dmt-director" ]; then
@@ -44,11 +47,17 @@ fi
 chmod +x "$TARGET/dmt-director/scripts/"*.sh 2>/dev/null || true
 
 mkdir -p "$TARGET/docs"
-# 契约以**软链**落到 docs/team.md：跟随 <target>/dmt-director/team.md
-# ⇒ link 模式（默认）下即跟随本仓正本，正本变更自动生效、不再产生「需手动刷新」的副本。
-rm -f "$TARGET/docs/team.md"
-ln -sfn ../dmt-director/team.md "$TARGET/docs/team.md"
-ln -sfn ../dmt-director/OPS.md "$TARGET/docs/OPS.md"
+# 契约落到 docs/team.md（OPS 同理落到 docs/OPS.md，机检按同目录查找）：
+#   · link 模式（默认）＝**软链** → 跟随 <target>/dmt-director/ 下的正本，正本变更自动生效；
+#   · copy 模式＝**复制** → 目标项目不跟随本仓（正本变更后需重跑本脚本，见 README「维护」）。
+rm -f "$TARGET/docs/team.md" "$TARGET/docs/OPS.md"
+if [ "$MODE" = "copy" ]; then
+  cp "$TARGET/dmt-director/team.md" "$TARGET/docs/team.md"
+  cp "$TARGET/dmt-director/OPS.md"  "$TARGET/docs/OPS.md"
+else
+  ln -sfn ../dmt-director/team.md "$TARGET/docs/team.md"
+  ln -sfn ../dmt-director/OPS.md  "$TARGET/docs/OPS.md"
+fi
 
 bash "$TARGET/dmt-director/scripts/init-project.sh" "$TARGET"
 echo "installed ($MODE) into $TARGET"

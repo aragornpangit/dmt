@@ -10,9 +10,17 @@ SKILLS_DIR="${DMT_SKILLS_DIR:-$ROOT/.agents/skills}"
 # 契约定位：项目内 docs/team.md（安装副本）优先；只有脚本本身就在 $ROOT 的技能仓里时才回退到仓内正本。
 # 回退不能无条件：否则目标项目缺契约时会被技能仓的 team.md 顶替，机检报假绿。
 CONTRACT="$ROOT/docs/team.md"
-OPS="${CONTRACT%/*}/OPS.md"   # 操作手册（§1.2/§1.3/§1.5 内容所在）
 if [ ! -f "$CONTRACT" ] && [ "$(cd "$(dirname "$(readlink -f "$0")")/../.." && pwd)" = "$ROOT" ]; then
   CONTRACT="$ROOT/dmt-director/team.md"
+fi
+# OPS 必须跟着**契约实际所在目录**走：docs/team.md 是软链（→ dmt-director/team.md），
+# 而仓内维护时契约回退到 dmt-director/team.md。两种情形下 `$ROOT/docs/OPS.md` 都可能不存在
+# （回退时 docs/OPS.md 根本没有），故用 readlink -f 解析后的真实目录定位同目录的 OPS.md。
+# 2026-11-03 修复：此前写死 `${CONTRACT%/*}/OPS.md`，仓内跑机检时整段 ③/⑭ 断言全部「未找到」。
+if [ -f "$CONTRACT" ]; then
+  OPS="$(dirname "$(readlink -f "$CONTRACT")")/OPS.md"
+else
+  OPS="${CONTRACT%/*}/OPS.md"   # 契约缺失：保留原推导，让后续断言按「未找到」如实报红
 fi
 
 # 六个产物目录（docs 下）+ 收件箱根（项目根下，不在 docs/ 内）
@@ -361,6 +369,62 @@ check "$SKILLS_DIR/dmt-director/SKILL.md" 'delegate' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'delegate' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'delegate' 'anam'
 check "$SKILLS_DIR/dmt-pde/SKILL.md" 'delegate' 'pde'
+
+echo
+echo "== 4q) 五 harness 兼容必须登记（斜杠前缀分流 / .agents 交集 / 启动参数） =="
+# 2026-11-03 第六十二次：多 harness 适配。判据只锚「契约有没有把这些差异写下来」，
+# 不锚具体参数值 —— 参数会随 harness 版本变，但「差异必须被登记」这条不变。
+check "$CONTRACT" 'harness 兼容' '团队契约'
+check "$CONTRACT" 'dmt_skill_cmd' '团队契约'
+check "$CONTRACT" 'skill:dmt-' '团队契约（pi 斜杠前缀）'
+for role in dmt-director dmt-dm dmt-am; do
+  check "$SKILLS_DIR/$role/SKILL.md" 'skill:dmt-' "$role（pi 斜杠前缀）"
+done
+for h in codebuddy claude codex opencode pi; do
+  check "$CONTRACT" "\`$h\`" "团队契约 harness=$h"
+done
+# 脚本侧：lib 必须真有分流实现，且两份启动脚本不得写死 /dmt-* 技能命令
+lib="$(dirname "$(readlink -f "$0")")/lib-dmt.sh"
+if grep -q 'dmt_skill_cmd' "$lib"; then echo "OK   lib-dmt.sh 含 dmt_skill_cmd"; else echo "FAIL lib-dmt.sh 缺 dmt_skill_cmd"; fail=1; fi
+for s in setup-team.sh spawn-helper.sh; do
+  if grep -qF "'/dmt-" "$(dirname "$(readlink -f "$0")")/$s"; then
+    echo "FAIL $s 写死技能命令（应经 dmt_skill_cmd 生成）"; fail=1
+  else
+    echo "OK   $s 未写死技能命令"
+  fi
+done
+
+echo
+echo "== 4r) 权限档位复验必须存在且判据正确（非自动档 ⇒ 每次工具调用撞审批） =="
+# 2026-11-03 第六十三次：bcr-nh 三个 pane 全落在 default 档，33 次工具栏 ASK，
+# 表象却是「脚本超时 / 命令失败」（另一 pane 标题直接是 file-claim.sh 审批超时）。
+# 启动脚本此前只验 agent_status（=有 agent 在跑），从不验档位，故根因一直没被发现。
+lib="$(dirname "$(readlink -f "$0")")/lib-dmt.sh"
+for f in "$lib" "$(dirname "$(readlink -f "$0")")/setup-team.sh" "$(dirname "$(readlink -f "$0")")/spawn-helper.sh"; do
+  if grep -q 'dmt_pane_auto_mode\|verify_auto_mode' "$f"; then
+    echo "OK   $(basename "$f") 含档位复验"
+  else
+    echo "FAIL $(basename "$f") 缺档位复验（启动后不验自动档）"; fail=1
+  fi
+done
+# 行为断言：用 $DMT_PANE_ARGV 逃生舱喂 argv，验判据本身（正例全认、反例不误认）
+auto_case() { # auto_case <argv> <want: 0|1>
+  local got=0
+  ( export DMT_PANE_ARGV="$1"; . "$lib"; dmt_pane_auto_mode x ) 2>/dev/null || got=$?
+  if [ "$got" = "$2" ]; then echo "OK   argv=[$1] → rc=$got"
+  else echo "FAIL argv=[$1] 期望 rc=$2 实得 rc=$got"; fail=1; fi
+}
+auto_case 'codebuddy --permission-mode auto' 0
+auto_case 'claude --permission-mode auto' 0
+auto_case 'pi --approve' 0
+auto_case 'opencode --auto' 0
+auto_case 'codex -a never' 0
+auto_case 'codex --ask-for-approval never' 0
+auto_case 'codex --yolo' 0
+auto_case 'codebuddy' 1
+auto_case 'codebuddy --permission-mode default' 1
+auto_case 'claude --permissions-mode auto' 1     # 拼错的参数不得被当成自动档
+auto_case 'claude --autocompact auto' 1          # 子串误判回归：--autocompact 不是 --auto
 
 echo "== 5) 团队契约必须登记六个唯一目录与收件箱根 =="
 if [ -f "$CONTRACT" ]; then

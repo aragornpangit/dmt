@@ -4,7 +4,7 @@
 #   --no-start     只建 pane，不启动
 #   --force-start  即使 agent 已在跑也重发启动命令（默认跳过：对运行中的 agent 发启动命令会被当成用户提问）
 #   --reload       对已在跑的 pane 只补发技能命令（重载技能，不重发启动命令）
-#   --harness      harness 名：codebuddy（默认）| pi | opencode | codex（亦可 $DMT_HARNESS；$DMT_HARNESS_CMD 整体覆盖）
+#   --harness      harness 名：codebuddy（默认）| pi | opencode | codex | claude（亦可 $DMT_HARNESS；$DMT_HARNESS_CMD 整体覆盖）
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_TAB_ID、HERDR_WORKSPACE_ID
 set -eu
 DRY=0; START=1; FORCE=0; RELOAD=0; HARNESS_ARG=""
@@ -60,6 +60,22 @@ ensure_started() {
   wait_ready "$pane" || true
   h env HERDR_ENV=1 herdr pane send-text "$pane" "$skill"
   h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
+  # 档位复验（第六十三次）：就绪只证明「有 agent 在跑」，不证明它跑在自动档。
+  # 非自动档的 pane 每次工具调用都要人点批准 —— 表现为「脚本超时/命令失败」，根因却在权限层。
+  verify_auto_mode "$pane"
+}
+
+# 启动后回读 argv 复验自动档；rc=1 告警并把该 pane 标出来，不静默放过。
+# argv 拿不到（rc=2，如 herdr process-info 不可用）只记 INFO —— 不把工具限制当违规。
+verify_auto_mode() {
+  local pane="$1" rc=0
+  dmt_pane_auto_mode "$pane" || rc=$?
+  case "$rc" in
+    0) echo "auto-mode OK: $pane" ;;
+    2) echo "INFO 无法判定权限档位（拿不到 argv）: $pane" >&2 ;;
+    *) echo "WARN $pane 不在自动批准档位 —— 每次工具调用都可能撞审批；请用 --harness/--force-start 重开该 pane（argv: $(dmt_pane_argv "$pane")）" >&2 ;;
+  esac
+  return 0
 }
 
 # 1) 自己正名：先 tab 后 pane
@@ -79,7 +95,7 @@ if [ -z "$devm" ]; then
     HERDR_ENV=1 herdr pane rename "$devm" devm
   fi
 fi
-ensure_started "$devm" '/dmt-dm'
+ensure_started "$devm" "$(dmt_skill_cmd "$HARNESS" dmt-dm)"
 
 # 3) anam：独立建 tab
 p="$(pane_by_label anam || true)"
@@ -99,5 +115,5 @@ if [ -z "$p" ]; then
     HERDR_ENV=1 herdr pane rename "$p" anam
   fi
 fi
-ensure_started "$p" '/dmt-am'
+ensure_started "$p" "$(dmt_skill_cmd "$HARNESS" dmt-am)"
 echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pde），不占 pane"

@@ -20,6 +20,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级只有
 - **不按位置识别**：`pane list` 的顺序会随 `pane swap` / `pane move` 变化，**只有 label 稳定**；也不要记 pane id（重启即变）。
 - devm 的 pane 在 director tab 内右侧，**不自建 tab**（唯一例外：全队共享的 `helper` tab 不存在时，按「helper 分身」节建）。
 - 启动时自检：`herdr pane get "$HERDR_PANE_ID"` 的 label 不是 `devm` 就 `herdr pane rename "$HERDR_PANE_ID" devm`。
+- **技能调用行按 harness 走**（`team.md` §1.2「harness 兼容」）：claude / codebuddy / codex / opencode 为 `/dmt-dm`，**pi 为 `/skill:dmt-dm`**，由 `dmt-director/scripts/lib-dmt.sh` 的 `dmt_skill_cmd` 生成；重载技能时不要手敲前缀。
 
 ## 工作流
 

@@ -27,7 +27,9 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 ## 建 pane、打 label 与启动（固定顺序）
 
-**一律用脚本**：`bash dmt-director/scripts/setup-team.sh`（幂等）。要点：给自己正名（**tab label → pane label，顺序不可颠倒**）→ split 出 `devm`（本 tab 右侧）→ 建 `anam` tab → 两 pane 由 director 代启动 harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex`）→ 输 `/dmt-dm` / `/dmt-am`。身份＝**`pane label`**（不按 tab 位置、不抄 pane id），漂移即 `pane rename` 自愈。**禁止 `herdr tab close`**（会连带杀掉 devm 与自己）。完整判据、例外与 helper 布局见 `dmt-director/OPS.md` §1。
+**一律用脚本**：`bash dmt-director/scripts/setup-team.sh`（幂等）。要点：给自己正名（**tab label → pane label，顺序不可颠倒**）→ split 出 `devm`（本 tab 右侧）→ 建 `anam` tab → 两 pane 由 director 代启动 harness（默认 `codebuddy --permission-mode auto`；`--harness pi|opencode|codex|claude`）→ 输技能命令装载角色（claude / codebuddy / codex / opencode 为 `/dmt-dm`、`/dmt-am`；**pi 为 `/skill:dmt-dm`**，由 `dmt_skill_cmd` 按 harness 生成）。身份＝**`pane label`**（不按 tab 位置、不抄 pane id），漂移即 `pane rename` 自愈。**禁止 `herdr tab close`**（会连带杀掉 devm 与自己）。**启动后必须复验权限档位**：`agent_status` 就绪只证明有 agent 在跑，不证明在自动档 —— 脚本已自动调 `dmt_pane_auto_mode`，见 `WARN` 就说明该 pane 每次工具调用都会撞审批（现象是「脚本超时/命令失败」），用 `--force-start` 重开。详见 `OPS.md` §1「档位复验」。
+
+完整判据、例外与 helper 布局见 `dmt-director/OPS.md` §1。
 
 ## 并行（director 自己也要用子代理）
 

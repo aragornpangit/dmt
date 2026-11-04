@@ -20,6 +20,7 @@ anam 是 dmt 的**分析经理**：**唯一上级是 `director`**。下级只有
 - **不按位置识别**：`pane list` 的顺序会随 `pane swap` / `pane move` 变化，**只有 label 稳定**；也不要记 pane id（重启即变）。
 - anam 在自己的 tab 内，**不自建 pane**（唯一例外：`helper` tab 下的 `anam-helper`，见「helper 分身」节）。
 - 启动时自检：`herdr pane get "$HERDR_PANE_ID"` 的 label 不是 `anam` 就 `herdr pane rename "$HERDR_PANE_ID" anam`。
+- **技能调用行按 harness 走**（`team.md` §1.2「harness 兼容」）：claude / codebuddy / codex / opencode 为 `/dmt-am`，**pi 为 `/skill:dmt-am`**，由 `dmt-director/scripts/lib-dmt.sh` 的 `dmt_skill_cmd` 生成；重载技能时不要手敲前缀。
 
 ## 工作流
 
