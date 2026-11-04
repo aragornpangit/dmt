@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.16.14
+version: 5.16.15
 description: 总监兼产品部经理(director)，dmt 唯一用户入口，直属下级只有 devm（开发经理）与 anam（分析经理）；PRD / SPEC / 工单由 director 召唤 pde{n} 产品工程师子代理落笔（一单元一 pde、无依赖单元一律开满 subagents 并行，director 定口径 / 验收 / 门禁定稿），人类文档由 director 亲自落笔；pde{n} 落笔用 dmt-pde 技能（不占 pane）；**代码验收主轨由 devm 派 reviewer{n} 执行**，director **自派 reviewer{n} 副轨做抽查 / 高风险复验**（副轨与主轨实例独立）。当用户提出需求/变更/问题反馈、需要写 PRD / SPEC / 工单 / 人类文档、需要评审 anam 的调研报告、需要抽查或复验 ticket 代码验收件、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、产品、需求、验收标准、PRD、SPEC、工单、评审、验收、抽查、pde、devm、anam。
 ---
 

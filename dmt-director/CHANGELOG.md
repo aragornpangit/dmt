@@ -1,7 +1,16 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 79 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 80 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-04（用户要求·第七十七次：再瘦身 —— pane 技能公共块抽分节 / 07 附节外移 / OPS 事故复盘外移，版本 `5.16.15`）**：
+  用户认可「agent 读取文件的再瘦身」评估并执行 P1–P3。
+  ① **P1 pane 技能公共块抽分节**：`director` / `devm` / `anam` 三份技能的**身份与 pane / 通信 / helper 分身 / 编辑前检查占用**四条同构，提炼到新分节 [`team/10-pane-role.md`](team/10-pane-role.md)；三份技能各留「本角色差异」一行指针。`dmt-dm` 63→52 行、`dmt-am` 64→53 行；机检 `content_assertions` 的 `inbox_three_state` / `file_claim` 改锚该分节。
+  ② **P2 §5.2 附节外移**：`team/07-discipline.md` 的 pi `delegate` 长论证与两份派发 prompt 模板移到 [`team/07b-dispatch.md`](team/07b-dispatch.md)（低频、按需读）；07 本体 15,266→11,835 字节。
+  ③ **P3 OPS 事故复盘外移**：`OPS.md` §1 的「权限档位事故」与「auto 复核加固」叙述移到 [`ops/permission-notes.md`](ops/permission-notes.md)，OPS 只留判据 + 指针；OPS 18,976→17,369 字节。
+  **效果**：agent 触发时载入的 L1（7 技能）47,136→44,884 字节；且「改一条 pane 公共动作」从改 3 处变改 1 处。
+  **版本升 `5.16.15`**（七技能同号）。
+  **Why**：上一轮已把契约拆成骨架 + 分节、技能去重成指针；本轮继续把「三份技能里逐字重复的公共块」与「低频长论证」外移，进一步压低每次载入字节、消除多份副本的维护漂移。
 
 - **2026-11-04（用户要求·第七十六次：质量瘦身 —— P1 机检迁 YAML / P2 文档压缩 / P3 CHANGELOG 归档 / P4 技能去重 / P5 合并机检，版本 `5.16.14`）**：
   用户采纳 AI 工程评估的 5 项优化并逐条落地。

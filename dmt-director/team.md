@@ -1,6 +1,6 @@
 # dmt 团队契约
 
-> **版本 5.16.14 · 2026-11-04** —— 与七份 `SKILL.md` 的 `version:` 同号；不同号即装错。
+> **版本 5.16.15 · 2026-11-04** —— 与七份 `SKILL.md` 的 `version:` 同号；不同号即装错。
 > **作用域**：本契约全部纪律（权限 / 写操作归属 / 门禁 / pane / 收件箱）**只作用于 dmt 管理的「目标项目」**（`init-project.sh` 初始化的 root）；**维护 `dmt` / `dmt-en` 等技能仓自身时不适用**（维护者可直接 commit / push，无需 director 授权、无需 devm 代推）。
 > **唯一权威**：本文件（规范层）+ [`OPS.md`](OPS.md)（操作层）。七份技能只做落地说明，**冲突以本文件为准**。
 > **单一来源纪律（硬规则）**：团队口径只在**本文件及其 `team/` 分节**；技能只写「本角色怎么干」，共性一律写指针（`见 team.md §X`），不得复述。
@@ -15,9 +15,10 @@
 | §2 文件命名规范（权威） | [`team/04-naming.md`](team/04-naming.md) |
 | §3 目录职责 / §3.1 初始化 | [`team/05-dirs.md`](team/05-dirs.md) |
 | §4 工作流程（PRD / SPEC / 工单模板） | [`team/06-workflow.md`](team/06-workflow.md) |
-| §5 纪律（Git / 并行子代理 / 评审门禁 / 读数纪律） | [`team/07-discipline.md`](team/07-discipline.md) |
+| §5 纪律（Git / 并行子代理 / 评审门禁 / 读数纪律） | [`team/07-discipline.md`](team/07-discipline.md)（派发 prompt 模板与 pi 承载见 [`team/07b-dispatch.md`](team/07b-dispatch.md)） |
 | §6 表达规范 | [`team/08-expression.md`](team/08-expression.md) |
 | §7 机检清单 | [`team/09-check.md`](team/09-check.md) |
+| §10 pane 角色公共动作（三份 pane 技能共用：身份/pane、通信、helper、占用） | [`team/10-pane-role.md`](team/10-pane-role.md) |
 
 > 引用写法统一为 `team.md §X`（X = 上表主题号）；改一条口径只改对应 `team/*.md`，不要动技能。
 

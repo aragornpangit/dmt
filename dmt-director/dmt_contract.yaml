@@ -5,7 +5,7 @@
 # check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.16.14
+version: 5.16.15
 date: "2026-11-04"
 
 skills:
@@ -150,21 +150,13 @@ content_assertions:
     files:
       "{docs}/OPS.md":
         require: [".doing/", ".seq", "msg-take.sh", "msg-done.sh"]
-      "{skills}/dmt-director/SKILL.md":
-        require: ["msg-take.sh"]
-      "{skills}/dmt-dm/SKILL.md":
-        require: ["msg-take.sh"]
-      "{skills}/dmt-am/SKILL.md":
-        require: ["msg-take.sh"]
+      "{docs}/team/10-pane-role.md":
+        require: ["msg-take.sh", "msg-done.sh"]
   file_claim:
     files:
       "{docs}/OPS.md":
         require: ["file-claim"]
-      "{skills}/dmt-director/SKILL.md":
-        require: ["file-claim"]
-      "{skills}/dmt-dm/SKILL.md":
-        require: ["file-claim"]
-      "{skills}/dmt-am/SKILL.md":
+      "{docs}/team/10-pane-role.md":
         require: ["file-claim"]
       "{skills}/dmt-pde/SKILL.md":
         require: ["file-claim"]
