@@ -4,7 +4,7 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 **产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` / `dmt-reviewer` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
 **经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开、不强制派满）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
 
-> **作用域（Scope，必读）**：本仓全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（用 `init-project.sh <项目根>` 初始化的那个 project root）。
+> **作用域（Scope，必读）**：本仓全部纪律 —— 角色权限、**写操作归属（硬件设备写操作 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（用 `init-project.sh <项目根>` 初始化的那个 project root）。
 > **维护 `dmt` / `dmt-en` 等技能仓自身时不适用**：维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权，也不需 devm 代推**。
 
 | 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责摘要 |
@@ -25,10 +25,11 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 | 角色 | 交付物（落盘位置） |
 |---|---|
-| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（PRD / SPEC / 工单由 `pde{n}` 落笔、director 定稿；取证类 pde 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；评审结论（收件箱） |
+| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（PRD / SPEC / 工单由 `pde{n}` 落笔、director 定稿；取证类 pde 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；抽查 / 复验结论（收件箱） |
 | `devm` | 票面末尾「实施状态」；合并后的主干代码；`feat/{ticket-id}` 分支提交（worktree）；实施层初检结论；`reviewer{n}` 的逐条验收结论；**merge 与 push**；**硬件设备写操作（安装 / 刷写 / 覆写设备文件 / 强杀进程等）**；GitLab 推送（每 ticket 一推 ＋ 每小时巡检） |
 | `anam` | `docs/analyst/` 调研报告 ＋ `docs/analyst/evidence/` 一手证据；取证回报与一手出处复核 |
 | `pde{n}` | `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 落笔（director 定稿） |
+| `reviewer{n}` | 逐条验收结论（回报 `devm`；**不落盘、不进收件箱**） |
 | `dev-e` / `ana-e` | worktree 代码提交 / 核对材料（经派生者收口，不写收件箱） |
 
 **三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**

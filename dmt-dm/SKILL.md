@@ -63,7 +63,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级只有
 - 发出方向：`devm2director`；收到方向：`director2devm`
 - **不得**写 `inbox/anam/`（跨部门经 director 转派）
 - `dev-e` 是子代理（由 devm 派生），**不走跨 pane 通信**、不进收件箱
-- 交 director 验收的正文必带：ticket 路径、diff 摘要、验收证据路径、逐条判据读数、风险与未决项
+- 向 director 回报（抽查用）的正文必带：ticket 路径、diff 摘要、验收证据路径、逐条判据读数、`reviewer{n}` 的验收结论与证据路径、风险与未决项
 - label 不存在或与预期不符：**停下问用户**，不猜 pane id
 
 ## helper 分身（忙不过来时）
