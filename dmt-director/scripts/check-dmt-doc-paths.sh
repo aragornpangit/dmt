@@ -168,17 +168,18 @@ check_absent "$OPS" 'opencode2' '门铃表旧 harness 名（2026-11-04 已更正
 check "$OPS" 'agent prompt' '团队契约'
 
 echo
-echo "== 4d) 硬件设备写操作与 merge/push 均只归 devm（每 ticket 一推；每小时巡检） =="
+echo "== 4d) 硬件设备写操作（devm / director 均可）与 merge/push（只归 devm）（每 ticket 一推；每小时巡检） =="
 check "$CONTRACT" 'merge 与 push 只归 devm' '团队契约'
-check "$CONTRACT" '只许 `devm` 执行' '团队契约'
+check "$CONTRACT" '只许 `devm` 或 `director` 执行' '团队契约'
 check "$CONTRACT" '至少每完成一个 ticket 推送一次' '团队契约'
 check "$CONTRACT" '至少每小时' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'push 与 merge 归 devm' 'devm'
-# 2026-11-04 第六十八次：设备操作（装机）从 director 移交 devm
+# 2026-11-04 第六十八次先移交 devm；第七十三次放开 director（devm 与 director 均可）
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '硬件设备写操作' 'devm'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '硬件设备写操作' 'director'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不代推' 'director'
 check_absent "$SKILLS_DIR/dmt-director/SKILL.md" 'git push[^。]{0,20}只由[ ]*director' 'director'
-check_absent "$CONTRACT" '只许 `director` 执行|装机只归 director|装机归 director|装机仍归 director' '契约装机归属（应归 devm）'
+check_absent "$CONTRACT" '只许 `director` 执行|装机只归 director|装机归 director|装机仍归 director' '契约装机归属（不得只归 director）'
 # 2026-11-04 第六十九次：设备操作抽象为通用「硬件设备写操作」（不绑定项目特定命令）
 check_absent "$CONTRACT" 'adb install|bcr_t36_calib|bcr_detect_probe|dump_prefs' '契约不得绑定具体项目设备命令'
 

@@ -9,9 +9,9 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 | 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责摘要 |
 |---|---|---|---|---|---|
-| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}`） | 唯一入口；接需求与验收口径、召唤 `pde{n}` 落笔 PRD / SPEC / 工单（director 定稿）、落笔人类文档并出文档门禁结论、分派、裁决、维护 pane/tab；抽查放行（merge / push 与硬件设备写操作归 devm，代码验收由 devm 派 `reviewer{n}`；director 只抽查与高风险复验，不代做）；**不替代** devm 的代码评审 |
+| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}`） | 唯一入口；接需求与验收口径、召唤 `pde{n}` 落笔 PRD / SPEC / 工单（director 定稿）、落笔人类文档并出文档门禁结论、分派、裁决、维护 pane/tab；抽查放行（merge / push 归 devm；**硬件设备写操作 devm 与 director 均可**；代码验收由 devm 派 `reviewer{n}`，director 抽查与高风险复验）；**不替代** devm 的代码评审 |
 | 产品工程师（子代理） | `dmt-pde` | `pde{n}` | `director` | — | **落笔 PRD / SPEC / 工单**、产品事实取证、用户故事与边界枚举、验收标准核对；**不占 tab 不占 pane**，director 自派、一单元一实例 |
-| 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e` / `reviewer{n}`（子代理） | 依用户要求与 tickets 计划直接干活（知会 director 即可）、排期派活、建 worktree、派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**（ticket 代码评审责任人）、**派 `reviewer{n}` 独立验收**（独立于实施者、以证据为准）、整合交付物、**merge / push 与硬件设备写操作（代码库与设备均归 devm 管理，收到 `reviewer{n}` 通过后即合并 / 推送）**；**不拆票** |
+| 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e` / `reviewer{n}`（子代理） | 依用户要求与 tickets 计划直接干活（知会 director 即可）、排期派活、建 worktree、派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**（ticket 代码评审责任人）、**派 `reviewer{n}` 独立验收**（独立于实施者、以证据为准）、整合交付物、**merge / push（代码库归 devm 管理，收到 `reviewer{n}` 通过后即合并 / 推送）**；**硬件设备写操作（devm 与 director 均可）**；**不拆票** |
 | 分析经理 | `dmt-am` | `anam` | `director` | `ana-e`（子代理） | 依用户要求与 tickets 计划直接干活（知会 director 即可）；拆子问题、派 `ana-e` 并行取证、复核一手出处、收口调研报告 |
 | 开发工程师（子代理） | `dmt-de` | `dev-e` | `devm` | — | 一票一 worktree、TDD 实施（`/tdd` `/implement`）、提交前自审（`/code-review`）、worktree 内提交（不 push） |
 | 分析工程师（子代理） | `dmt-ae` | `ana-e` | `anam` | — | 一手取证（`/research`）、竞品逆向（`/rea`）、证据分级、交叉拷问（`/grilling` 系） |
@@ -25,8 +25,8 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 | 角色 | 交付物（落盘位置） |
 |---|---|
-| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（PRD / SPEC / 工单由 `pde{n}` 落笔、director 定稿；取证类 pde 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；抽查 / 复验结论（收件箱） |
-| `devm` | 票面末尾「实施状态」；合并后的主干代码；`feat/{ticket-id}` 分支提交（worktree）；实施层初检结论；`reviewer{n}` 的逐条验收结论；**merge 与 push**；**硬件设备写操作（安装 / 刷写 / 覆写设备文件 / 强杀进程等）**；GitLab 推送（每 ticket 一推 ＋ 每小时巡检） |
+| `director` | `docs/team.md`；`docs/pd/prd/` PRD、`docs/pd/spec/` SPEC、`docs/dev/tickets/` 工单、`docs/human/human-arch/`、`docs/human/human-plan/`（PRD / SPEC / 工单由 `pde{n}` 落笔、director 定稿；取证类 pde 只交证据不落盘）；按需 `docs/handoff/`（director / devm）；抽查 / 复验结论（收件箱）；**硬件设备写操作（与 devm 均可）** |
+| `devm` | 票面末尾「实施状态」；合并后的主干代码；`feat/{ticket-id}` 分支提交（worktree）；实施层初检结论；`reviewer{n}` 的逐条验收结论；**merge 与 push**；**硬件设备写操作（devm 与 director 均可）**；GitLab 推送（每 ticket 一推 ＋ 每小时巡检） |
 | `anam` | `docs/analyst/` 调研报告 ＋ `docs/analyst/evidence/` 一手证据；取证回报与一手出处复核 |
 | `pde{n}` | `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 落笔（director 定稿） |
 | `reviewer{n}` | 逐条验收结论（回报 `devm`；**不落盘、不进收件箱**） |
@@ -35,11 +35,11 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 **三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**
 
 **单线指挥**：每个角色只与直属上下级通信；director 不越级指挥工程师，经理之间不横向直连，跨部门一律经 director 转派。**工程师永远是子代理**（不占 pane、不走跨 pane 通信）：一律由经理直接开（`devm` 开 `dev-e`、`anam` 开 `ana-e`，按需求开、不强制派满）—— 经理与工程师之间没有 pane 级通道，只有父子代理关系；`pde{n}` 由 `director` 直接开。
-**helper（`{角色}-helper`，本体的纯分身，每角色至多一个）**：`director-helper` / `devm-helper` / `anam-helper` 是本体的**纯分身**——任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果**单向汇报给主体**（`{角色}`）；helper **没有自己的 inbox**（不收件），**不走门铃互通**。**生命周期由创建者（本体角色）维护**：用 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam>` 建立（幂等，支持 `--dry-run` / `--no-start`；helper tab label 固定 `helper`（全队共享一个），pane label 固定 `{角色}-helper`，代启动 harness 并装载**同角色技能**）、label 漂移自愈改名、任务完成用 `bash dmt-director/scripts/close-helper.sh <director|devm|anam>` 回收（支持 `--force` / `--dry-run`；**helper tab 保留复用，不随 pane 关闭**）。**独占动作不移交**：硬件设备写操作与 merge / push 均只归 `devm` 本体。
+**helper（`{角色}-helper`，本体的纯分身，每角色至多一个）**：`director-helper` / `devm-helper` / `anam-helper` 是本体的**纯分身**——任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果**单向汇报给主体**（`{角色}`）；helper **没有自己的 inbox**（不收件），**不走门铃互通**。**生命周期由创建者（本体角色）维护**：用 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam>` 建立（幂等，支持 `--dry-run` / `--no-start`；helper tab label 固定 `helper`（全队共享一个），pane label 固定 `{角色}-helper`，代启动 harness 并装载**同角色技能**）、label 漂移自愈改名、任务完成用 `bash dmt-director/scripts/close-helper.sh <director|devm|anam>` 回收（支持 `--force` / `--dry-run`；**helper tab 保留复用，不随 pane 关闭**）。**独占动作不移交**：硬件设备写操作（`devm` / `director` 本体）与 merge / push（`devm` 本体）均不移交 helper。
 
 成员运行在 Herdr（终端多智能体复用器）中，**按 pane label 识别伙伴**（label 与角色名同名、全 workspace 唯一；不看 tab 内位置，pane id 每次发送前重查）。
 **角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**：先 `msg-take.sh` 移到 `inbox/<自己>/.doing/`（认领），办完 `msg-done.sh` 删除（详见 `OPS.md` §2）。
-工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开、不强制派满）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → **devm 按票数派 reviewer1…reviewer{n}**（技能 `dmt-reviewer`；独立于实施该票的 dev-e、以证据为准）对照同 spec-seq 的 SPEC+ticket 逐条验收 → **通过后 devm 直接 merge/push**（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 **dev-e** 返工、不得先 merge/push；**director 保留抽查与高风险票复验**。硬件设备写操作与 merge / push **只归 `devm`**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
+工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（按需求开、不强制派满）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → **devm 按票数派 reviewer1…reviewer{n}**（技能 `dmt-reviewer`；独立于实施该票的 dev-e、以证据为准）对照同 spec-seq 的 SPEC+ticket 逐条验收 → **通过后 devm 直接 merge/push**（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 **dev-e** 返工、不得先 merge/push；**director 保留抽查与高风险票复验**。merge / push **只归 `devm`**；**硬件设备写操作 `devm` 与 `director` 均可**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
 
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
 
@@ -50,7 +50,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，74 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，75 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
