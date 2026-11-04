@@ -2,7 +2,7 @@
 
 ## 派发 prompt 骨架（照填，不要现编）
 
-`你是 <角色> 的子代理。技能：<对应的 dmt-<角色> 技能名>（cbc 直接斜杠调用；pi 读 '<技能目录>/dmt-<角色>/SKILL.md' 并按其中强制技能节执行）。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。构建补件：<**凡票涉 gradle／clean build ⇒ 必写此字段**：本 worktree 需补 `local.properties`(sdk.dir) ＋ `app/src/main/jni/` 两个 vendored 目录软链（`opencv-mobile-4.13.0-android`／`ncnn-20260526-android-vulkan` → 主仓同路径；均 gitignored、非交付物）＋ 设 `ANDROID_HOME=<sdk 路径>；缺之则 configureCMake 报 `Could not find OpenCV`／`SDK location not found`>。资源纪律：**禁 `pkill <pattern>`／`pkill -f`／`killall`**（只允许按自己 pidfile 的确切 PID 清理）＋ **同一门／同一 worktree 不得并发跑**（跑重门前先 `ps` 查，等或换）。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`
+`你是 <角色> 的子代理。技能：<对应的 dmt-<角色> 技能名>（cbc 直接斜杠调用；pi 读 '<技能目录>/dmt-<角色>/SKILL.md' 并按其中强制技能节执行）。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。构建补件：<**凡票涉 gradle／clean build ⇒ 必写此字段**：本 worktree 需补 `local.properties`(sdk.dir) ＋ `app/src/main/jni/` 两个 vendored 目录软链（`opencv-mobile-4.13.0-android`／`ncnn-20260526-android-vulkan` → 主仓同路径；均 gitignored、非交付物）＋ 设 `ANDROID_HOME=<sdk 路径>；缺之则 configureCMake 报 `Could not find OpenCV`／`SDK location not found`>。资源纪律：**禁 `pkill <pattern>`／`pkill -f`／`killall`**（只允许按自己 pidfile 的确切 PID 清理）＋ **同一门／同一 worktree 不得并发跑**（跑重门前先 `ps` 查，等或换）。收口：**合流前必须在「缺本票本地产物的树」上跑一次门**（同一主仓 **detached worktree**；**禁** `archive`／`clone --shared` —— 会缺 refs 造成假红）；证据需给该次读数。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`
 
 `<角色>` ∈ `pde{n}` / `dev-e` / `ana-e`，对应技能 `dmt-pde` / `dmt-de` / `dmt-ae`。`reviewer{n}` 变体见下。
 

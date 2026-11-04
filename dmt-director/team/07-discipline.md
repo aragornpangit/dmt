@@ -10,6 +10,7 @@
    - **How to apply**：提交前先 `git status` 看有没有别人的未提交改动；有则改用 `git commit -- <自己的路径>` 且**不先 `add`**；发现同 worktree 已有他人改动，停下问 devm，不要自行判断「应该没事」。
 5. **推送节奏（devm）**：① **至少每完成一个 ticket 推送一次**到 GitLab（地址取 `.env` 的 `DMT_GITLAB_SERVER` / `DMT_GITLAB_PORT`，模板见 `.env.example`），推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果（`publish.sh` 默认推 `gitlab origin` 双远端：GitLab 为主、GitHub 镜像；只推 GitLab 时用 `--remotes gitlab`）；② **至少每小时**巡检一次 `git status --porcelain`，有新建或修改文件就按显式路径提交并推送（不必等 ticket 收口）。巡检与推送结果在下一次回报里一句话说明（推了什么、跳过什么、为什么）。
    - 命令：`bash dmt-director/scripts/publish.sh -m '<message>' -- <显式路径...>`；`--auto` 由 `git status --porcelain` 枚举改动路径（仍是显式路径，不使用 `git add -A`），`--no-push` 只提交。
+   - **③ 分支待合流期间，不得向 `master` 推任何提交**（含文档/口径类）。根因：master 一动，待合流分支就必须再 rebase ⇒ 提交 sha 全变 ⇒ **sha 型登记册（授权面）须再重钉**、且已跑的 sweep/对照读数全部过期。**来源**＝104 合流后 devm 推口径文档 `17facd63` 的实证（使修复分支需再 rebase ＋ 触发 `t068` S1.3 重钉）。⇒ **收口顺序：先把分支的修复/证据全部落定并合流，最后才推 master 侧文档。**
 6. **合并冲突时「取 main」（`checkout --ours`）只在 main 是分支的严格超集时成立。** 判断办法不是看谁改得多，是**逐项比对「两侧各有哪些行是对方没有的」**；只要有一项只有分支有，就必须手工合成。
 
    - **How to apply**：合并前跑一次两侧差异清单（`git diff --stat main...branch` 逐文件看，或直接 `git merge-tree` 预判）；合成后**与分支版本再 diff 一次**，确认差异只剩「main 独有的行」与「人工合成的那几行」，其余逐字节相同。
