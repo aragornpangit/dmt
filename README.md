@@ -46,7 +46,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，67 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，68 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
@@ -60,16 +60,19 @@ dmt/                                    # 一个角色一个文件夹
 仓内目录名即技能名（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`），**装到技能目录时同名复制**。运行 id（`devm` 等）只是 pane label 与收件箱名，不随技能名变化。
 
 ```bash
-# 软链安装（推荐，跟随本仓更新）
+# 软链安装（推荐，跟随本仓更新）；默认 --harness all ⇒ 铺 .agents/skills + .claude/skills + .codebuddy/skills
 bash dmt-director/scripts/install-skills.sh <项目根>
 
 # 复制安装（目标项目不跟随本仓）
 bash dmt-director/scripts/install-skills.sh <项目根> --copy
+
+# 只装指定 harness 的落点（收窄；默认 all）
+bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebuddy
 ```
 
-脚本做四件事：① 建 `.agents/skills/` 并软链或复制四个技能目录；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做四件事：① **按 harness 建技能落点**并软链或复制四个技能目录（默认 `--harness all` ⇒ `.agents/skills/` ＋ `.claude/skills/` ＋ `.codebuddy/skills/` 三处，覆盖五个 harness）；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
-> **落点限制（2026-11-04 实测）**：① 只装 `<target>/.agents/skills/` —— 该目录只被 `codex` / `opencode` / `pi`（`pi` 需 `--approve`）发现；**在 `claude` / `codebuddy` 上使用本项目时，需另把技能软链到项目的 `.claude/skills/` / `.codebuddy/skills/`**（详见 `dmt-director/team.md` §1.2）。
+> **为什么要三个落点（2026-11-04 逐 harness 探针实测）**：各 harness **只认自己的技能目录**，没有「一处通用」—— `codex` / `opencode` / `pi` 读 `.agents/skills/`（`pi` 的项目级目录需 `--approve`），`claude` **只读** `.claude/skills/`，`codebuddy` **只读** `.codebuddy/skills/`。所以 `install-skills.sh` 默认铺满三处；只装一处会在 claude / codebuddy 上静默装不上。详见 `dmt-director/team.md` §1.2。
 
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness 的用户级技能目录时，规则同样是**目录名即技能名**。
@@ -87,7 +90,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 
 ## 维护
 
-- 本仓是 dmt 的**唯一维护地**。技能目录（`.agents/skills/<角色>/`）与 **`docs/team.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
+- 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
 - 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步四个技能与机检 4m。
 - 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。

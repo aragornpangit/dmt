@@ -388,6 +388,13 @@ done
 # 脚本侧：lib 必须真有分流实现，且两份启动脚本不得写死 /dmt-* 技能命令
 lib="$(dirname "$(readlink -f "$0")")/lib-dmt.sh"
 if grep -q 'dmt_skill_cmd' "$lib"; then echo "OK   lib-dmt.sh 含 dmt_skill_cmd"; else echo "FAIL lib-dmt.sh 缺 dmt_skill_cmd"; fail=1; fi
+# 2026-11-04 第六十六次：技能落点必须覆盖 claude / codebuddy（它们不读 .agents/skills）
+iss="$(dirname "$(readlink -f "$0")")/install-skills.sh"
+if grep -q '\.claude/skills' "$iss" && grep -q '\.codebuddy/skills' "$iss"; then
+  echo "OK   install-skills.sh 覆盖 .claude/skills 与 .codebuddy/skills 落点"
+else
+  echo "FAIL install-skills.sh 未覆盖非 .agents 落点（claude / codebuddy 装不上）"; fail=1
+fi
 for s in setup-team.sh spawn-helper.sh; do
   if grep -qF "'/dmt-" "$(dirname "$(readlink -f "$0")")/$s"; then
     echo "FAIL $s 写死技能命令（应经 dmt_skill_cmd 生成）"; fail=1
