@@ -1,11 +1,11 @@
 # dmt 结构契约：单一来源（机器可读）。
 #
 # 这里放「会漂移的结构性事实」——技能清单、角色层级、产物目录、版本号位置、脚本清单。
-# 由 dmt-director/scripts/check-dmt-structure.sh 校验，取代原先散落在
-# check-dmt-doc-paths.sh 里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
+# 由 dmt-director/scripts/check-dmt.sh 校验，取代原先散落在
+# check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.16.13
+version: 5.16.14
 date: "2026-11-04"
 
 skills:
@@ -63,10 +63,10 @@ scripts:
   - publish.sh
   - file-claim.sh
   - install-skills.sh
-  - check-dmt-doc-paths.sh
-  - check-dmt-structure.sh
+  - check-dmt.sh
   - bump-version.sh
   - archive-changelog.sh
+  - digest-changelog.sh
   - install-git-hooks.sh
   - auto-review-model.sh
 
@@ -75,3 +75,102 @@ forbidden_scripts:
   - dispatch-ledger.sh
   - fanout.sh
   - install-hooks.sh
+
+# 内容断言（P1）：原先散在 check-dmt-doc-paths.sh 里的中文短句 grep，收口到本表。
+# 语义：每个文件必须含 `require`（all），且不得含 `forbid`（any）。
+# 文件键可用占位符：{docs} = 安装后 docs/（仓内回退到 dmt-director/team/ 等正本）；
+#   {skills} = 技能目录；{scripts} = 脚本目录；{repo} = 技能仓根。
+# 由 check-dmt.sh（合并入口）逐条执行。加/改断言只改这里，不改脚本。
+content_assertions:
+  requirement_coverage:
+    files:
+      "{skills}/dmt-director/SKILL.md":
+        require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/human-arch/", "docs/human/human-plan/", "docs/team.md", "setup-team.sh"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["docs/dev/tickets/", "归 devm", "硬件设备写操作"]
+      "{skills}/dmt-am/SKILL.md":
+        require: ["docs/analyst/"]
+        forbid: ["docs/pd/prd/", "docs/dev/tickets/"]
+      "{skills}/dmt-pde/SKILL.md":
+        require: ["pde{n}"]
+  organization:
+    files:
+      "{docs}/team.md":
+        require: ["pde{n}", "reviewer{n}", "devm", "anam"]
+      "{docs}/team/01-org.md":
+        require: ["pde{n}", "reviewer{n}", "单线指挥"]
+  helper:
+    files:
+      "{docs}/OPS.md":
+        require: ["close-helper.sh", "一次性下发", "不接受任何输入框内容", "单向汇报", "没有自己的 inbox", "pane label", "不按 tab 内位置"]
+      "{scripts}/spawn-helper.sh":
+        require: ["一次性下发"]
+  concurrency:
+    files:
+      "{docs}/team/07-discipline.md":
+        require: ["依赖分析", "开满 subagents 并行"]
+      "{skills}/dmt-director/SKILL.md":
+        require: ["依赖分析", "开满 subagents 并行", "完成即报"]
+        forbid: ["不强制派满", "不强制并行", "按需并行"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["依赖分析", "开满", "完成即报"]
+        forbid: ["不强制派满", "不强制并行", "按需并行"]
+      "{skills}/dmt-am/SKILL.md":
+        require: ["依赖分析", "开满", "完成即报"]
+        forbid: ["不强制派满", "不强制并行", "按需并行"]
+      "{skills}/dmt-pde/SKILL.md":
+        require: ["开满"]
+  write_ops:
+    files:
+      "{docs}/team/07-discipline.md":
+        require: ["merge 与 push 只归 devm", "只许 `devm` 或 `director` 执行", "至少每完成一个 ticket 推送一次", "至少每小时"]
+        forbid: ["只许 `director` 执行", "装机只归 director", "装机归 director", "adb install|bcr_t36_calib|bcr_dump_prefs"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["归 devm", "硬件设备写操作"]
+      "{skills}/dmt-director/SKILL.md":
+        require: ["硬件设备写操作", "不代推"]
+        forbid: ["git push[^。]{0,20}只由[ ]*director"]
+  gates:
+    files:
+      "{docs}/team/07-discipline.md":
+        require: ["文档门禁", "代码门禁", "每批至少抽 1 票", "100% 复验"]
+      "{docs}/team/01-org.md":
+        require: ["主轨直属 `devm`", "副轨直属 `director`"]
+      "{skills}/dmt-director/SKILL.md":
+        require: ["文档门禁", "每批至少抽 1 票", "不替代"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["代码门禁", "reviewer{n}"]
+      "{skills}/dmt-reviewer/SKILL.md":
+        require: ["/code-review", "devm"]
+  skill_links:
+    files:
+      "{docs}/team.md":
+        require: ["raw.githubusercontent.com"]
+  inbox_three_state:
+    files:
+      "{docs}/OPS.md":
+        require: [".doing/", ".seq", "msg-take.sh", "msg-done.sh"]
+      "{skills}/dmt-director/SKILL.md":
+        require: ["msg-take.sh"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["msg-take.sh"]
+      "{skills}/dmt-am/SKILL.md":
+        require: ["msg-take.sh"]
+  file_claim:
+    files:
+      "{docs}/OPS.md":
+        require: ["file-claim"]
+      "{skills}/dmt-director/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-am/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-pde/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-de/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-ae/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-reviewer/SKILL.md":
+        require: ["file-claim"]

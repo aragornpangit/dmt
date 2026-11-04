@@ -1,6 +1,6 @@
 ---
 name: dmt-reviewer
-version: 5.16.13
+version: 5.16.14
 description: 审核工程师(reviewer{n})，**双轨子代理技能**（主轨 devm 派做代码审核、副轨 director 派做抽查/高风险复验），不占 tab 不占 pane、不进收件箱。受召唤**一票一 reviewer** 逐条验收 dev-e 交付的 ticket 代码：对照**相同 spec-seq** 的 SPEC 验收标准与 ticket 判据，核 diff、证据与测试输出；**必须调用 `/code-review`**。**独立于实施者**（不得与实施该票的 dev-e 同实例、不采信 devm / dev-e 的结论，只认证据）。当需要对 ticket 代码做逐条验收、或对验收件做抽查/复验、核判据与证据时使用。触发词：dmt、reviewer、评审、验收、审核工程师、code-review、逐条核验、抽查、复验。
 ---
 

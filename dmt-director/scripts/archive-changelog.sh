@@ -5,23 +5,25 @@
 # 纪律：条目**整条原样搬移**（不改写、不重编号，符合「历史留痕」）。
 #
 # 用法：
-#   bash archive-changelog.sh [--dry-run]     # 归档非最新季度的条目
-#   bash archive-changelog.sh --check         # 只报告条目总数与跨季度条数，不改动
+#   bash archive-changelog.sh [--dry-run]         # 归档非最新季度的条目
+#   bash archive-changelog.sh --keep N [--dry-run] # 只保留最新 N 条，其余归档到 changelog/archive.md
+#   bash archive-changelog.sh --check             # 只报告条目总数与跨季度条数，不改动
 #
 # 说明：条目跨越其季度的判定按条目首行日期（- **YYYY-MM-DD …）。归档文件按时间倒序。
 set -eu
 DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$DIR/../.." && pwd)"
 export CL="$REPO/dmt-director/CHANGELOG.md" ARCH_DIR="$REPO/dmt-director/changelog"
-DRY=0; CHECK=0
+DRY=0; CHECK=0; KEEP=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1; shift ;;
     --check) CHECK=1; shift ;;
+    --keep) KEEP="${2:?missing N}"; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
-export DRY CHECK
+export DRY CHECK KEEP
 [ -f "$CL" ] || { echo "archive-changelog: 缺 $CL" >&2; exit 2; }
 
 python3 - <<'PY'
@@ -52,11 +54,20 @@ if check:
 
 if not entries:
     print("CHANGELOG.md 无条目，跳过"); raise SystemExit(0)
-newest_q = entries[0]["q"]
-keep = [e for e in entries if e["q"] == newest_q]
-groups = {}
-for e in entries:
-    if e["q"] != newest_q: groups.setdefault(e["q"], []).append(e)
+
+keep_n = os.environ.get("KEEP", "").strip()
+if keep_n:
+    n = int(keep_n)
+    keep = entries[:n]
+    archived = entries[n:]
+    groups = {"archive": archived} if archived else {}
+    newest_q = "(--keep %d)" % n
+else:
+    newest_q = entries[0]["q"]
+    keep = [e for e in entries if e["q"] == newest_q]
+    groups = {}
+    for e in entries:
+        if e["q"] != newest_q: groups.setdefault(e["q"], []).append(e)
 
 def render(es): return "\n".join("\n".join(e["lines"]).rstrip("\n") for e in es) + "\n"
 

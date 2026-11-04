@@ -92,14 +92,11 @@ bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebud
 ## 机检
 
 ```bash
-bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 散文 / 落盘纪律机检
-bash dmt-director/scripts/check-dmt-structure.sh <项目根目录>    # 结构化机检（YAML 单一来源）
+bash dmt-director/scripts/check-dmt.sh <项目根目录>   # 单一入口：结构断言 + 内容断言
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖
 ```
 
-**结构化机检**（`check-dmt-structure.sh`）校验**可机读的结构事实**，事实定义在 `dmt-director/dmt_contract.yaml`（技能清单 / 版本源 / 产物目录 / 组织 / 脚本清单 / 已废止脚本）与 `dmt-director/harness_matrix.yaml`（五 harness 矩阵）——改一处即改全部，不再散落中文 grep。**散文机检**（`check-dmt-doc-paths.sh`）保留「纪律是否被登记」的软断言。
-
-判据 **十八项**（机检共 27 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。
+**A 结构断言 + B 内容断言**，事实都来自单一来源：`dmt-director/dmt_contract.yaml`（技能清单 / 版本源 / 目录 / 组织 / 脚本 / **content_assertions**）与 `dmt-director/harness_matrix.yaml`（五 harness 矩阵）——加 / 改断言只改 YAML，不再散落中文 grep。**逐项说明与判据维护在 `dmt-director/team/09-check.md`（单一来源）**。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。
 
 ## 内网端点配置（`.env`）
 
@@ -120,7 +117,7 @@ cp .env.example .env && ${EDITOR:-vi} .env   # 填入本机实际地址
 
 ## 维护
 
-- **单一来源**：团队口径只在 `dmt-director/team.md`（规范）/ `OPS.md`（操作）；harness 差异只在 `harness_matrix.yaml`；结构事实只在 `dmt_contract.yaml`。七份技能只写「本角色怎么干」，共性一律写指针（`check-dmt-structure.sh` §6 断言）。
+- **单一来源**：团队口径只在 `dmt-director/team.md`（规范）/ `OPS.md`（操作）；harness 差异只在 `harness_matrix.yaml`；结构事实只在 `dmt_contract.yaml`。七份技能只写「本角色怎么干」，共性一律写指针（`check-dmt.sh` A6 断言）。
 - **版本同步**：版本号权威在 `dmt_contract.yaml`；`bash dmt-director/scripts/bump-version.sh <X.Y.Z>` 一条命令刷进 team.md 与七份 SKILL.md，`--check` 复核同号。
 - **防泄漏门禁**：`bash dmt-director/scripts/install-git-hooks.sh` 启用受版本控制的 `pre-commit`（拦截 `.env`、内网地址、密钥形态）；`launch.sh` 默认安装。误报用 `git commit --no-verify` 绕过。
 - **变更记录**：`CHANGELOG.md` 只留当前季度条目；`bash dmt-director/scripts/archive-changelog.sh` 把更早季度整条原样归档到 `dmt-director/changelog/<YYYYQn>.md`。

@@ -69,4 +69,4 @@ else
   echo "[launch] 跳过建团队"
 fi
 
-echo "[launch] 完成。机检：bash $SCRIPT_DIR/check-dmt-doc-paths.sh $ROOT ；结构化机检：bash $SCRIPT_DIR/check-dmt-structure.sh $ROOT"
+echo "[launch] 完成。机检：bash $SCRIPT_DIR/check-dmt.sh $ROOT ；结构化机检：bash $SCRIPT_DIR/check-dmt.sh $ROOT"

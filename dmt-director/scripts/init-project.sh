@@ -23,7 +23,7 @@ done
 
 echo "initialized: $ROOT"
 if [ "$CHECK" = 1 ]; then
-  bash "$SCRIPT_DIR/check-dmt-doc-paths.sh" "$ROOT"
+  bash "$SCRIPT_DIR/check-dmt.sh" "$ROOT"
 else
-  echo "skip check（--no-check）；装好技能后再跑 bash $SCRIPT_DIR/check-dmt-doc-paths.sh \"$ROOT\""
+  echo "skip check（--no-check）；装好技能后再跑 bash $SCRIPT_DIR/check-dmt.sh \"$ROOT\""
 fi

@@ -7,9 +7,9 @@
 #
 # 用法：
 #   bash bump-version.sh <X.Y.Z> [--date YYYY-MM-DD] [--dry-run]
-#   bash bump-version.sh --check          # 只校验是否同号（同 check-dmt-structure.sh 第 1 节）
+#   bash bump-version.sh --check          # 只校验是否同号（同 check-dmt.sh 第 1 节）
 #
-# 改完请跑 `bash check-dmt-structure.sh` 确认 ALL_PASS。
+# 改完请跑 `bash check-dmt.sh` 确认 ALL_PASS。
 set -eu
 DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$DIR/../.." && pwd)"
@@ -31,7 +31,7 @@ done
 
 if [ "$CHECK" = 1 ]; then
   # 第 1 节即版本同号校验（其余节也会跑）；技能目录指向仓内（各角色目录即技能目录）
-  DMT_SKILLS_DIR="$REPO" exec bash "$DIR/check-dmt-structure.sh" "$REPO"
+  DMT_SKILLS_DIR="$REPO" exec bash "$DIR/check-dmt.sh" "$REPO"
 fi
 [ -n "$VER" ] || { echo "usage: bump-version.sh <X.Y.Z> [--date YYYY-MM-DD] [--dry-run]" >&2; exit 2; }
 case "$VER" in *[!0-9.]*|.*|*.) echo "版本号格式应为 X.Y.Z：$VER" >&2; exit 2 ;; esac
@@ -67,5 +67,5 @@ for rel in m["version_sources"]:
 PY
 
 if [ "$DRY" = 1 ]; then echo "（--dry-run：未写盘）"; else
-  echo "已同步版本 $VER（$DATE）；跑 check-dmt-structure.sh 复核"
+  echo "已同步版本 $VER（$DATE）；跑 check-dmt.sh 复核"
 fi
