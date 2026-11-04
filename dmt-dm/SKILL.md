@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.16.7
+version: 5.16.8
 description: 开发经理(devm)，dmt 开发部门负责人，直属上级 director。接 director 落盘的开发工单（ticket），**直接派 dev-e 工程师子代理**实施：devm 亲自建 worktree（一票一 worktree）、按需求开 dev-e（不强制派满）、收 diff 做实施层初检、复核一手出处；**代码门禁**：负责评审（逐条判据 PASS/FAIL）；**按票数派 reviewer{n} 做独立验收**（技能 dmt-reviewer；实例独立于 dev-e、以证据为准）、整合开发部门交付物，不拆票；**代码库与设备归 devm 管理：merge / push 与装机等设备写操作均归 devm**（**收到本部门 `reviewer{n}` 验收通过后**即合并 / 推送，不必等 director 通知）。**可依用户要求与 tickets 计划直接开工，知会 director 即可**。当需要接单排期、派发与验收 ticket、或修复缺陷时使用。触发词：dmt、devm、开发经理、接单、ticket、工单、排期、验收、reviewer、整合、worktree、dev-e、pane label。
 ---
 
@@ -30,7 +30,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级只有
 2. **排期**：按票面「依赖」字段做依赖分析并分批，标注阻塞关系；无依赖的票**适合并行**、按需求开子代理（并发几路按需求定，不强制派满、不设并发上限 —— 2026-11-02 用户裁定），共享文件/共享构建目标的票串行。
 3. **建 worktree 并派 `dev-e`**：**一票一个 worktree、一票一个 `dev-e` 子代理**，worktree 与分支由 **devm 亲自建**（`.worktrees/{ticket-id}` + `feat/{ticket-id}`，主工作树只读）。派单**八要素**写进 `dev-e` 子代理 prompt（不落收件箱）：票面路径、票基（显式 sha）、Files 边界、验收判据、期望产物、回报格式、`timeoutMs`、**文件写入纪律**（改 bash 用单引号 heredoc／Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 `oldString` 必须唯一）；**另写明「技能：`dmt-de`」**（cbc harness 直接斜杠 `/dmt-de`；pi harness 读 `<技能目录>/dmt-de/SKILL.md` 并按其中强制技能节执行 —— pi 的 `delegate` 子代理不注入技能清单）。**无依赖的票适合并行**（同回复内并发派出后台子代理，按需求开：并发几路按需求定，**不强制派满、不设并发上限**，2026-11-02 用户裁定），共享文件/共享构建目标的票串行；**派完立即结束本轮**，由完成通知唤醒，不轮询。
 4. **代码门禁评审与整合**：收 `dev-e` 回报（先核判据读数与证据路径）→ **收 diff 做实施层初检、复核一手出处**（命令输出、证据路径逐条核对）→ **逐条对照 SPEC 判据给 PASS / FAIL 与读数（代码门禁，结论由 devm 出）** → 主干构建 + 全量测试 → **不动主干**（冲突预判用 `git merge-tree`，不 `--abort`）→ 不通过则打回**原 `dev-e`** → 写「实施状态」初稿（不改判据）。**本步不 merge、不收回 worktree**：merge 与 `git worktree remove` 都在第 5 步（本部门 `reviewer{n}` 验收通过）之后做。
-5. **派 `reviewer{n}` 独立验收（验收通过才发布）**：代码门禁评审 PASS 后，**devm 按票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer，无依赖票按需并行；技能 `dmt-reviewer`：cbc 直接斜杠 `/dmt-reviewer`、pi 读 `<技能目录>/dmt-reviewer/SKILL.md`），对照**相同 spec-seq 的 SPEC 与 ticket** 逐条验收 `dev-e` 代码；prompt 必带 ticket / SPEC 路径、diff、证据与测试输出，并写死**三条硬约束**：① **实例独立**（不得与实施该票的 `dev-e` 同实例）；② **证据为准**（逐条挂证据路径，无证据的「通过」视为不通过）；③ **director 保留抽查与高风险复验**。**收到 `reviewer{n}` 验收通过后才 merge 与 push**（每 ticket 一推、每小时巡检未推送变更）；**未通过打回原 `dev-e` 返工，不得先 merge/push**。验收结论一句话回报 director（抽查用）。
+5. **派 `reviewer{n}` 独立验收（验收通过才发布）**：代码门禁评审 PASS 后，**devm 按票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer，无依赖票按需并行；技能 `dmt-reviewer`：cbc 直接斜杠 `/dmt-reviewer`、pi 读 `<技能目录>/dmt-reviewer/SKILL.md`），对照**相同 spec-seq 的 SPEC 与 ticket** 逐条验收 `dev-e` 代码；prompt 必带 ticket / SPEC 路径、diff、证据与测试输出，并写死**三条硬约束**：① **实例独立**（不得与实施该票的 `dev-e` 同实例）；② **证据为准**（逐条挂证据路径，无证据的「通过」视为不通过）；③ **director 保留抽查与高风险复验**。**收到 `reviewer{n}` 验收通过后才 merge 与 push**（每 ticket 一推、每小时巡检未推送变更）；**未通过打回原 `dev-e` 返工，不得先 merge/push**。验收结论**连同 `reviewer{n}` 的逐条结论与证据路径**一并回报 director（抽查用；平行可见）。
 6. **push 与 merge 归 devm**：`git push` 与合并主干**只归 devm**（anam / 工程师 / reviewer 一律不得 push、不得 merge 主干）；**硬件设备写操作（安装 / 刷写 / 覆写设备文件 / 强杀进程等，不限于安卓）也归 devm**（操作后必报产物哈希 ＋ 设备侧版本 / 更新时间 ＋ 进程确已退出）。执行时机见第 5 步：**收到本部门 `reviewer{n}` 验收通过后才 merge 与 push**，**不得先 merge/push**。推送结果在回报里写明（推了什么、跳过什么、为什么）。
 7. **收口**：在每张票末尾追加/更新「实施状态」一节（验收结论、证据路径、合并 sha、残留风险）；**不改判据、编号与 Files 边界**；不另写进度报告。
 
@@ -44,7 +44,7 @@ devm 是 dmt 的**开发经理**：**唯一上级是 `director`**。下级只有
 6. **完成即报（不傻等）**：本批票收口 / 代码门禁出结论（或阻塞 / 超时 / 需裁决）**立即**回报 `director`（收件箱正文 + 门铃），不等 director 来问、不静默挂着。
 7. **复核证据**：`dev-e` 回报的 diff、读数与命令输出由 devm **复核一手出处**后，才能进入验收整合或写入权威文档。
 8. **一子代理一单元队列**：在途子代理只收同一单元的纠正 / 收窄，**新单元一律另派**（判据与违规情形见 `dmt-director/team.md` §5.2 第 9 条）。
-9. **派 `reviewer{n}`（代码验收，独立实例）**：一票一 reviewer，prompt 必带技能「`dmt-reviewer`」、ticket 与 SPEC 路径、diff、证据与测试输出；写死独立性三条（**不得与实施该票的 `dev-e` 同实例**、以证据为准、director 抽查）。`reviewer{n}` 只做验收、不写代码；结论回 devm。
+9. **派 `reviewer{n}`（代码验收，独立实例）**：一票一 reviewer，prompt 必带技能「`dmt-reviewer`」、ticket 与 SPEC 路径、diff、证据与测试输出；写死独立性四条（**不得与实施该票的 `dev-e` 同实例**、以证据为准、结论随回报抄送 director、director 抽查与高风险复验）。`reviewer{n}` 只做验收、不写代码；结论回 devm。
 
 ## 产物
 

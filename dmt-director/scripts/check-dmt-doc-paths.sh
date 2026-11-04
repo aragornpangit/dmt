@@ -250,6 +250,15 @@ check "$CONTRACT" '`reviewer{n}` 直属 `devm`' '团队契约（reviewer 归 dev
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'reviewer{n}' 'devm（派 reviewer）'
 check "$SKILLS_DIR/dmt-reviewer/SKILL.md" 'devm' 'dmt-reviewer（上级 devm）'
 check_absent "$SKILLS_DIR/dmt-director/SKILL.md" '按验收票数派|按票数派 `reviewer1' 'director 不得再派 reviewer（改为抽查/复验）'
+# 2026-11-04 第七十次：独立性四条硬约束（结论平行可见 + 抽查下限/高风险复验/留痕）
+check "$CONTRACT" '结论平行可见' '团队契约'
+check "$CONTRACT" '每批至少抽 1 票' '团队契约'
+check "$CONTRACT" '100% 复验' '团队契约'
+check "$CONTRACT" '必须留痕' '团队契约'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '每批至少抽 1 票' 'director'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '100% 复验' 'director'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '抄送 director' 'devm'
+check "$SKILLS_DIR/dmt-reviewer/SKILL.md" '结论平行可见' 'dmt-reviewer'
 
 echo
 echo "== 4h) cbc-herdr 通用技能必须逐角色登记 =="

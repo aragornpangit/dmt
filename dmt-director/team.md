@@ -1,6 +1,6 @@
 # dmt 团队契约
 
-> **版本 5.16.7 · 2026-11-04** —— 与七个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
+> **版本 5.16.8 · 2026-11-04** —— 与七个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
 > **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（硬件设备写操作 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
 > **不适用于技能仓自身的维护**：维护 `dmt` / `dmt-en` / 其他技能仓时，上述归属纪律**不生效** —— 维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权、也不需 devm 代推**；装机权限同理只约束「目标项目中的设备写操作」。
 > 本文件（规范层）与 [`OPS.md`](OPS.md)（操作层）**共同构成 dmt 的团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；七个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
@@ -150,7 +150,7 @@ director            总监兼产品部经理（label director，屏幕左侧）
 | `docs/human/human-arch/` | director | 人类架构文档 | 无 |
 | `docs/human/human-plan/` | director | 人类计划文档 | 无 |
 | `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` **软链**到 `docs/team.md`，同法软链 `OPS.md` 到 `docs/OPS.md`，供机检读取） | director | 团队契约（本文件） | 软链跟随正本、恒同版本（`--copy` 模式除外） |
-| `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
+| `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`；**抽查 / 复验结论亦可写此处**）；其余情形仅在用户要求时写 | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 `OPS.md` §2 |
 
 1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/human/`（除 `human-arch/`、`human-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
@@ -183,7 +183,7 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 3. **devm 接单**：devm 读 `docs/dev/tickets/` 的本批票面（`pde{n}` 落笔、director 定稿、已过文档门禁），核 `spec-seq` 对齐与判据齐备后按依赖排期；**devm 不拆票、不改判据**，缺项回报 director 补。devm 负责评审、整合本部门交付物。
 4. **devm 直接派工程师（按需求开）**：devm **直接派生 `dev-e` 子代理**（一票一 worktree、按需求开），把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给工程师实施；devm 自己建 worktree、收 diff 做**实施层初检**、复核一手出处。anam 同理**直接派 `ana-e`**（拆子问题、并行取证，复核一手出处）。
 5. **devm 验收整合（实施层）**：核 diff 与初检读数（自己收子代理回报并自做初检）→ 构建与测试 → 不合格打回原实施者；**本步不 merge、不写「实施状态」**（merge 的唯一时点见第 6 条）；**任务收口即报（`OPS.md` §2），该批 `dev-e` 子代理随收口回收**。
-6. **（merge 时点：本部门 `reviewer{n}` 验收通过之后；director 只抽查）** devm 代码门禁评审 → devm 派 `reviewer{n}` 独立验收 → devm merge/push：ticket 代码干完后由 devm 按代码门禁评审（逐条对照 SPEC 判据、核 diff 与证据，先不 merge）→ **devm 按票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer，无依赖票并行、按需求开）对照相同 spec-seq 的 SPEC 验收标准与 ticket 判据逐条验收；**三条硬约束**：① **实例独立**（不得与实施该票的 `dev-e` 同实例；不采信 devm / `dev-e` 的结论，只认 ticket ＋ SPEC ＋ diff ＋ 证据）；② **证据为准**（逐条 PASS/FAIL 挂证据路径，无证据的「通过」视为不通过）；③ **director 保留两个口子**（抽查权 ＋ 高风险票复验）。验收通过 ⇒ **devm 直接执行 merge 与 push**（每 ticket 一推，不再等 director 通知）；不通过 ⇒ 打回 `dev-e` 返工，不得先 merge/push。硬件设备写操作同归 devm。`reviewer{n}` 是子代理、不占 pane、不装技能（`/code-review` 写进派发 prompt）；director 不代推、不代 merge。
+6. **（merge 时点：本部门 `reviewer{n}` 验收通过之后；director 只抽查）** devm 代码门禁评审 → devm 派 `reviewer{n}` 独立验收 → devm merge/push：ticket 代码干完后由 devm 按代码门禁评审（逐条对照 SPEC 判据、核 diff 与证据，先不 merge）→ **devm 按票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer，无依赖票并行、按需求开）对照相同 spec-seq 的 SPEC 验收标准与 ticket 判据逐条验收；**四条硬约束**：① **实例独立**（不得与实施该票的 `dev-e` 同实例；不采信 devm / `dev-e` 的结论，只认 ticket ＋ SPEC ＋ diff ＋ 证据）；② **证据为准**（逐条 PASS/FAIL 挂证据路径，无证据的「通过」视为不通过）；③ **结论平行可见**（`reviewer{n}` 的逐条结论与证据路径**随 devm 向 director 的回报一并给出** —— director 不参与验收裁定，但看得到；2026-11-04 第七十次立）；④ **抽查下限 ＋ 高风险复验 ＋ 留痕**（director **每批至少抽 1 票**；**高风险票 —— 设备 / SHA / 门禁 / 破坏性变更类 —— 100% 复验**，由 director 亲自或 **director 另派**独立 `reviewer` 执行；复验结论与证据**必须留痕**（写 `docs/handoff/` 或回报），不做口头结论；发现验收不实 ⇒ 打回 devm 重验）。验收通过 ⇒ **devm 直接执行 merge 与 push**（每 ticket 一推，不再等 director 通知）；不通过 ⇒ 打回 `dev-e` 返工，不得先 merge/push。硬件设备写操作同归 devm。`reviewer{n}` 是子代理、不占 pane、不装技能（`/code-review` 写进派发 prompt）；director 不代推、不代 merge。
 7. **并行（按需）**：对无依赖关系的任务，各角色**可在直属下级之间并行**（director 在 devm/anam 之间，产品单元在多个 `pde{n}` 之间；devm 在多个 `dev-e` 之间；anam 在多个 `ana-e` 之间），优先级：dynamic workflow > 多个 subagents 并行；**并行与否、一次并行几路由各角色按任务规模自定（不强制并行、不强制派满），但不得越级派发**。**director 自己的无依赖工作（评审前证据预检、文档交叉核对、外部事实取证、产品取证）同样可按需用子代理铺开**，结论由本人落笔。
 
 ### 4.1 PRD 模板（`pde{n}` 落笔，director 定稿）
@@ -226,7 +226,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 4. **产品工作（director 自派 `pde{n}`）**：产品线无 pane、无队长层，无依赖产品单元按需求并发派 `pde{n}`（一单元一 `pde{n}`，派发手段同第 3 条）；`director` 的评审前预检同理。
 5. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）；**并带「文件写入纪律」三句**（2026-10-27 第五十三次立规）：① 改 bash 文件用**单引号 heredoc**（`cat <<'EOF' … EOF`）或 Write/Edit 工具；② **不得把脚本正文放进 JS 模板字符串**（bash 的 `${VAR:-默认}` / `${1:?msg}` 与 JS 模板字符串 `${expr}` 逐字符相同，会被当插值求值，报 `Unexpected token ':'` / `Expected a closing '}' …`）；③ **Edit 的 `oldString`（锚点）必须唯一**（不唯一就带足上下文或 `replace_all`，否则报 `Found N matches … replace_all is false`）。**派发 prompt 照骨架填空，不要现编**：
     `你是 <角色> 的子代理。技能：<对应的 dmt-<角色> 技能名>（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-<角色>/SKILL.md` 并按其中强制技能节执行）。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`（`<角色>` ∈ `pde{n}` / `dev-e` / `ana-e`，对应技能 `dmt-pde` / `dmt-de` / `dmt-ae`）
-    > reviewer{n} 变体（验收专用，`/code-review` 为模板常量，不得替换或省略）：`你是 devm 的 reviewer{n} 子代理。技能：dmt-reviewer（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-reviewer/SKILL.md`）。必须调用 /code-review 技能逐条验收。独立性：不得与实施该票的 dev-e 同实例，不采信 devm / dev-e 的结论，只认 ticket + SPEC + diff + 证据；无证据的「通过」视为不通过。票：<ticket 路径>。SPEC：<对应 spec-seq 路径>。输入：<diff、证据、测试输出路径>。判据：照 ticket 验收标准逐条核，逐条挂证据路径。回报：逐条通过/不通过 + 结论 + 证据路径。超时：<timeoutMs>。`
+    > reviewer{n} 变体（验收专用，`/code-review` 为模板常量，不得替换或省略）：`你是 devm 的 reviewer{n} 子代理。技能：dmt-reviewer（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-reviewer/SKILL.md`）。必须调用 /code-review 技能逐条验收。独立性：不得与实施该票的 dev-e 同实例，不采信 devm / dev-e 的结论，只认 ticket + SPEC + diff + 证据；无证据的「通过」视为不通过。票：<ticket 路径>。SPEC：<对应 spec-seq 路径>。输入：<diff、证据、测试输出路径>。判据：照 ticket 验收标准逐条核，逐条挂证据路径。回报：逐条通过/不通过 + 结论 + 证据路径（**结论将随 devm 回报抄送 director 供抽查**）。超时：<timeoutMs>。`
 6. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
 7. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
 8. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
@@ -247,7 +247,8 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 | helper 回收 | `director` / `devm` / `anam`（创建者＝本体） | 创建者本人自检 | 成果已入账、worktree 已 `git worktree remove`、本体收件箱该 helper 方向无未收口；关闭后 `herdr pane list` 无 `{角色}-helper` label |
 | 人类架构 / 人类计划 | director | **director（文档门禁自评）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
 | ticket 代码 | 开发部门（devm 直接派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后写「实施状态」，**merge 待本部门 `reviewer{n}` 验收通过** |
-| 代码验收（spec-seq 对齐） | `dev-e`（实施）/ `devm`（提交） | **`devm` 派 `reviewer{n}`（独立实例；director 抽查与高风险复验）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后由 **devm merge / push** |
+| 代码验收（spec-seq 对齐） | `dev-e`（实施）/ `devm`（提交） | **`devm` 派 `reviewer{n}`（独立实例；结论抄送 director）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后由 **devm merge / push**；逐条结论与证据随 devm 回报抄送 director |
+| 代码验收抽查 / 高风险复验 | devm（验收结论与证据） | **director**（**每批至少抽 1 票**；**高风险票 —— 设备 / SHA / 门禁 / 破坏性变更类 —— 100% 复验**，亲自或另派独立 `reviewer`） | 抽查 / 复验结论与证据**留痕**（`docs/handoff/` 或回报）；发现验收不实 ⇒ 打回 devm 重验 |
 | 跨部门分歧 | devm / anam | director | director 裁决并回结论 |
 
 ### 5.4 读数纪律（性能窗）
@@ -272,7 +273,6 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh
 
 ## 8. 变更记录
 
-**历史明细（第一次～第六十八次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
+**历史明细（第一次～第六十九次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
 
-- **2026-11-04（用户要求·第六十九次：`reviewer{n}` 归 devm ＋ 改名 `dmt-reviewer` ＋ 设备操作抽象为「硬件设备写操作」，版本 `5.16.7`）**：用户两项要求 —— ①「把代码评审工程师归到 devm 的团队中」（采纳"三条硬约束"方案）；②「把 `adb install`／`uninstall` 这些命令抽象为更通用的描述（如"对硬件设备的操作"），不要限定在安卓项目」。① **建制变更** —— `reviewer{n}` 从 director 直属**移入 devm 团队**（由 `devm` 直接派），因此 **devm 成为目标项目侧唯一写操作出口**（硬件设备写操作 ＋ merge ＋ push ＋ 代码验收组织）；**merge 时点**随之改为「**devm 收到本部门 `reviewer{n}` 验收通过即 merge / push**」，不再等 director 通知；director 从"逐票派 reviewer 并收结论"降为**抽查权 ＋ 高风险票复验**（设备 / SHA / 门禁 / 破坏性变更类）。② **独立性三条硬约束**（写进 §4 第 6 条、§5.2 骨架、§5.3 门禁表、`dmt-dm` 派发条与 `dmt-reviewer` 技能）：**实例独立**（不得与实施该票的 `dev-e` 同实例）、**证据为准**（逐条挂证据路径，无证据的「通过」视为不通过）、**director 两个口子**（抽查 ＋ 高风险复验）。③ **改名** —— 技能 `dmt-rve` → **`dmt-reviewer`**（`git mv` ＋ 全仓引用同步；运行 id 仍 `reviewer{n}`；历史 CHANGELOG 条目不重写）。④ **设备操作抽象化** —— §5.4 第 5 条由「`adb install`／覆写 `bcr_t36_calib.txt`／`dump_prefs`／`force-stop`」改为**通用「硬件设备写操作」**定义（安装 / 卸载产物、刷写固件、覆写设备文件或配置、触发探针、强杀进程、改设备运行时参数），并写明**工具链与设备文件以目标项目实际为准、不限于安卓**（`adb`／`fastboot`／串口／网口／JTAG 均属此列）；「装机后必报 APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空」改为**通用可核验证据**（产物哈希 ＋ 设备侧版本 / 更新时间 ＋ 进程确已退出）。`dmt-director` 设备节、`dmt-dm` 边界与第 6 条、四份子代理技能边界、根 `README.md`、`OPS` §1、`spawn-helper.sh` 注释同步。⑤ **机检** —— 4d 标题改「硬件设备写操作与 merge/push 均只归 devm」并新增负向断言（契约不得再绑定 `adb install`／`bcr_t36_calib`／`bcr_detect_probe`／`dump_prefs` 等项目特定命令）；4g 新增「`reviewer{n}` 直属 `devm`」正向断言与「director 不得再派 reviewer」负向断言。**版本升 `5.16.7`**（七技能同号）。**Why**：① 设备与代码库是同一类「目标项目写操作」，验收又是「代码是否可进主干」的判断 —— 三者同属 devm 后才能形成**单一责任闭环**（谁写进去谁负责），director 退回产品 / 组织并保留制衡口子（抽查 ＋ 高风险复验），既短链路又不失去独立性；② 契约是**通用团队定义**，不该因为某个目标项目用安卓就把「设备操作」写成 `adb` 专用 —— 抽象成「硬件设备写操作」后，换项目（串口设备、工控、网口设备）无需改契约。
-**附（同次补齐，2026-11-04）**：建制变更的收尾同步 —— 根 `README.md` 交付物表补 `reviewer{n}` 行、director 交付物由「评审结论」改「抽查 / 复验结论」、作用域句改「硬件设备写操作」；本文件 §3 规则 3 补 `reviewer{n}`（不写 `docs/`）、§1.4 子代理技能段补「派发者」对应（`pde{n}`←director、`dev-e` / `reviewer{n}`←devm、`ana-e`←anam）；`dmt-dm` 通信节由「交 director 验收」改「向 director 回报（抽查用）」。
+- **2026-11-04（用户要求·第七十次：代码验收独立性四条硬约束 —— 结论平行可见 ＋ 抽查下限 / 高风险复验 / 留痕，版本 `5.16.8`）**：第六十九次把 `reviewer{n}` 移入 devm 后，"独立验收"被降级为「部门内审 ＋ 产品抽查」；用户据此采纳补强建议，把独立性从"两个口子"升级为**四条硬约束**。① **结论平行可见** —— `reviewer{n}` 的逐条结论与证据路径**随 devm 向 director 的回报一并给出**（director 不参与验收裁定，但看得到）：`§4 第 6 条` ③、`§5.3 门禁表`「代码验收」行、`§5.2 第 5 条` reviewer 变体骨架、`dmt-dm` 第 5 步与派单纪律第 9 条、`dmt-reviewer` 独立性节与回报节同步。② **抽查下限 ＋ 高风险复验 ＋ 留痕** —— director **每批至少抽 1 票**；**高风险票 —— 设备 / SHA / 门禁 / 破坏性变更类 —— 100% 复验**（director 亲自或**另派独立 `reviewer`**）；抽查 / 复验结论与证据**必须留痕**（写 `docs/handoff/` 或回报），不做口头结论；发现验收不实 ⇒ 打回 devm 重验。`§5.3` 新增「代码验收抽查 / 高风险复验」门禁行；`§3` 的 `docs/handoff/` 行补「抽查 / 复验结论亦可写此处」。③ **机检** —— 4g 新增 8 条断言（契约含「结论平行可见」「每批至少抽 1 票」「100% 复验」「复验结论与证据必须留痕」；`dmt-director` 含抽查下限与 100% 复验；`dmt-dm` 含「抄送 director」；`dmt-reviewer` 含「结论平行可见」）。**版本升 `5.16.8`**（七技能同号）。**Why**：把「谁写进主干谁负责」（责任闭环）与「提交方不得自证」（独立性）这对目标**分开满足** —— 流程仍归 devm（短链路、专业化），但用**信息独立通道（结论抄送）＋ 有下限的抽查（每批 ≥ 1 票）＋ 高风险全复验 ＋ 复验留痕**把独立性补回来；**没有下限的「抽查权」在实践中会归零**，故写死下限并可机检。

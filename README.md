@@ -50,7 +50,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，71 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，72 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
