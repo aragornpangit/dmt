@@ -46,12 +46,13 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，66 条）
-│   ├── README.md                       # 角色目录说明（正文见根 README.md）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，67 条）
+│   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
 ├── dmt-dm/SKILL.md                     # 开发经理
-└── dmt-am/SKILL.md                     # 分析经理
+├── dmt-am/SKILL.md                     # 分析经理
+└── logs/                              # 事故复盘档（如 2026-10-27-serial-queue-incident.md）
 ```
 
 ## 安装到一个项目
@@ -68,10 +69,12 @@ bash dmt-director/scripts/install-skills.sh <项目根> --copy
 
 脚本做四件事：① 建 `.agents/skills/` 并软链或复制四个技能目录；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
+> **落点限制（2026-11-04 实测）**：① 只装 `<target>/.agents/skills/` —— 该目录只被 `codex` / `opencode` / `pi`（`pi` 需 `--approve`）发现；**在 `claude` / `codebuddy` 上使用本项目时，需另把技能软链到项目的 `.claude/skills/` / `.codebuddy/skills/`**（详见 `dmt-director/team.md` §1.2）。
+
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness 的用户级技能目录时，规则同样是**目录名即技能名**。
 
-**五个 harness 的发现目录（2026-11-03 实测）**：`~/.agents/skills/` 是 claude / codebuddy / codex / opencode / pi 的**唯一交集** —— 装到这里即五者全兼容；各自私有目录为 `.claude/skills/`、`.codebuddy/skills/`、`.codex/skills/`、`.opencode/skills/`（**复数**）、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**）。**斜杠写法不同**：claude / codebuddy / codex / opencode 用 `/dmt-dm`，**pi 用 `/skill:dmt-dm`** —— 启动脚本经 `lib-dmt.sh` 的 `dmt_skill_cmd` 自动生成，不要手敲。完整表见 `dmt-director/team.md` §1.2「harness 兼容」。
+**五个 harness 的技能发现目录（2026-11-04 逐 harness 探针实测）**：`.agents/skills/` **不是**五者交集 —— 实测只有 `codex` / `opencode` / `pi` 读它，`claude` 与 `codebuddy` **只认各自私有目录**（项目级 `.claude/skills/` / `.codebuddy/skills/`，用户级 `~/.claude/skills/` / `~/.codebuddy/skills/`）。因此 `install-skills.sh` 的 `<target>/.agents/skills/` 落点只覆盖三者（`pi` 还需 `--approve`）；**装到 claude / codebuddy 时必须另软链其私有目录**。另一个易错点：`pi` 的用户级私有目录是 `~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**），`opencode` 的项目级目录是 `.opencode/skills/`（**复数**）。**斜杠写法也不同**：claude / codebuddy / codex / opencode 用 `/dmt-dm`，**pi 用 `/skill:dmt-dm`** —— 启动脚本经 `lib-dmt.sh` 的 `dmt_skill_cmd` 自动生成，不要手敲。完整表（含项目级 / 用户级）见 `dmt-director/team.md` §1.2「harness 兼容」。
 
 ## 机检
 
@@ -80,7 +83,7 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖（默认值见脚本第 9 行）
 ```
 
-判据 **十八项**（机检共 27 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发纪律或脚本接口后必须重跑。
+判据 **十八项**（机检共 27 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。
 
 ## 维护
 

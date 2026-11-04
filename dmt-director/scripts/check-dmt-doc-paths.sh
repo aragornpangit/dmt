@@ -158,8 +158,9 @@ check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate 方式' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate 方式' 'anam'
 
 echo
-echo "== 4c) 门铃通道必须登记（五种 harness 优先 agent prompt，其余回退） =="
-check "$OPS" 'opencode2' '团队契约'
+echo "== 4c) 门铃通道必须登记（五个 harness 优先 agent prompt，其余回退） =="
+check "$OPS" 'claude / codebuddy / codex / opencode / pi' '门铃表五 harness'
+check_absent "$OPS" 'opencode2' '门铃表旧 harness 名（2026-11-04 已更正）'
 check "$OPS" 'agent prompt' '团队契约'
 
 echo
@@ -371,10 +372,11 @@ check "$SKILLS_DIR/dmt-am/SKILL.md" 'delegate' 'anam'
 check "$SKILLS_DIR/dmt-pde/SKILL.md" 'delegate' 'pde'
 
 echo
-echo "== 4q) 五 harness 兼容必须登记（斜杠前缀分流 / .agents 交集 / 启动参数） =="
+echo "== 4q) 五 harness 兼容必须登记（斜杠前缀分流 / .agents 落点 / 启动参数） =="
 # 2026-11-03 第六十二次：多 harness 适配。判据只锚「契约有没有把这些差异写下来」，
 # 不锚具体参数值 —— 参数会随 harness 版本变，但「差异必须被登记」这条不变。
 check "$CONTRACT" 'harness 兼容' '团队契约'
+check "$CONTRACT" '不是五个 harness 的交集' '团队契约（2026-11-04 实测更正：.agents 落点只覆盖 codex/opencode/pi）'
 check "$CONTRACT" 'dmt_skill_cmd' '团队契约'
 check "$CONTRACT" 'skill:dmt-' '团队契约（pi 斜杠前缀）'
 for role in dmt-director dmt-dm dmt-am; do

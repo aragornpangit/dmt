@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.16.2
+version: 5.16.3
 description: 总监兼产品部经理(director)，dmt 唯一用户入口，直属下级只有 devm（开发经理）与 anam（分析经理）；PRD / SPEC / 工单由 director 召唤 pde{n} 产品工程师子代理落笔（一单元一 pde、按需求开、不强制派满，director 定口径 / 验收 / 门禁定稿），人类文档由 director 亲自落笔；pde{n} 落笔用 dmt-pde 技能（不占 pane），reviewer{n} 一票一 reviewer（不占 pane，验收代码用 /code-review 写进派发 prompt）。当用户提出需求/变更/问题反馈、需要写 PRD / SPEC / 工单 / 人类文档、需要评审 anam 的调研报告、验收 devm 交付的 ticket 代码（派 reviewer{n} 逐条验收）、或需要对 dmt 做团队协调、组织维护与裁决时使用。触发词：dmt、director、总监、产品、需求、验收标准、PRD、SPEC、工单、评审、验收、reviewer、pde、devm、anam。
 ---
 
@@ -15,7 +15,7 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 ## 工作流
 
-0. **初始化目录**（接手项目第一件事，幂等）：`bash dmt-director/scripts/init-project.sh <项目根>` —— 建六个产物目录 + 三个收件箱 + `locks/`，写 `.gitignore` 的 `inbox/*/` 与 `locks/`，并跑机检；直到输出 `ALL_PASS`。缺目录**由 director 补齐**，anam / devm 不自建产物目录（详见 `team.md` §3.1）。
+0. **初始化目录**（接手项目第一件事，幂等）：`bash dmt-director/scripts/init-project.sh <项目根>` —— 建六个产物目录 + 三个收件箱 + `locks/`，写 `.gitignore` 的 `inbox/*/`、`locks/` 与 `.codebuddy/`，并跑机检；直到输出 `ALL_PASS`。缺目录**由 director 补齐**，anam / devm 不自建产物目录（详见 `team.md` §3.1）。
 1. **接需求**：与用户沟通、澄清需求，确认边界、范围外与**验收口径**；必要时自己补事实（只把决策留给用户）。
 2. **写产品文档（召唤 `pde{n}` 落笔）**：把产品单元列清楚后**按需求开 `pde{n}` 子代理**（按需求开、不强制派满；一单元一 pde，竞品产品面取证、用户故事枚举、边界推演、验收标准核对、既有文档一致性核查、**PRD / SPEC / 工单落笔**）；`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 由 `pde{n}` 落笔（用 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、`/to-tickets`），**口径、验收与门禁定稿由 director 定**；`docs/human/` 由 director 亲自写；需要调研支撑时按第 3 步同时派 anam。
 3. **派调研**（按需）：写 `inbox/anam/{seq}-director2anam-{slug}-{YYMMDDHHMM}.md`，再发门铃。**只派给 anam**，不直接找分析工程师。
@@ -62,7 +62,7 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 ## helper 分身（忙不过来时）
 
-**触发三条同时成立才开**（① 本体忙不过来；② 在途子代理已饱和、收不过来回报；③ 仍有待办）。形态＝helper tab（label `helper`，全队共享）+ `{角色}-helper` pane（每角色至多一个），由 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam> "<任务>"` 建立并**一次性下发**任务，收口用 `close-helper.sh`。helper 是本体纯分身：**没有自己的 inbox**、不走门铃，成果单向汇报。**独占动作不移交**：装机归 director 本体、merge / push 归 devm 本体。完整语义与回收顺序见 `dmt-director/OPS.md` §1。
+**触发三条同时成立才开**（① 本体忙不过来；② 在途子代理回报积压、收不过来；③ 仍有待办）。形态＝helper tab（label `helper`，全队共享；其 root pane 固定为锚点 `helper-anchor`、不跑 agent）+ `{角色}-helper` pane（每角色至多一个），由 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam> "<任务>"` 建立并**一次性下发**任务，收口用 `close-helper.sh`。helper 是本体纯分身：**没有自己的 inbox**、不走门铃，成果单向汇报。**独占动作不移交**：装机归 director 本体、merge / push 归 devm 本体。完整语义与回收顺序见 `dmt-director/OPS.md` §1。
 
 ## 产物
 

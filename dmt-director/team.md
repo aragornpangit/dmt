@@ -1,6 +1,6 @@
 # dmt 团队契约
 
-> **版本 5.16.2 · 2026-11-03** —— 与四个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
+> **版本 5.16.3 · 2026-11-04** —— 与四个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
 > **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
 > **不适用于技能仓自身的维护**：维护 `dmt` / `dmt-en` / 其他技能仓时，上述归属纪律**不生效** —— 维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权、也不需 devm 代推**；装机权限同理只约束「目标项目中的设备写操作」。
 > 本文件（规范层）与 [`OPS.md`](OPS.md)（操作层）**共同构成 dmt 的团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；四个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
@@ -56,21 +56,21 @@ director            总监兼产品部经理（label director，屏幕左侧）
 
 ### 1.2 运行环境与 pane 生命周期
 
-**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §1** —— pane/tab 形态、身份＝`pane label`、启动顺序、helper 生命周期、首条消息前的权限模式。
+**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §1** —— pane/tab 形态、身份＝`pane label`、启动顺序、helper 生命周期（含 helper tab 的锚点 pane `helper-anchor`）、首条消息前的权限模式。
 
-**harness 兼容（五个，2026-11-03 第六十二次实测登记）**：
+**harness 兼容（五个；2026-11-04 第六十五次逐 harness 探针实测复核）**：
 
-| harness | 技能发现目录（实测） | 代启动命令 | 技能调用行 |
+| harness | 技能发现目录（实测；`<项目>/` 项目级、`~/` 用户级） | 代启动命令 | 技能调用行 |
 |---|---|---|---|
-| `codebuddy` | `.codebuddy/skills/`（`~` 与项目级） | `codebuddy --permission-mode auto` | `/dmt-dm` |
-| `claude` | `.claude/skills/`、`.agents/skills/` | `claude --permission-mode auto` | `/dmt-dm` |
-| `codex` | `.codex/skills/`、`.agents/skills/` | `codex -a never` | `/dmt-dm` |
-| `opencode` | `.opencode/skills/`（**复数**）、`.agents/skills/` | `opencode --auto` | `/dmt-dm` |
-| `pi` | `~/.pi/agent/skills/`、`<项目>/.pi/skills/`、`.agents/skills/` | `pi --approve` | **`/skill:dmt-dm`** |
+| `claude` | 项目级 `.claude/skills/`；用户级 `~/.claude/skills/` | `claude --permission-mode auto` | `/dmt-dm` |
+| `codebuddy` | 项目级 `.codebuddy/skills/`；用户级 `~/.codebuddy/skills/` | `codebuddy --permission-mode auto` | `/dmt-dm` |
+| `codex` | 项目级 `.agents/skills/`、`.codex/skills/`；用户级 `~/.agents/skills/`、`~/.codex/skills/` | `codex -a never` | `/dmt-dm` |
+| `opencode` | 项目级 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`（**复数**）；用户级 `~/.agents/skills/`、`~/.claude/skills/` | `opencode --auto` | `/dmt-dm` |
+| `pi` | 项目级 `.agents/skills/`、`.pi/skills/`；用户级 `~/.agents/skills/`、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**） | `pi --approve` | **`/skill:dmt-dm`** |
 
-**三条实测约束**（写进契约以免回退）：
+**四条实测约束**（写进契约以免回退）：
 1. **斜杠前缀按 harness 分流**：pi 的技能命令是 `/skill:<name>`，其余四个是 `/<name>`。写死 `/<name>` 在 pi 上**静默降级为普通提问**（不报错、不装载）。统一由 `lib-dmt.sh` 的 `dmt_skill_cmd` 生成，`setup-team.sh` / `spawn-helper.sh` 一律经它取命令，**不得在脚本或文档里写死某一种前缀**。
-2. **`.agents/skills/` 是五个 harness 的交集**：`install-skills.sh` 装到这里即可被全体发现；其余目录是该 harness 的私有目录，按需另行软链。**pi 的项目级 `.agents/skills` 属 trust-requiring**，启动不带 `--approve` 就看不到 —— 这也是 `dmt_harness_cmd` 给 pi 固定带该参数的原因。
+2. **`.agents/skills/` 不是五个 harness 的交集**（2026-11-04 实测更正第六十二次的结论）：只有 `codex` / `opencode` / `pi` 读它（项目级与用户级同理），**`claude` 与 `codebuddy` 都不读**——它们各自只认私有目录（`.claude/skills/` / `.codebuddy/skills/`）。`install-skills.sh` 的落点 `<target>/.agents/skills/` 因此只覆盖 codex / opencode / pi；**在 claude / codebuddy 上装技能必须另软链各自私有目录**。**pi 的项目级 `.agents/skills` 属 trust-requiring**，启动不带 `--approve` 就看不到（实测：不带时只见用户级技能）—— 这也是 `dmt_harness_cmd` 给 pi 固定带该参数的原因。
 3. **codex 首次进入项目目录需人工确认 trust（一次性）**；`-a never` 只免逐条审批，不免这一步。pane 卡在 trust 提示时由 director 手工确认后重跑 `setup-team.sh`。
 
 **4. 权限档位必须复验，不能只看「有没有 agent 在跑」**（2026-11-03 第六十三次，事故实证）：`agent_status` 非 `unknown` 只证明 pane 里有 agent，**不证明它在自动批准档**。2026-11-03 bcr-nh 实测三个常驻 pane（`director` / `devm` / `anam`）**全部落在 default 档**，当日日志 33 次工具栏 `ASK`；表象却是「脚本超时 / 命令失败」（另一 pane 标题直接写着 `file-claim.sh 审批超时`），而脚本本体 57ms 正常返回 —— 根因在权限层，现象在命令层，极易误判成脚本坏了。
@@ -98,13 +98,13 @@ director            总监兼产品部经理（label director，屏幕左侧）
 
 **技能源文件**（技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**；`/rea` 属 REA、不在该仓，保持原名不加链接）：
 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、
-[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)
+[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)、[`/improve-codebase-architecture`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/improve-codebase-architecture/SKILL.md)（**可选、非强制**，`dmt-dm` 指针里提及）
 
 **通用技能（pane 常驻角色）**：`cbc-herdr`（CodeBuddy 在 herdr 的状态上报，让 `herdr pane list` 的 `agent_status` 可信）—— `dmt-director` / `dmt-dm` / `dmt-am` 三份技能都必须登记；`dmt-pde`（子代理技能）不登记；子代理不占 pane，不需要。
 
 **安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；失败时克隆 `https://github.com/mattpocock/skills.git`，把 `skills/` 下技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录。
 
-**harness 差异（2026-11-03 实测）**：五个 harness 都读 `~/.agents/skills/`（用户级，交集）；**pi 的用户级私有目录是 `~/.pi/agent/skills/`（不是 `~/.pi/skills/`）**，**opencode 的项目级目录是 `.opencode/skills/`（复数）**，codex 另有 `.codex/skills/`。装到哪个 harness 就软链到哪个目录；只装 `~/.agents/skills/` 已足够五个 harness 共用。详见 §1.2「harness 兼容」。
+**harness 差异（2026-11-04 探针实测，更正第六十二次的「交集」结论）**：只有 `codex` / `opencode` / `pi` 读 `.agents/skills/`（项目级与用户级同理），**`claude` 与 `codebuddy` 都不读**——它们各自只认私有目录（`.claude/skills/` / `.codebuddy/skills/`）；`opencode` 额外兼容 `.claude/skills/`。⇒ **装到哪个 harness 就必须软链到那个 harness 认的目录**，不存在「只装一处、五者共用」的落点（原「`~/.agents/skills/` 是五者唯一交集」的说法经实测作废）。详见 §1.2「harness 兼容」。
 
 **已知缺口（2026-10 核查）**：上游无 `to-prd`，`implement-spec` 仍在 `in-progress/` 未发布 ⇒ PRD 由 `pde{n}` 按 §4.1 模板落笔、director 定稿；若上游提供 `to-prd`，优先改用。
 
@@ -146,7 +146,7 @@ director            总监兼产品部经理（label director，屏幕左侧）
 | `docs/analyst/evidence/{research-seq}-{slug}/` | anam | 调研一手证据（采样产物／原始日志／manifest） | 与报告同号；须带 `manifest.txt`（文件名＋大小＋sha256＋采样命令） |
 | `docs/human/human-arch/` | director | 人类架构文档 | 无 |
 | `docs/human/human-plan/` | director | 人类计划文档 | 无 |
-| `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` **软链**到 `docs/team.md` 供机检读取） | director | 团队契约（本文件） | 软链跟随正本、恒同版本（`--copy` 模式除外） |
+| `dmt-director/team.md`（仓内正本、唯一权威；`install-skills.sh` **软链**到 `docs/team.md`，同法软链 `OPS.md` 到 `docs/OPS.md`，供机检读取） | director | 团队契约（本文件） | 软链跟随正本、恒同版本（`--copy` 模式除外） |
 | `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`，**仅在用户要求时写**） | 无 |
 | `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 `OPS.md` §2 |
 
@@ -165,7 +165,7 @@ director 接手项目的**第一件事**：检查目录，缺什么建什么。�
 bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前目录
 ```
 
-脚本做三件事：建六个产物目录 + 三个收件箱（`inbox/director/`、`inbox/devm/`、`inbox/anam/`）+ `locks/`；把 `inbox/*/`、`locks/` 写进 `.gitignore`（已存在则跳过）；跑机检直到 `ALL_PASS`。
+脚本做三件事：建六个产物目录 + 三个收件箱（`inbox/director/`、`inbox/devm/`、`inbox/anam/`）+ `locks/`；把 `inbox/*/`、`locks/`、`.codebuddy/` 写进 `.gitignore`（已存在则跳过）；跑机检直到 `ALL_PASS`。
 
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
 - **只建目录、不建产物**：空目录不预置占位文件，避免被误认为已有交付物。
@@ -203,7 +203,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 
 1. **禁止 `git add -A` / `git add .`**，提交一律显式列文件路径（优先 `git commit -m "..." -- <path>`，绕过索引），且 `add` 与 `commit` 之间不插入其它动作（避免索引被并发写者扫入）。
 2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**；`director` 保留抽查权（抽查后由 devm 推送）；`anam` / 工程师**一律不得 push、不得 merge 主干**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
-3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff -- <显式路径>` 复核改动内容（第 15 条强化：`git commit -m … -- <路径>` 不经索引，故不查 `--cached`）。
+3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff -- <显式路径>` 复核改动内容（`git commit -m … -- <路径>` 不经索引，故不查 `--cached`）。
 4. **同一 worktree 单一写者（无豁免）**：一个 worktree 从开工到收工，**只有被派到该票的那一个 agent 可以提交**。任何人要提交自己的文档 / 记录，**不得**在工程师正在施工的 worktree 里做——走主工作树或另开 worktree。**并发提交不会报错，只会把别人的改动扫进自己的提交**，事后靠 `git show --stat` 才能发现，而那时已经进了历史。
 
    - **How to apply**：提交前先 `git status` 看有没有别人的未提交改动；有则改用 `git commit -- <自己的路径>` 且**不先 `add`**；发现同 worktree 已有他人改动，停下问 devm，不要自行判断「应该没事」。
@@ -265,10 +265,10 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 bash dmt-director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查**十八项（机检共 27 组断言：①–⑱–主判据 ＋ 2b / 3b / 4b–4r 专项组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 四个技能（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` 为 `pde{n}` 子代理技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与四个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `director` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；工程师执行技能已登记（`dev-e` 行含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`ana-e` 行含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，四个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与四个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与四个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
+检查**十八项判据（机检共 27 组断言：主判据 6 组 ＋ 专项组 2b / 3b / 4b–4r（含 4i-b、4l-b）21 组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 四个技能（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` 为 `pde{n}` 子代理技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与四个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `director` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；工程师执行技能已登记（`dev-e` 行含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`ana-e` 行含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，四个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与四个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与四个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
 
 ## 8. 变更记录
 
-**历史明细（第一次～第六十三次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
+**历史明细（第一次～第六十四次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
 
-- **2026-11-03（用户要求·第六十四次：`--quiet` 语义修正，版本 `5.16.2`）**：`auto-review-model.sh` 的 `--quiet` 文档承诺「只在有变化时输出一行」，但唯一输出函数 `say()` 被 `[ "$QUIET" = 1 ] ||` 全面闸住 ⇒ 连「有变化」那行也一起吞掉，机队 pane 启动日志看不出健康门钉没钉上。修复：新增 `say_change()`（恒输出）承担五处「有变化 / 异常」叙述（`--off` 关闭 / 无 `curl` / 无 `python3` / `pinned-*`|`unpinned` 落盘 / 改写失败），`say()` 只留给 noop。实测（临时 settings、端点不可达）：有变化时 `--quiet` 新版出一行、HEAD 版零行；noop 仍静默。**Why**：`--quiet` 该关的是「启动时刷屏」，不是可观测性 —— 两者须分开，别靠 `QUIET` 的默认值兜。
+- **2026-11-04（用户要求·第六十五次：全仓一致性修复 ＋ 五 harness 技能发现目录实测更正，版本 `5.16.3`）**：用户要求「检查 dmt 内容不一致并解决、以实测为准」。① **harness 发现目录实测更正（推翻第六十二次的「交集」结论）** —— 逐 harness 探针（项目级与用户级各放独立探针技能，非交互问「这些技能名在不在你的技能列表里」）实测：`.agents/skills/` **只被 `codex` / `opencode` / `pi` 读取**，**`claude` 与 `codebuddy` 都不读**（各自只认 `.claude/skills/` / `.codebuddy/skills/`，用户级同理；单变量目录复核同结论）；`opencode` 还额外读 `.claude/skills/`（项目级与用户级）；`pi` 读项目级 `.agents/skills` **必须带 `--approve`**（不带只见用户级）。⇒ `install-skills.sh` 的 `<target>/.agents/skills/` 落点只覆盖 codex / opencode / pi，**在 claude / codebuddy 上装技能须另软链其私有目录**（§1.2 表已按「项目级 / 用户级」重写，§1.4 与根 `README.md` 同步；第六十二次条目按历史留痕纪律不改，其结论以本条为准）。② **门铃表更正** —— `OPS.md` §2 门铃表原写 `codebuddy / pi-coding-agent / codex / opencode2 / opencode`（缺 `claude`、含两个 herdr 不存在的名字）；实测 herdr 0.9.5 的 agent 检测（`herdr agent explain` 实测 `codebuddy` / `claude` / `pi`；`herdr agent start --kind` 含 `claude` / `codex` / `opencode` / `pi`，codebuddy 经 `cbc-herdr` 上报），表改为五个真实名字，机检 4c 从断言 `opencode2` 改为断言五 harness 名 ＋ 负向断言 `opencode2` 不得出现。③ **CHANGELOG/§8 口径** —— §8「历史明细（第一次～第六十三次）」与 CHANGELOG 实含第六十四次不符 ⇒ 改为「第一次～第六十四次」；根 README 的「66 条」改为「67 条」；CHANGELOG 头部「共 67 条；最新条目见 team.md §8」与「§8 只留最新一条」自此自洽。④ **helper 锚点 pane 登记** —— `spawn-helper.sh` 会把 helper tab 的 root pane 命名为 `helper-anchor`（不跑 agent，保证关 helper 后 tab 不消失），规范层此前未登记 ⇒ 补进 §1.2、`OPS.md` §1 与三份 pane 技能。⑤ **其它口径对齐** —— 「三条实测约束」改「四条」（第六十三次补的第 4 条）；helper 触发条件里的「在途子代理已饱和」在 5.13.0 取消并发上限后无判据 ⇒ 改为「回报积压」；§7 的「27 组断言」描述改为「主判据 6 组 ＋ 专项 21 组」（原写法「①–⑱–主判据」与机检组号体系不符、字面也推不出 27）；§5.1 去掉悬空的「第 15 条」编号；§3.1 补登 `.gitignore` 的 `.codebuddy/`；根 README 目录树补 `logs/`、重跑清单与 §7 对齐、可选技能 `/improve-codebase-architecture` 登记进 §1.4。**实测**：五 harness 各两轮探针（项目级 / 用户级 × 8 名）；`herdr agent explain` 实测 codebuddy / claude / pi 三类 pane；`bash -n` 脚本；`check-dmt-doc-paths.sh`（`DMT_SKILLS_DIR=<仓>`）除「产物目录缺失」（维护仓不装产物，预期）外全绿。**版本升 `5.16.3`**（四技能同号）。**Why**：契约里「一个通用落点、五者共用」这类结论若不实测就会长期是错的 —— 本次实测把「`.agents/skills/` 是五者交集」（第六十二次结论）推翻为「只覆盖三者」，而 `install-skills.sh` 正按旧结论只装一处 ⇒ 在 claude / codebuddy 上静默装不上。
