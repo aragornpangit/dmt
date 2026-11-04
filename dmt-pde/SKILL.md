@@ -1,12 +1,12 @@
 ---
 name: dmt-pde
-version: 5.16.4
+version: 5.16.5
 description: 产品工程师(pde{n})，director 自派的产品子代理技能，不占 tab 不占 pane、不进收件箱。受 director 召唤**落笔 PRD / SPEC / 工单**（写 `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`，director 定口径与验收定稿），并做产品事实取证、用户故事与边界枚举、验收标准核对、既有文档一致性预检；**匹配 `/to-spec`、`/to-tickets` 技能**（与 director 同套，SPEC 与工单方法论一致）。director 需写 PRD / SPEC / 工单或需要产品支撑时，在派发 prompt 里下发本技能生成 pde1…pde{n} 子代理（一单元一实例，无依赖并发、按需求开）。触发词：dmt、pde、产品工程师、产品取证、用户故事、验收标准核对、一致性核查、PRD、SPEC。
 ---
 
 # 产品工程师（pde{n} · dmt）
 
-pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1`、`pde2` … `pde{n}`），**不占 tab、不占 pane、不装 harness 技能、不进收件箱、不走跨 pane 通信**；技能随派发 prompt 下发（「你是 director 的 `pde{n}` 子代理，按 `/dmt-pde` 技能执行」）。**唯一上级是 `director`**，回报走子代理完成通知回到派生者，**不给任何 pane 发门铃**。
+pde 是 **director 的产品子代理**：一个实例一个产品单元（`pde1`、`pde2` … `pde{n}`），**不占 tab、不占 pane**、不进收件箱、不走跨 pane 通信；**三层命名对照**：技能名 `dmt-pde` ↔ 运行 id `pde{n}` ↔ 称呼「产品工程师」。**技能加载两态（2026-11-04 实测）**：cbc harness 的 teammate 继承技能清单、可直接斜杠调用 `/dmt-pde`；pi harness 的 `delegate` 子代理**不注入技能清单、也没有 Skill 工具**，需由派发 prompt 给出文件路径（`read <技能目录>/dmt-pde/SKILL.md` 并按其中强制技能节执行）。**唯一上级是 `director`**，回报走子代理完成通知回到派生者，**不给任何 pane 发门铃**。
 
 产品部已于 2026-10-26 并入总监：PRD / SPEC / 工单（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`）**由本技能实例（`pde{n}`）落笔**（director 召唤、定口径、验收定稿）；人类文档（`docs/human/`）由 director 亲自落笔；取证类单元只交证据、清单与核对结论。
 

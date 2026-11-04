@@ -1,7 +1,7 @@
 # dmt
 
 dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维护地**。层级：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e` / `pde{n}`）。
-**产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
+**产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` / `dmt-rve` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
 **经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开、不强制派满）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
 
 > **作用域（Scope，必读）**：本仓全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（用 `init-project.sh <项目根>` 初始化的那个 project root）。
@@ -9,10 +9,13 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 
 | 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责摘要 |
 |---|---|---|---|---|---|
-| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}`） | 唯一入口；接需求与验收口径、召唤 `pde{n}` 落笔 PRD / SPEC / 工单（director 定稿）、落笔人类文档并出文档门禁结论、分派、裁决、维护 pane/tab；抽查放行（merge / push 归 devm，不代推）与装机；**不替代** devm 的代码评审 |
+| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` / `reviewer{n}`） | 唯一入口；接需求与验收口径、召唤 `pde{n}` 落笔 PRD / SPEC / 工单（director 定稿）、落笔人类文档并出文档门禁结论、分派、裁决、维护 pane/tab；抽查放行（merge / push 归 devm，不代推）与装机；**不替代** devm 的代码评审 |
 | 产品工程师（子代理） | `dmt-pde` | `pde{n}` | `director` | — | **落笔 PRD / SPEC / 工单**、产品事实取证、用户故事与边界枚举、验收标准核对；**不占 tab 不占 pane**，director 自派、一单元一实例 |
 | 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e`（子代理） | 依用户要求与 tickets 计划直接干活（知会 director 即可）、排期派活、建 worktree、派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**（ticket 代码评审责任人）、整合交付物、**merge 与 push（代码库归 devm 管理）**；**不拆票** |
 | 分析经理 | `dmt-am` | `anam` | `director` | `ana-e`（子代理） | 依用户要求与 tickets 计划直接干活（知会 director 即可）；拆子问题、派 `ana-e` 并行取证、复核一手出处、收口调研报告 |
+| 开发工程师（子代理） | `dmt-de` | `dev-e` | `devm` | — | 一票一 worktree、TDD 实施（`/tdd` `/implement`）、提交前自审（`/code-review`）、worktree 内提交（不 push） |
+| 分析工程师（子代理） | `dmt-ae` | `ana-e` | `anam` | — | 一手取证（`/research`）、竞品逆向（`/rea`）、证据分级、交叉拷问（`/grilling` 系） |
+| 审核工程师（子代理） | `dmt-rve` | `reviewer{n}` | `director` | — | 一票一 reviewer 逐条验收 ticket 代码（`/code-review`，写进派发 prompt）；不改代码、不 push |
 
 **角色 × 强制技能**（mattpocock，必须使用）及逐条用途见 `dmt-director/team.md` §1.4（含可点击链接）。
 
@@ -28,7 +31,7 @@ dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维�
 | `pde{n}` | `docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/` 落笔（director 定稿） |
 | `dev-e` / `ana-e` | worktree 代码提交 / 核对材料（经派生者收口，不写收件箱） |
 
-**三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**
+**三层命名**：技能名带 `dmt-` 前缀（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve`），用于技能注册表、安装目录与斜杠命令；运行 id 不带前缀（`director` / `devm` / `anam` / `pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`，helper 为 `{角色}-helper`），用于 pane label、收件箱目录与方向码；正文与日志用称呼（总监／开发经理／分析经理）。**三层不混写。**
 
 **单线指挥**：每个角色只与直属上下级通信；director 不越级指挥工程师，经理之间不横向直连，跨部门一律经 director 转派。**工程师永远是子代理**（不占 pane、不走跨 pane 通信）：一律由经理直接开（`devm` 开 `dev-e`、`anam` 开 `ana-e`，按需求开、不强制派满）—— 经理与工程师之间没有 pane 级通道，只有父子代理关系；`pde{n}` 由 `director` 直接开。
 **helper（`{角色}-helper`，本体的纯分身，每角色至多一个）**：`director-helper` / `devm-helper` / `anam-helper` 是本体的**纯分身**——任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果**单向汇报给主体**（`{角色}`）；helper **没有自己的 inbox**（不收件），**不走门铃互通**。**生命周期由创建者（本体角色）维护**：用 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam>` 建立（幂等，支持 `--dry-run` / `--no-start`；helper tab label 固定 `helper`（全队共享一个），pane label 固定 `{角色}-helper`，代启动 harness 并装载**同角色技能**）、label 漂移自愈改名、任务完成用 `bash dmt-director/scripts/close-helper.sh <director|devm|anam>` 回收（支持 `--force` / `--dry-run`；**helper tab 保留复用，不随 pane 关闭**）。**独占动作不移交**：装机只归 `director` 本体、merge / push 只归 `devm` 本体。
@@ -46,10 +49,13 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，68 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，69 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
+├── dmt-de/SKILL.md                     # 开发工程师（dev-e 子代理技能，不占 pane）
+├── dmt-ae/SKILL.md                     # 分析工程师（ana-e 子代理技能，不占 pane）
+├── dmt-rve/SKILL.md                    # 审核工程师（reviewer{n} 子代理技能，不占 pane）
 ├── dmt-dm/SKILL.md                     # 开发经理
 ├── dmt-am/SKILL.md                     # 分析经理
 └── logs/                              # 事故复盘档（如 2026-10-27-serial-queue-incident.md）
@@ -57,7 +63,7 @@ dmt/                                    # 一个角色一个文件夹
 
 ## 安装到一个项目
 
-仓内目录名即技能名（`dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`），**装到技能目录时同名复制**。运行 id（`devm` 等）只是 pane label 与收件箱名，不随技能名变化。
+仓内目录名即技能名（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve`），**装到技能目录时同名复制**。运行 id（`devm` 等）只是 pane label 与收件箱名，不随技能名变化。
 
 ```bash
 # 软链安装（推荐，跟随本仓更新）；默认 --harness all ⇒ 铺 .agents/skills + .claude/skills + .codebuddy/skills
@@ -70,7 +76,7 @@ bash dmt-director/scripts/install-skills.sh <项目根> --copy
 bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebuddy
 ```
 
-脚本做四件事：① **按 harness 建技能落点**并软链或复制四个技能目录（默认 `--harness all` ⇒ `.agents/skills/` ＋ `.claude/skills/` ＋ `.codebuddy/skills/` 三处，覆盖五个 harness）；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做四件事：① **按 harness 建技能落点**并软链或复制七个技能目录（默认 `--harness all` ⇒ `.agents/skills/` ＋ `.claude/skills/` ＋ `.codebuddy/skills/` 三处，覆盖五个 harness）；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
 > **为什么要三个落点（2026-11-04 逐 harness 探针实测）**：各 harness **只认自己的技能目录**，没有「一处通用」—— `codex` / `opencode` / `pi` 读 `.agents/skills/`（`pi` 的项目级目录需 `--approve`），`claude` **只读** `.claude/skills/`，`codebuddy` **只读** `.codebuddy/skills/`。所以 `install-skills.sh` 默认铺满三处；只装一处会在 claude / codebuddy 上静默装不上。详见 `dmt-director/team.md` §1.2。
 
@@ -92,5 +98,5 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 
 - 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
-- 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步四个技能与机检 4m。
+- 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步七个技能与机检 4m。
 - 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。
