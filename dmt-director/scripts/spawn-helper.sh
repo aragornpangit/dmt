@@ -5,7 +5,7 @@
 #   ⇒ 代启动 harness 并输同角色技能命令（director→dmt-director、devm→dmt-dm、anam→dmt-am；前缀按 harness 走 `dmt_skill_cmd`）
 #   harness：默认 codebuddy；备选 pi / opencode / codex / claude（--harness 或 $DMT_HARNESS；$DMT_HARNESS_CMD 可整体覆盖）
 # 生命周期由创建者（本体角色）维护：建立、改名（label 漂移自愈）、任务完成回收（close-helper.sh 关 pane；helper tab 保留复用）
-# 独占动作不移交：装机与 merge/push 只归 devm 本体
+# 独占动作不移交：硬件设备写操作与 merge/push 只归 devm 本体
 # 分身语义（用户裁定）：技能同主体（director→/dmt-director、devm→/dmt-dm、anam→/dmt-am）；任务随 spawn 一次性下发，此后不接受任何输入框内容；
 # 工作成果单向汇报主体（inbox/<主体>/，方向 {seq}-{角色}-helper2{角色}-）；helper 没有自己的 inbox、不收件
 # 用法：bash spawn-helper.sh <director|devm|anam> [任务文本] [--dry-run] [--no-start] [--harness <name>]

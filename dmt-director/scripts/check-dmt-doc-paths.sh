@@ -30,7 +30,7 @@ fail=0
 echo "项目根：  $ROOT"
 echo "技能目录：$SKILLS_DIR"
 echo "契约文件：$CONTRACT"
-for r in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do
+for r in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   if [ -L "$SKILLS_DIR/$r" ]; then echo "WARN 技能为软链（校验的是技能仓本体）：$SKILLS_DIR/$r"; break; fi
 done
 echo
@@ -51,7 +51,7 @@ else
 fi
 
 echo
-echo "== 2) 七个技能必须指向各自唯一目录（PRD / SPEC / 工单 / 人类文档归 dmt-director；dmt-pde / dmt-de / dmt-ae / dmt-rve 为子代理角色技能） =="
+echo "== 2) 七个技能必须指向各自唯一目录（PRD / SPEC / 工单 / 人类文档归 dmt-director；dmt-pde / dmt-de / dmt-ae / dmt-reviewer 为子代理角色技能） =="
 # 负向断言：命中禁用表述即 FAIL（grep -E）
 # 只查正文：§7 机检清单与 §8 变更记录会原样复述断言字面，整文件 grep 会被自己「自证」
 _body() { sed -n '1,/^## 7\./p' "$1"; }
@@ -109,7 +109,7 @@ check "$SKILLS_DIR/dmt-am/SKILL.md" 'docs/analyst/'
 # 只查「不得落笔」的目录：dmt-am 不得把 PRD / 工单当自己的产物（只读引用其它目录不算越界）
 check_absent "$SKILLS_DIR/dmt-am/SKILL.md" 'docs/pd/prd/|docs/dev/tickets/' 'dmt-am 越界'
 # 三个新增子代理角色技能必须存在且自述为子代理（2026-11-04 第六十七次）
-for r in dmt-de dmt-ae dmt-rve; do
+for r in dmt-de dmt-ae dmt-reviewer; do
   check "$SKILLS_DIR/$r/SKILL.md" '子代理' "$r"
 done
 
@@ -138,7 +138,7 @@ echo
 echo "== 3b) 身份识别必须按 pane label（不得按 tab 内位置） =="
 check "$OPS" 'pane label' '团队契约'
 check "$OPS" '不按 tab 内位置' '团队契约'
-for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do
+for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   check "$SKILLS_DIR/$role/SKILL.md" 'pane label' "$role"
 done
 
@@ -168,17 +168,19 @@ check_absent "$OPS" 'opencode2' '门铃表旧 harness 名（2026-11-04 已更正
 check "$OPS" 'agent prompt' '团队契约'
 
 echo
-echo "== 4d) 装机与 merge/push 均只归 devm（每 ticket 一推；每小时巡检） =="
+echo "== 4d) 硬件设备写操作与 merge/push 均只归 devm（每 ticket 一推；每小时巡检） =="
 check "$CONTRACT" 'merge 与 push 只归 devm' '团队契约'
 check "$CONTRACT" '只许 `devm` 执行' '团队契约'
 check "$CONTRACT" '至少每完成一个 ticket 推送一次' '团队契约'
 check "$CONTRACT" '至少每小时' '团队契约'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'push 与 merge 归 devm' 'devm'
 # 2026-11-04 第六十八次：设备操作（装机）从 director 移交 devm
-check "$SKILLS_DIR/dmt-dm/SKILL.md" '装机等设备写操作也归 devm' 'devm'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '硬件设备写操作' 'devm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不代推' 'director'
 check_absent "$SKILLS_DIR/dmt-director/SKILL.md" 'git push[^。]{0,20}只由[ ]*director' 'director'
 check_absent "$CONTRACT" '只许 `director` 执行|装机只归 director|装机归 director|装机仍归 director' '契约装机归属（应归 devm）'
+# 2026-11-04 第六十九次：设备操作抽象为通用「硬件设备写操作」（不绑定项目特定命令）
+check_absent "$CONTRACT" 'adb install|bcr_t36_calib|bcr_detect_probe|dump_prefs' '契约不得绑定具体项目设备命令'
 
 echo
 echo "== 4e) mattpocock 强制技能必须逐角色登记 =="
@@ -216,17 +218,17 @@ done
 for x in '/research' '/rea' '/grilling' '/grill-me' '/grill-with-docs'; do
   check "$SKILLS_DIR/dmt-ae/SKILL.md" "$x" 'dmt-ae'
 done
-check "$SKILLS_DIR/dmt-rve/SKILL.md" '/code-review' 'dmt-rve'
-check "$SKILLS_DIR/dmt-rve/SKILL.md" 'reviewer{n}' 'dmt-rve'
+check "$SKILLS_DIR/dmt-reviewer/SKILL.md" '/code-review' 'dmt-reviewer'
+check "$SKILLS_DIR/dmt-reviewer/SKILL.md" 'reviewer{n}' 'dmt-reviewer'
 check_row "$CONTRACT" 'dmt-de' '`dmt-de` | `dev-e` |' '三层命名表 dmt-de'
 check_row "$CONTRACT" 'dmt-ae' '`dmt-ae` | `ana-e` |' '三层命名表 dmt-ae'
-check_row "$CONTRACT" 'dmt-rve' '`dmt-rve` | `reviewer{n}` |' '三层命名表 dmt-rve'
+check_row "$CONTRACT" 'dmt-reviewer' '`dmt-reviewer` | `reviewer{n}` |' '三层命名表 dmt-reviewer'
 
 echo
 echo "== 4f) 文件占用（编辑前检查）必须登记 =="
 check "$OPS" '文件占用' '团队契约'
 check "$OPS" 'file-claim' '团队契约'
-for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do
+for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   check "$SKILLS_DIR/$role/SKILL.md" 'file-claim' "$role"
 done
 if [ -f "$(dirname "$(readlink -f "$0")")/file-claim.sh" ]; then
@@ -243,6 +245,11 @@ check "$CONTRACT" '代码门禁' '团队契约'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '文档门禁' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '代码门禁' 'devm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不替代' 'director'
+# 2026-11-04 第六十九次：reviewer{n} 归 devm（代码验收由 devm 派，director 只抽查/复验）
+check "$CONTRACT" '`reviewer{n}` 直属 `devm`' '团队契约（reviewer 归 devm）'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" 'reviewer{n}' 'devm（派 reviewer）'
+check "$SKILLS_DIR/dmt-reviewer/SKILL.md" 'devm' 'dmt-reviewer（上级 devm）'
+check_absent "$SKILLS_DIR/dmt-director/SKILL.md" '按验收票数派|按票数派 `reviewer1' 'director 不得再派 reviewer（改为抽查/复验）'
 
 echo
 echo "== 4h) cbc-herdr 通用技能必须逐角色登记 =="
@@ -253,7 +260,7 @@ done
 echo
 echo "== 4i) mattpocock 技能名必须与上游一致并带 raw 链接 =="
 check "$CONTRACT" 'raw.githubusercontent.com' '团队契约'
-for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do
+for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   check "$SKILLS_DIR/$role/SKILL.md" 'raw.githubusercontent.com' "$role"
 done
 
@@ -276,7 +283,7 @@ check_links() {
   [ "$bad" = 1 ] || echo "OK   $who 的 $n 条技能链接文字与上游目录名一致"
 }
 check_links "$CONTRACT" '团队契约'
-for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do check_links "$SKILLS_DIR/$role/SKILL.md" "$role"; done
+for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do check_links "$SKILLS_DIR/$role/SKILL.md" "$role"; done
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
@@ -309,7 +316,7 @@ echo
 echo "== 4l-b) max-subagents / 饱和派发机制不得回潮（2026-11-02 用户裁定：不强制派满、不设并发上限） =="
 # 负向断言：契约正文与七份技能正文里不得再出现 CAP 探测、派发账本、先派后干、并发账、每波 min(N, CAP) 等饱和派发表述。
 # （§7 / §8 会复述这些字面，_body 只查正文，历史记录不判红）
-for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-de/SKILL.md" "$SKILLS_DIR/dmt-ae/SKILL.md" "$SKILLS_DIR/dmt-rve/SKILL.md"; do
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-de/SKILL.md" "$SKILLS_DIR/dmt-ae/SKILL.md" "$SKILLS_DIR/dmt-reviewer/SKILL.md"; do
   check_absent "$f" 'min\(8, cap\)|min\(N, CAP\)|并发账|先派后干|饱和派发|probe-cap|dispatch-ledger|fanout\.sh|install-hooks|MAX_SUBAGENTS' "$(basename "$(dirname "$f")") 饱和机制回潮"
 done
 
@@ -329,7 +336,7 @@ if head -10 "$CONTRACT" 2>/dev/null | grep -qE '[0-9]{4}-[0-9]{2}-[0-9]{2}'; the
 else
   echo "FAIL 契约头部缺日期"; fail=1
 fi
-for role in dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve; do
+for role in dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   v="$(sed -n 's/^version: *//p' "$SKILLS_DIR/$role/SKILL.md" 2>/dev/null | head -1)"
   if [ -n "$v" ] && [ "$v" = "$ver_skill" ]; then echo "OK   $role 版本同号"; else echo "FAIL $role 版本不同号（${v:-none}）"; fail=1; fi
 done
@@ -369,7 +376,7 @@ fi
 echo
 echo "== 4o) 派发 prompt 文件写入纪律必须登记（改 bash 用单引号 heredoc／禁 JS 模板字符串／Edit 锚点唯一） =="
 # 三份 pane 派发技能 + 四份子代理技能（同样收 prompt、同样用 Edit）均须带该纪律
-for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-de/SKILL.md" "$SKILLS_DIR/dmt-ae/SKILL.md" "$SKILLS_DIR/dmt-rve/SKILL.md"; do
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-de/SKILL.md" "$SKILLS_DIR/dmt-ae/SKILL.md" "$SKILLS_DIR/dmt-reviewer/SKILL.md"; do
   if grep -q '文件写入纪律' "$f" 2>/dev/null; then
     echo "OK   文件写入纪律              $(basename "$(dirname "$f")")/$(basename "$f")"
   else
@@ -391,7 +398,7 @@ check "$SKILLS_DIR/dmt-am/SKILL.md" 'delegate' 'anam'
 check "$SKILLS_DIR/dmt-pde/SKILL.md" 'delegate' 'pde'
 check "$SKILLS_DIR/dmt-de/SKILL.md" 'delegate' 'dmt-de'
 check "$SKILLS_DIR/dmt-ae/SKILL.md" 'delegate' 'dmt-ae'
-check "$SKILLS_DIR/dmt-rve/SKILL.md" 'delegate' 'dmt-rve'
+check "$SKILLS_DIR/dmt-reviewer/SKILL.md" 'delegate' 'dmt-reviewer'
 
 echo
 echo "== 4q) 五 harness 兼容必须登记（斜杠前缀分流 / .agents 落点 / 启动参数） =="

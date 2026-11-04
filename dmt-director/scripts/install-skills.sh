@@ -57,7 +57,7 @@ for h in $(printf '%s' "$HARNESS" | tr ',' ' '); do
 done
 [ -n "$DIRS" ] || { echo "no skill dir resolved for --harness '$HARNESS'" >&2; exit 2; }
 
-SKILLS="dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-rve"
+SKILLS="dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer"
 for rel in $DIRS; do
   mkdir -p "$TARGET/$rel"
   for s in $SKILLS; do

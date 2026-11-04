@@ -1,27 +1,27 @@
 # dmt 团队契约
 
-> **版本 5.16.6 · 2026-11-04** —— 与七个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
-> **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（装机 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
+> **版本 5.16.7 · 2026-11-04** —— 与七个技能 `SKILL.md` 的 `version:` 字段同号；抽查时先看这一行确认装载版本，两者不一致即视为装错。
+> **作用域（Scope，必读）**：本契约的全部纪律 —— 角色权限、**写操作归属（硬件设备写操作 / `git push` / merge）**、门禁、pane 生命周期、收件箱规范 —— **只作用于 dmt 工作流所管理的「目标项目」**（即用 `init-project.sh <项目根>` 初始化的那个 project root，团队在其中开发被交付的软件）。
 > **不适用于技能仓自身的维护**：维护 `dmt` / `dmt-en` / 其他技能仓时，上述归属纪律**不生效** —— 维护者（人或其他 agent）可直接 `git add` / `git commit` / `git push`，**无需 director 授权、也不需 devm 代推**；装机权限同理只约束「目标项目中的设备写操作」。
 > 本文件（规范层）与 [`OPS.md`](OPS.md)（操作层）**共同构成 dmt 的团队定义**：组织、成员、通信、文件命名、工作流程、目录职责与纪律；七个技能 `dmt-director` / `dmt-pde` / `dmt-dm` / `dmt-am`（`dmt-director` 运行 id `director`；`dmt-pde` 是 `pde{n}` 产品工程师子代理技能、不占 pane；`dmt-dm` / `dmt-am` 运行 id 为 `devm` / `anam`）只做落地说明，**冲突时以本文件为准**。
 > 团队成员运行在终端多智能体复用器 Herdr 中；会话与 pane 随重启变化，本文件不登记 pane id。
 
 ## 0. 仓库结构
 
-按角色分文件夹，一个角色（或其子代理）一个目录：`dmt-director/`（技能、团队契约 `team.md`、说明与机检脚本）、`dmt-dm/`、`dmt-am/`（三个 pane 角色）与 `dmt-pde/`、`dmt-de/`、`dmt-ae/`、`dmt-rve/`（四个子代理角色）。**目录树、安装与维护说明以根 [`README.md`](../README.md) 为准（`dmt-director/README.md` 只有本目录的脚本清单），此处不重复。**
+按角色分文件夹，一个角色（或其子代理）一个目录：`dmt-director/`（技能、团队契约 `team.md`、说明与机检脚本）、`dmt-dm/`、`dmt-am/`（三个 pane 角色）与 `dmt-pde/`、`dmt-de/`、`dmt-ae/`、`dmt-reviewer/`（四个子代理角色）。**目录树、安装与维护说明以根 [`README.md`](../README.md) 为准（`dmt-director/README.md` 只有本目录的脚本清单），此处不重复。**
 
 ## 1. 团队定义
 
 ### 1.1 组织与成员
 
-**层级**：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e`；`pde{n}` / `reviewer{n}` 直属 `director`）。产品部并入总监 —— `director` 写 PRD / SPEC / 工单时**召唤 `pde{n}` 子代理落笔**（一单元一 pde、按需求开），director 定口径、逐份验收并出文档门禁结论；人类文档由 director 落笔；产品支撑同用 `pde{n}`（`dmt-pde` 技能，**不占 tab 不占 pane**）；不设产品经理 pane、不设队长层。**共七个技能**：三个 pane 角色技能（`dmt-director` / `dmt-dm` / `dmt-am`）＋ 四个子代理角色技能（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve`）—— **子代理技能名与运行 id 一一对应**（`pde{n}`↔`dmt-pde`、`dev-e`↔`dmt-de`、`ana-e`↔`dmt-ae`、`reviewer{n}`↔`dmt-rve`）。
+**层级**：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e`；`pde{n}` 直属 `director`；**`reviewer{n}` 直属 `devm`** —— 2026-11-04 第六十九次从 director 建制移入 devm 团队）。产品部并入总监 —— `director` 写 PRD / SPEC / 工单时**召唤 `pde{n}` 子代理落笔**（一单元一 pde、按需求开），director 定口径、逐份验收并出文档门禁结论；人类文档由 director 落笔；产品支撑同用 `pde{n}`（`dmt-pde` 技能，**不占 tab 不占 pane**）；不设产品经理 pane、不设队长层。**共七个技能**：三个 pane 角色技能（`dmt-director` / `dmt-dm` / `dmt-am`）＋ 四个子代理角色技能（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`）—— **子代理技能名与运行 id 一一对应**（`pde{n}`↔`dmt-pde`、`dev-e`↔`dmt-de`、`ana-e`↔`dmt-ae`、`reviewer{n}`↔`dmt-reviewer`）。
 
 ```
 director            总监兼产品部经理（label director，屏幕左侧）
 ├── pde{n}             产品工程师（子代理，不占 tab 不占 pane，director 自派；技能 dmt-pde）
-├── reviewer{n}        审核工程师（子代理，不占 pane，director 按票数派；技能 dmt-rve）
 ├── devm               开发经理（label devm，pane 在 director 的 tab 内右侧）
 │   ├── dev-e          开发工程师（子代理，不占 pane，devm 直接派；技能 dmt-de）
+│   ├── reviewer{n}    审核工程师（子代理，不占 pane，devm 按票数派；技能 dmt-reviewer）
 │   └── dev-e ...
 └── anam               分析经理（label anam，独立 tab）
     ├── ana-e          分析工程师（子代理，不占 pane，anam 直接派；技能 dmt-ae）
@@ -30,8 +30,8 @@ director            总监兼产品部经理（label director，屏幕左侧）
 
 | 角色 | 技能名 | 运行 id（pane label） | 直属上级 | 直属下级 | 职责 |
 |---|---|---|---|---|---|
-| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` / `reviewer{n}` 子代理） | 唯一用户入口；接需求与验收口径、**写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔**（一单元一 pde、按需求开；director 定口径、验收定稿）、落笔人类文档并出文档门禁结论、分派、跨部门裁决、创建并维护经理层 pane/tab；**merge / push 与设备操作（装机）均归 devm**（director 只抽查，不代做）；不替代 devm 的代码评审 |
-| 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e`（直接派，按需求开） | 接单（`pde{n}` 落笔、director 定稿的 ticket）、排期派活、建 worktree 并派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**：ticket 代码的评审责任人；整合开发部门交付物；**代码库与设备管理**：merge / push 与装机等设备写操作均由 devm 执行；**不拆票** |
+| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` 子代理） | 唯一用户入口；接需求与验收口径、**写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔**（一单元一 pde、按需求开；director 定口径、验收定稿）、落笔人类文档并出文档门禁结论、分派、跨部门裁决、创建并维护经理层 pane/tab；**merge / push 与硬件设备写操作均归 devm**，**代码验收由 devm 派 `reviewer{n}`**（director 保留**抽查权**与**高风险票复验**），director 不代做；不替代 devm 的代码评审 |
+| 开发经理 | `dmt-dm` | `devm` | `director` | `dev-e` / `reviewer{n}`（直接派，按需求开） | 接单（`pde{n}` 落笔、director 定稿的 ticket）、排期派活、建 worktree 并派 `dev-e` 实施、收 diff 做实施层初检、**代码门禁**：ticket 代码的评审责任人；**按票数派 `reviewer{n}` 独立验收**（实例独立于 `dev-e`、以证据为准）、整合开发部门交付物；**代码库与设备管理**：merge / push 与**硬件设备写操作**（安装 / 刷写 / 覆写设备文件 / 强杀进程等，不限于安卓）均由 devm 执行（**收到本部门 `reviewer{n}` 验收通过后**即合并 / 推送）；**不拆票** |
 | 分析经理 | `dmt-am` | `anam` | `director` | `ana-e`（直接派，按需求开） | 接调研诉求；拆子问题、派 `ana-e` 并行取证；复核一手出处、收口调研报告 |
 
 **三层命名（不得混写）**：① **技能名** `dmt-dm` —— 技能注册表、安装目录与 `/dmt-dm` 命令用；② **运行 id** `devm` —— pane label、收件箱目录、方向码与实例号用；③ **称呼** 开发经理 —— 正文、汇报、日志用。例：命令写 `/dmt-dm`，路径写 `inbox/devm/`，正文写「开发经理 回报：…」。
@@ -40,7 +40,7 @@ director            总监兼产品部经理（label director，屏幕左侧）
 |---|---|---|---|
 | `dmt-director` | `director` | 总监 | — |
 | `dmt-pde` | `pde{n}` | 产品工程师 | 产品工程师1、产品工程师2 … |
-| `dmt-rve` | `reviewer{n}` | 审核工程师 | 评审1、评审2 … |
+| `dmt-reviewer` | `reviewer{n}` | 审核工程师 | 评审1、评审2 … |
 | `dmt-dm` | `devm` | 开发经理 | — |
 | `dmt-am` | `anam` | 分析经理 | — |
 | `dmt-de` | `dev-e` | 开发工程师 | 按序号，如「工程师3」 |
@@ -97,7 +97,7 @@ director            总监兼产品部经理（label director，屏幕左侧）
 | `dev-e` | `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs` | TDD 实施、按 SPEC 落地、提交前自审、缺陷分诊 |
 | `ana-e` | `/research`、`/rea`、`/grilling`、`/grill-me`、`/grill-with-docs` | 取证、竞品逆向（`/rea`，REA 专用）、交叉拷问 |
 
-**子代理角色技能（四个，2026-11-04 第六十七次新增 / 统一命名）**：`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 各自一份技能 —— `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve`（**技能名与运行 id 一一对应**）。派生者把**对应技能名**写进派发 prompt：cbc 下 teammate 继承技能清单、可直接斜杠调用（如 `/dmt-de`）；**pi 下 `delegate` 子代理不注入技能清单、也没有 Skill 工具**，必须写成「`read <技能目录>/dmt-<角色>/SKILL.md` 并按其中「强制技能」节执行」。**实测（2026-11-04）**：cbc teammate 能列出 `dmt-pde` 等技能；pi `delegate` 子代理的 system prompt **无 skills 段**、工具集**无 Skill 工具**（只能 `read` 文件）—— 故「技能名写进 prompt」在 pi 下必须配「读文件路径」，否则不可执行。
+**子代理角色技能（四个，2026-11-04 第六十七次新增 / 统一命名）**：`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 各自一份技能 —— `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`（**技能名与运行 id 一一对应**）。派生者把**对应技能名**写进派发 prompt：cbc 下 teammate 继承技能清单、可直接斜杠调用（如 `/dmt-de`）；**pi 下 `delegate` 子代理不注入技能清单、也没有 Skill 工具**，必须写成「`read <技能目录>/dmt-<角色>/SKILL.md` 并按其中「强制技能」节执行」。**实测（2026-11-04）**：cbc teammate 能列出 `dmt-pde` 等技能；pi `delegate` 子代理的 system prompt **无 skills 段**、工具集**无 Skill 工具**（只能 `read` 文件）—— 故「技能名写进 prompt」在 pi 下必须配「读文件路径」，否则不可执行。
 
 **技能源文件**（技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**；`/rea` 属 REA、不在该仓，保持原名不加链接）：
 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、
@@ -183,7 +183,7 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 3. **devm 接单**：devm 读 `docs/dev/tickets/` 的本批票面（`pde{n}` 落笔、director 定稿、已过文档门禁），核 `spec-seq` 对齐与判据齐备后按依赖排期；**devm 不拆票、不改判据**，缺项回报 director 补。devm 负责评审、整合本部门交付物。
 4. **devm 直接派工程师（按需求开）**：devm **直接派生 `dev-e` 子代理**（一票一 worktree、按需求开），把票面（路径、票基、Files 边界、验收判据、`timeoutMs`、回报格式）交给工程师实施；devm 自己建 worktree、收 diff 做**实施层初检**、复核一手出处。anam 同理**直接派 `ana-e`**（拆子问题、并行取证，复核一手出处）。
 5. **devm 验收整合（实施层）**：核 diff 与初检读数（自己收子代理回报并自做初检）→ 构建与测试 → 不合格打回原实施者；**本步不 merge、不写「实施状态」**（merge 的唯一时点见第 6 条）；**任务收口即报（`OPS.md` §2），该批 `dev-e` 子代理随收口回收**。
-6. **（唯一 merge 时点：director 代码验收通过之后）** devm 评审 → director 验收 → devm merge/push：ticket 代码干完后由 devm 按代码门禁评审（逐条对照 SPEC 判据、核 diff 与证据，先不 merge）→ 交 director；director 按票数派 reviewer1…reviewer{n} 子代理（一票一 reviewer，无依赖票并行、按需求开）对照相同 spec-seq 的 SPEC 验收标准与 ticket 判据逐条验收；验收通过 ⇒ 通知 devm（收件箱 + 门铃）执行 merge 与 push（每 ticket 一推）；不通过 ⇒ 打回 devm 返工，不得先 merge/push。装机等设备写操作归 devm。reviewer{n} 是子代理、不占 pane、不装技能（/code-review 写进派发 prompt），逐条核验收标准、判据、diff、证据与测试输出；director 不代推、不代 merge。
+6. **（merge 时点：本部门 `reviewer{n}` 验收通过之后；director 只抽查）** devm 代码门禁评审 → devm 派 `reviewer{n}` 独立验收 → devm merge/push：ticket 代码干完后由 devm 按代码门禁评审（逐条对照 SPEC 判据、核 diff 与证据，先不 merge）→ **devm 按票数派 `reviewer1…reviewer{n}` 子代理**（一票一 reviewer，无依赖票并行、按需求开）对照相同 spec-seq 的 SPEC 验收标准与 ticket 判据逐条验收；**三条硬约束**：① **实例独立**（不得与实施该票的 `dev-e` 同实例；不采信 devm / `dev-e` 的结论，只认 ticket ＋ SPEC ＋ diff ＋ 证据）；② **证据为准**（逐条 PASS/FAIL 挂证据路径，无证据的「通过」视为不通过）；③ **director 保留两个口子**（抽查权 ＋ 高风险票复验）。验收通过 ⇒ **devm 直接执行 merge 与 push**（每 ticket 一推，不再等 director 通知）；不通过 ⇒ 打回 `dev-e` 返工，不得先 merge/push。硬件设备写操作同归 devm。`reviewer{n}` 是子代理、不占 pane、不装技能（`/code-review` 写进派发 prompt）；director 不代推、不代 merge。
 7. **并行（按需）**：对无依赖关系的任务，各角色**可在直属下级之间并行**（director 在 devm/anam 之间，产品单元在多个 `pde{n}` 之间；devm 在多个 `dev-e` 之间；anam 在多个 `ana-e` 之间），优先级：dynamic workflow > 多个 subagents 并行；**并行与否、一次并行几路由各角色按任务规模自定（不强制并行、不强制派满），但不得越级派发**。**director 自己的无依赖工作（评审前证据预检、文档交叉核对、外部事实取证、产品取证）同样可按需用子代理铺开**，结论由本人落笔。
 
 ### 4.1 PRD 模板（`pde{n}` 落笔，director 定稿）
@@ -205,7 +205,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 ### 5.1 Git
 
 1. **禁止 `git add -A` / `git add .`**，提交一律显式列文件路径（优先 `git commit -m "..." -- <path>`，绕过索引），且 `add` 与 `commit` 之间不插入其它动作（避免索引被并发写者扫入）。
-2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**；`director` 保留抽查权（抽查后由 devm 推送）；`anam` / 工程师**一律不得 push、不得 merge 主干**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
+2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**（**收到本部门 `reviewer{n}` 验收通过后**即可推送，不必再等 director 通知）；`director` 保留抽查权（抽查后仍由 devm 推送）；`anam` / 工程师**一律不得 push、不得 merge 主干**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
 3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff -- <显式路径>` 复核改动内容（`git commit -m … -- <路径>` 不经索引，故不查 `--cached`）。
 4. **同一 worktree 单一写者（无豁免）**：一个 worktree 从开工到收工，**只有被派到该票的那一个 agent 可以提交**。任何人要提交自己的文档 / 记录，**不得**在工程师正在施工的 worktree 里做——走主工作树或另开 worktree。**并发提交不会报错，只会把别人的改动扫进自己的提交**，事后靠 `git show --stat` 才能发现，而那时已经进了历史。
 
@@ -226,7 +226,7 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 4. **产品工作（director 自派 `pde{n}`）**：产品线无 pane、无队长层，无依赖产品单元按需求并发派 `pde{n}`（一单元一 `pde{n}`，派发手段同第 3 条）；`director` 的评审前预检同理。
 5. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）；**并带「文件写入纪律」三句**（2026-10-27 第五十三次立规）：① 改 bash 文件用**单引号 heredoc**（`cat <<'EOF' … EOF`）或 Write/Edit 工具；② **不得把脚本正文放进 JS 模板字符串**（bash 的 `${VAR:-默认}` / `${1:?msg}` 与 JS 模板字符串 `${expr}` 逐字符相同，会被当插值求值，报 `Unexpected token ':'` / `Expected a closing '}' …`）；③ **Edit 的 `oldString`（锚点）必须唯一**（不唯一就带足上下文或 `replace_all`，否则报 `Found N matches … replace_all is false`）。**派发 prompt 照骨架填空，不要现编**：
     `你是 <角色> 的子代理。技能：<对应的 dmt-<角色> 技能名>（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-<角色>/SKILL.md` 并按其中强制技能节执行）。单元：<一句话>。输入：<路径>。边界：<Files>。产物：<路径与格式>。判据：<可测>。回报：<格式>。超时：<timeoutMs>。文件写入纪律：改 bash 文件用单引号 heredoc 或 Write/Edit，禁止把脚本正文放进 JS 模板字符串；Edit 的 oldString 必须唯一。`（`<角色>` ∈ `pde{n}` / `dev-e` / `ana-e`，对应技能 `dmt-pde` / `dmt-de` / `dmt-ae`）
-    > reviewer{n} 变体（验收专用，`/code-review` 为模板常量，不得替换或省略）：`你是 director 的 reviewer{n} 子代理。技能：dmt-rve（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-rve/SKILL.md`）。必须调用 /code-review 技能逐条验收。票：<ticket 路径>。SPEC：<对应 spec-seq 路径>。输入：<diff、证据、测试输出路径>。判据：照 ticket 验收标准逐条核。回报：逐条通过/不通过 + 结论。超时：<timeoutMs>。`
+    > reviewer{n} 变体（验收专用，`/code-review` 为模板常量，不得替换或省略）：`你是 devm 的 reviewer{n} 子代理。技能：dmt-reviewer（cbc 直接斜杠调用；pi 读 `<技能目录>/dmt-reviewer/SKILL.md`）。必须调用 /code-review 技能逐条验收。独立性：不得与实施该票的 dev-e 同实例，不采信 devm / dev-e 的结论，只认 ticket + SPEC + diff + 证据；无证据的「通过」视为不通过。票：<ticket 路径>。SPEC：<对应 spec-seq 路径>。输入：<diff、证据、测试输出路径>。判据：照 ticket 验收标准逐条核，逐条挂证据路径。回报：逐条通过/不通过 + 结论 + 证据路径。超时：<timeoutMs>。`
 6. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
 7. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
 8. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
@@ -246,17 +246,17 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 | 实施初检 | devm（自做，或自派子代理初检后本人复核） | devm | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
 | helper 回收 | `director` / `devm` / `anam`（创建者＝本体） | 创建者本人自检 | 成果已入账、worktree 已 `git worktree remove`、本体收件箱该 helper 方向无未收口；关闭后 `herdr pane list` 无 `{角色}-helper` label |
 | 人类架构 / 人类计划 | director | **director（文档门禁自评）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
-| ticket 代码 | 开发部门（devm 直接派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后写「实施状态」，**merge 待 director 代码验收通过** |
-| 代码验收（spec-seq 对齐） | devm（评审 PASS 后提交待验收） | **director（派 reviewer{n} 逐条验收）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后通知 devm merge / push |
+| ticket 代码 | 开发部门（devm 直接派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后写「实施状态」，**merge 待本部门 `reviewer{n}` 验收通过** |
+| 代码验收（spec-seq 对齐） | `dev-e`（实施）/ `devm`（提交） | **`devm` 派 `reviewer{n}`（独立实例；director 抽查与高风险复验）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后由 **devm merge / push** |
 | 跨部门分歧 | devm / anam | director | director 裁决并回结论 |
 
 ### 5.4 读数纪律（性能窗）
 
 1. **dump 开关必须随窗登记**：`obb_roi_dump_enabled`（`yolo11ncnn.cpp:1063`，默认 off）开时每帧算 raw sha256，占全进程 CPU **13.3%**、detect 线程约 95% ⇒ 实测 `detect_fps_measured` **1.79**（原记 0.76，经 004 订正 —— 0.76 属跨轮残留快照）vs 生产档 **3.86**。**dump-on 窗的 fps／耗时对比一律作废**，不得进任何结论；开窗前必须核 `diagnostics_state` 并把该值写进口径行。
 2. **跨构建绝对值禁比**：不同 so／APK 的毫秒数不可互比（设备现装、语料、仓内 APK 三者不同源）；比值（如 detect 前向占比 f）可跨构建比，但须挂横幅说明。
-3. **「停」要复验**：`force-stop` 后必须 `pidof <pkg>` 为空才算停；下级回报的「已停」不可直接采信。
+3. **「停」要复验**：下发停止指令（如 `force-stop`）后必须核目标进程确已退出（如 `pidof <pkg>` 为空）才算停；下级回报的「已停」不可直接采信。
 4. **快照必须同时满足两条才算本窗**：① 在本窗 `new.list` 内；② `build_sha256` 与同窗其余快照**一致**。任一条不满足 ⇒ **跨轮残留**，禁用于任何对账（含 `detect_ms`／`fps`／`decode_ms`）。
-5. **设备与装机权限（只归 devm；2026-11-04 用户裁定从 director 移交）**：`adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**写操作，只许 `devm` 执行**；`director`／`anam`／工程师**一律禁装、禁写设备**（需要设备操作时回报 devm，由 devm 自己动手，**不转授权**给工程师）。设备操作后必报 **APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空**。
+5. **硬件设备写操作权限（只归 devm；2026-11-04 用户裁定从 director 移交）**：凡**对硬件设备产生副作用的写操作** —— 安装 / 卸载产物、刷写固件、覆写设备上的文件或配置、触发设备探针、强杀设备进程、修改设备运行时参数等 —— **只许 `devm` 执行**；`director`／`anam`／工程师**一律禁做**（需要时回报 devm，**不转授权**给工程师）。**工具链与设备文件以目标项目实际为准**（不限于安卓：`adb`／`fastboot`／串口／网口／JTAG 等命令行工具与设备专用文件均属此列）。设备操作后必报**可核验证据**：写入产物的哈希（如 `sha256`）＋ 设备侧版本 / 更新时间 ＋ 目标进程确已退出（如 `pidof` 为空）—— 具体字段按项目设备而定。
 
 ## 6. 表达（全角色）
 
@@ -268,10 +268,10 @@ SPEC 必须自包含：每条 User Story 都能转成 ticket 与用例。
 bash dmt-director/scripts/check-dmt-doc-paths.sh
 ```
 
-检查**十八项判据（机检共 27 组断言：主判据 6 组 ＋ 专项组 2b / 3b / 4b–4r（含 4i-b、4l-b）21 组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 七个技能（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-rve` 为子代理角色技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与七个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（装机：契约含「只许 `devm` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）、`dmt-de`（/tdd、/implement、/code-review、/diagnosing-bugs）、`dmt-ae`（/research、/rea、/grilling、/grill-me、/grill-with-docs）、`dmt-rve`（/code-review）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；子代理角色技能已登记（`dmt-de` 含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`dmt-ae` 含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`、`dmt-rve` 含 `/code-review`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，七个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、`dmt-director` 含「不替代」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与七个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与七个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
+检查**十八项判据（机检共 27 组断言：主判据 6 组 ＋ 专项组 2b / 3b / 4b–4r（含 4i-b、4l-b）21 组）**：① 六个产物目录存在（`docs/pd/prd`、`docs/pd/spec`、`docs/dev/tickets`、`docs/analyst`、`docs/human/human-arch`、`docs/human/human-plan`）＋ 根目录 `inbox/` 存在；② 七个技能（`dmt-director` / `dmt-dm` / `dmt-am` / `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`）各自指向自己的唯一目录（PRD / SPEC / 工单 / 人类文档归 `dmt-director`；`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer` 为子代理角色技能，不占 pane）；③ **helper 纯分身语义与回收动作已登记**（契约与 `dmt-director` / `dmt-dm` / `dmt-am` 技能含 `close-helper.sh`，契约含「禁止先关后收」与「只许关 pane」；契约含「一次性下发」「不接受任何输入框内容」「单向汇报」「没有自己的 inbox」，`spawn-helper.sh` 含「一次性下发」）；④ **身份识别已登记**（契约与七个技能含 `pane label`，契约含「不按 tab 内位置」）；⑤ **并行判据已登记**（`dmt-dm` / `dmt-am` 含「依赖分析」，契约含「依赖分析」「不强制派满」「不设并发上限」）；⑥ **经理层路径已登记**（`dmt-dm` / `dmt-am` 含「直接派」，契约含「经理一律直接派工程师子代理」，契约与两技能含「按需求开」，`dmt-dm` / `dmt-am` 含 `teammate`）；⑦ **装机与推送归属已登记**（硬件设备写操作：契约含「只许 `devm` 执行」（反引号）；推送与合并：契约含「merge 与 push 只归 devm」、`dmt-dm` 含「push 与 merge 归 devm」、`dmt-director` 含「不代推」、负向断言「git push 后紧跟只由 director」不得出现、契约含「至少每完成一个 ticket 推送一次」与「至少每小时」）；⑧ **mattpocock 强制技能已逐角色登记**（契约含「强制使用」与角色表；技能侧 `dmt-director`（/grilling、/grill-me、/grill-with-docs、/code-review、/to-spec、/to-tickets）、`dmt-pde`（/grilling、/research、/to-spec、/to-tickets）、`dmt-dm`（/code-review、/diagnosing-bugs）、`dmt-am`（/research、/grilling、/grill-me、/grill-with-docs）、`dmt-de`（/tdd、/implement、/code-review、/diagnosing-bugs）、`dmt-ae`（/research、/rea、/grilling、/grill-me、/grill-with-docs）、`dmt-reviewer`（/code-review）各含自己的强制技能名（4e 逐条断言）；`reviewer{n}` 行含 `/review`（= `/code-review`）；子代理角色技能已登记（`dmt-de` 含 `/tdd` `/implement` `/code-review` `/diagnosing-bugs`、`dmt-ae` 含 `/research` `/rea` `/grilling` `/grill-me` `/grill-with-docs`、`dmt-reviewer` 含 `/code-review`））；⑨ **文件占用已登记**（契约含「文件占用」与 `file-claim`，七个技能各含 `file-claim`，脚本 `dmt-director/scripts/file-claim.sh` 存在）；⑩ **评审门禁归属已登记**（契约与 `dmt-director` 含「文档门禁」、契约与 `dmt-dm` 含「代码门禁」、契约含「`reviewer{n}` 直属 `devm`」与代码验收「三条硬约束」、`dmt-dm` 含 `reviewer{n}`、`dmt-director` 含「不替代」与「抽查」、负向断言 director 不得再「派 reviewer」）；⑪ **cbc-herdr 通用技能已登记**（三份 pane 角色技能 `dmt-director` / `dmt-dm` / `dmt-am` 各含 `cbc-herdr`，`dmt-pde` 子代理技能不需要）；⑫ **技能链接与上游一致**（契约与七个技能都含 `raw.githubusercontent.com`；技能名与 `mattpocock/skills` 目录名逐字一致，机检只验链接存在、不验 URL 目录名）；⑬ **确定性动作已脚本化**（公共库 `lib-dmt.sh`；`launch.sh` / `init-project.sh` / `setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `send-msg.sh` / `msg-take.sh` / `msg-done.sh` / `publish.sh` / `file-claim.sh` / `install-skills.sh` / `check-dmt-doc-paths.sh` / `auto-review-model.sh` 共 14 个存在且可执行）；⑭ **收件箱三态已登记**（契约含 `.doing/`、 `.seq`、`msg-take.sh`、`msg-done.sh`，三份 pane 角色技能各含 `msg-take.sh`）；⑮ **按需派发与完成即报已登记**（OPS 与 `dmt-director` / `dmt-dm` / `dmt-am` 含「完成即报」，三份 pane 技能各含「依赖分析」；4l-b 负向断言：2026-11-02 用户裁定「不强制派满、不设并发上限」后，契约正文与四技能正文不得再出现饱和派发表述 —— 每波上限拆波、开工先落账、并发位计数开口、CAP 探测脚本与派发账本脚本名及其输出格式）；⑯ **契约表格登记齐全**（`docs/pd/prd/`、`docs/pd/spec/`、`docs/dev/tickets/`、`docs/analyst/`、`docs/human/human-arch/`、`docs/human/human-plan/`、`inbox/` 七项都在 §3 表中出现）；⑰ **契约头部带版本号与日期且与七个技能同号**（`team.md` 头部 `版本 X.Y.Z · YYYY-MM-DD`，四份 `SKILL.md` 的 `version:` 与之一致，脚本 4m）；⑱ 负样本能被正确拒绝（**只看契约的表格登记行**，§8 变更记录里的历史留痕不算登记）。**改路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。**
 
 ## 8. 变更记录
 
-**历史明细（第一次～第六十七次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
+**历史明细（第一次～第六十八次）见 [`dmt-director/CHANGELOG.md`](dmt-director/CHANGELOG.md)；此处只留最新一条。**
 
-- **2026-11-04（用户要求·第六十八次：设备操作（装机）从 director 移交 devm，版本 `5.16.6`）**：用户裁定「对于安卓设备的操作，合并代码，推送代码都由 devm 完成，不要由 director 去做」。① **归属变更** —— `adb install`／`uninstall`／覆写设备 `bcr_t36_calib.txt`／`bcr_detect_probe.trigger`／`dump_prefs`／`force-stop` 等**设备写操作从 director 移交 devm**（此前只有 merge / push 归 devm）；devm 由此独占目标项目侧的**三类写操作：设备操作 ＋ merge ＋ push**；`director`／`anam`／工程师一律禁装禁写设备（需要设备操作时回报 devm，**不转授权**给工程师）。director 保留验收（派 `reviewer{n}`）、抽查与组织维护，**不代做**。② **同步点** —— `team.md`（§1.1 两行职责、§4 第 6 条、§5.4 第 5 条「设备与装机权限（只归 devm）」、§7 ⑦）、`OPS.md` §1 helper「独占动作不移交」、`dmt-director` SKILL（「独占写操作」段改为「写操作归属（均归 devm）」＋ 节名由「装机（director 独占）与推送（devm 执行）」改为「设备操作与推送（均归 devm）」）、`dmt-dm` SKILL（description ／ 边界 ／ 第 6 条，原「不碰设备」改为「设备写操作、push 与 merge 均归 devm 自己」）、`dmt-de` SKILL 边界、根 `README`（角色表两行 ＋ 交付物表两行 ＋ 工作流一句话 ＋ helper 段）、`spawn-helper.sh` 头注释。③ **机检** —— 4d 标题与断言改锚 devm（`只许 devm 执行` ＋ `dmt-dm` 含「装机等设备写操作也归 devm」），新增负向断言「契约不得再出现 `只许 director 执行`／`装机只归 director`／`装机归 director`／`装机仍归 director`」（防回退）；OK 246 → 248。**实测**：`check-dmt-doc-paths.sh`（`DMT_SKILLS_DIR=<仓>`）除维护仓不装产物的 7 条预期 FAIL 外全绿。**版本升 `5.16.6`**（七技能同号）。**Why**：设备与代码库本是同一类「目标项目写操作」，分属两个角色会让「谁动手」在装机环节再走一次 director 往返（director 还得为此放下产品/组织工作）；统一归 devm 后，**devm 是目标项目侧唯一写操作出口**，director 退回纯产品与组织角色（拍板与验收），也消除了「需要装机时回报 director」这条跨部门链路。
+- **2026-11-04（用户要求·第六十九次：`reviewer{n}` 归 devm ＋ 改名 `dmt-reviewer` ＋ 设备操作抽象为「硬件设备写操作」，版本 `5.16.7`）**：用户两项要求 —— ①「把代码评审工程师归到 devm 的团队中」（采纳"三条硬约束"方案）；②「把 `adb install`／`uninstall` 这些命令抽象为更通用的描述（如"对硬件设备的操作"），不要限定在安卓项目」。① **建制变更** —— `reviewer{n}` 从 director 直属**移入 devm 团队**（由 `devm` 直接派），因此 **devm 成为目标项目侧唯一写操作出口**（硬件设备写操作 ＋ merge ＋ push ＋ 代码验收组织）；**merge 时点**随之改为「**devm 收到本部门 `reviewer{n}` 验收通过即 merge / push**」，不再等 director 通知；director 从"逐票派 reviewer 并收结论"降为**抽查权 ＋ 高风险票复验**（设备 / SHA / 门禁 / 破坏性变更类）。② **独立性三条硬约束**（写进 §4 第 6 条、§5.2 骨架、§5.3 门禁表、`dmt-dm` 派发条与 `dmt-reviewer` 技能）：**实例独立**（不得与实施该票的 `dev-e` 同实例）、**证据为准**（逐条挂证据路径，无证据的「通过」视为不通过）、**director 两个口子**（抽查 ＋ 高风险复验）。③ **改名** —— 技能 `dmt-rve` → **`dmt-reviewer`**（`git mv` ＋ 全仓引用同步；运行 id 仍 `reviewer{n}`；历史 CHANGELOG 条目不重写）。④ **设备操作抽象化** —— §5.4 第 5 条由「`adb install`／覆写 `bcr_t36_calib.txt`／`dump_prefs`／`force-stop`」改为**通用「硬件设备写操作」**定义（安装 / 卸载产物、刷写固件、覆写设备文件或配置、触发探针、强杀进程、改设备运行时参数），并写明**工具链与设备文件以目标项目实际为准、不限于安卓**（`adb`／`fastboot`／串口／网口／JTAG 均属此列）；「装机后必报 APK `sha256` ＋ `lastUpdateTime` ＋ `pidof` 空」改为**通用可核验证据**（产物哈希 ＋ 设备侧版本 / 更新时间 ＋ 进程确已退出）。`dmt-director` 设备节、`dmt-dm` 边界与第 6 条、四份子代理技能边界、根 `README.md`、`OPS` §1、`spawn-helper.sh` 注释同步。⑤ **机检** —— 4d 标题改「硬件设备写操作与 merge/push 均只归 devm」并新增负向断言（契约不得再绑定 `adb install`／`bcr_t36_calib`／`bcr_detect_probe`／`dump_prefs` 等项目特定命令）；4g 新增「`reviewer{n}` 直属 `devm`」正向断言与「director 不得再派 reviewer」负向断言。**版本升 `5.16.7`**（七技能同号）。**Why**：① 设备与代码库是同一类「目标项目写操作」，验收又是「代码是否可进主干」的判断 —— 三者同属 devm 后才能形成**单一责任闭环**（谁写进去谁负责），director 退回产品 / 组织并保留制衡口子（抽查 ＋ 高风险复验），既短链路又不失去独立性；② 契约是**通用团队定义**，不该因为某个目标项目用安卓就把「设备操作」写成 `adb` 专用 —— 抽象成「硬件设备写操作」后，换项目（串口设备、工控、网口设备）无需改契约。
