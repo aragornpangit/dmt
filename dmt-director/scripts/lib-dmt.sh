@@ -118,6 +118,30 @@ dmt_wait_ready() {
   return 1
 }
 
+# helper 开法判据（2026-11-04 第七十五次，可观测）：本体在忙 且 有待办积压。
+#   ① 本体 pane agent_status == working（busy）
+#   ② 该角色有 ≥1 条待办超过 $2 分钟未处理（默认 10）：
+#        未读 inbox/<role>/*.md（mtime 早于 N 分钟）或 .doing/ 有在办文件
+# 两条都成立 ⇒ rc=0（可开 helper）；否则 rc=1。
+# 这是唯一判据：旧口径「忙不过来 / 回报积压 / 仍有待办 三条同时成立」无观测手段，已废。
+dmt_helper_eligible() {
+  local role="$1" mins="${2:-10}" pane st root inbox nm now
+  pane="$(dmt_pane_by_label "$role")"
+  [ -n "$pane" ] || return 1
+  st="$(dmt_pane_status "$pane")"
+  [ "$st" = "working" ] || return 1
+  root="$(dmt_root)"; inbox="$root/inbox/$role"
+  [ -d "$inbox" ] || return 1
+  # 未读：mtime 早于 N 分钟
+  nm="$(find "$inbox" -maxdepth 1 -name '*.md' -mmin "+$mins" -print -quit 2>/dev/null || true)"
+  [ -n "$nm" ] && return 0
+  # 在办：.doing/ 非空即算积压
+  if [ -d "$inbox/.doing" ] && [ -n "$(find "$inbox/.doing" -maxdepth 1 -name '*.md' -print -quit 2>/dev/null)" ]; then
+    return 0
+  fi
+  return 1
+}
+
 # harness 白名单与启动命令（默认 codebuddy；备选 pi / opencode / codex / claude）。
 # 2026-11-03 第六十二次：补齐 claude（Claude Code），并把「技能如何被调起」抽成 dmt_skill_cmd ——
 # 五个 harness 的技能发现目录与斜杠写法并不一致，写死一种会在别的 harness 上静默失效。
@@ -134,16 +158,46 @@ dmt_harness_name() {
 }
 
 # 技能调用命令：按 harness 生成「往 pane 里输入的那一行」。
-# 实测（2026-11-03，五个 harness 各自 `--help` + 端到端探针）：
-#   · claude / codebuddy / codex / opencode ⇒ `/dmt-dm`（技能名直接作斜杠命令）
-#   · pi                                   ⇒ `/skill:dmt-dm`（pi 1.5.0 的 enableSkillCommands 注册为 skill:<name>）
+# 前缀**不在这里写死**：由 harness_matrix.yaml 的 slash_prefix 提供（单一来源）。
+#   · claude / codebuddy / codex / opencode ⇒ `/dmt-dm`
+#   · pi                                   ⇒ `/skill:dmt-dm`
 # `pi -p /dmt-dm` 不展开；`pi -p /skill:dmt-dm` 正常展开 —— 写错前缀会静默变成普通提问。
 dmt_skill_cmd() {
   local h="${1:-codebuddy}" name="${2:?dmt_skill_cmd <harness> <skill-name>}"
-  case "$h" in
-    pi) printf '/skill:%s' "$name" ;;
-    *)  printf '/%s' "$name" ;;
-  esac
+  local prefix
+  prefix="$(dmt_harness_field "$h" slash_prefix)"
+  [ -n "$prefix" ] || prefix="/"   # 矩阵不可用时回退（pi 以外全部是 /）
+  printf '%s%s' "$prefix" "$name"
+}
+
+# 从 harness_matrix.yaml 取字段（经 harness-matrix.sh）；矩阵/依赖不可用时给空、返回非 0。
+dmt_harness_field() {
+  local h="$1" f="$2"
+  [ -x "$DMT_SCRIPTS_DIR/harness-matrix.sh" ] || return 1
+  bash "$DMT_SCRIPTS_DIR/harness-matrix.sh" get "$h" "$f" 2>/dev/null
+}
+
+# 该 harness 的并发 subagent 上限（harness 侧能力；空＝未知/不设）。
+dmt_harness_max_conc() {
+  dmt_harness_field "$1" max_subagents_conc
+}
+
+# 并发上限对应的环境变量名（空＝无）。
+dmt_harness_max_env() {
+  dmt_harness_field "$1" max_subagents_env
+}
+
+# 并发上限的可读描述（供回报 / 文档引用；不改行为）：
+#   harness 有 max_subagents_conc ⇒ "上限 N（env: VAR）"，否则 "未声明上限"。
+dmt_concurrency_cap() {
+  local h="$1" n e
+  n="$(dmt_harness_max_conc "$h")"
+  e="$(dmt_harness_max_env "$h")"
+  if [ -n "$n" ]; then
+    if [ -n "$e" ]; then printf '上限 %s（env: %s）' "$n" "$e"; else printf '上限 %s' "$n"; fi
+  else
+    printf '未声明上限'
+  fi
 }
 
 # harness 启动命令。$DMT_HARNESS_CMD 可整体覆盖（逃生舱：任意 harness / 额外参数）。
@@ -157,17 +211,12 @@ dmt_skill_cmd() {
 dmt_harness_cmd() {
   local h="${1:-codebuddy}"
   if [ -n "${DMT_HARNESS_CMD:-}" ]; then printf '%s' "$DMT_HARNESS_CMD"; return 0; fi
-  case "$h" in
-    codebuddy) printf '%s' "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto" ;;
-    # pi：`--approve` 必带 —— 项目级 .agents/skills 属「trust-requiring」，不批准则不装载
-    # （实测 2026-11-03：无 --approve 只见用户级技能，项目内 dmt-* 一个都看不到）。
-    pi)        printf '%s' 'pi --approve' ;;
-    # opencode：`--auto` 预批权限，与 codebuddy 的 auto 同义；否则 pane 里会卡在授权提示。
-    opencode)  printf '%s' 'opencode --auto' ;;
-    # codex：`-a never` 免逐条审批。**首次进入项目目录仍需人工确认 trust（一次性）**。
-    codex)     printf '%s' 'codex -a never' ;;
-    # claude：Claude Code 的自动模式档位名就是 auto（实测可用）。
-    claude)    printf '%s' 'claude --permission-mode auto' ;;
-    *) echo "bad harness: $h" >&2; return 2 ;;
-  esac
+  # 启动命令来自 harness_matrix.yaml（单一来源）；codebuddy 的 start_cmd 里内嵌
+  # auto-review 健康门与超时预算（矩阵中的 start_cmd 字符串引用 $DMT_SCRIPTS_DIR，
+  # 在**这里**展开，因此矩阵不必知道脚本目录的绝对路径）。
+  local cmd
+  cmd="$(dmt_harness_field "$h" start_cmd)" || { echo "bad harness: $h" >&2; return 2; }
+  [ -n "$cmd" ] || { echo "bad harness: $h" >&2; return 2; }
+  # 展开 $DMT_SCRIPTS_DIR（矩阵里以字面量存放，避免把机器相关绝对路径写进受版本控制的 YAML）
+  printf '%s' "${cmd//\$DMT_SCRIPTS_DIR/$DMT_SCRIPTS_DIR}"
 }

@@ -143,21 +143,24 @@ for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
 done
 
 echo
-echo "== 4) 并行判据必须登记（依赖分析在前；并行按需、不强制派满，2026-11-02 用户裁定） =="
+echo "== 4) 并行判据必须登记（依赖分析在前；无依赖任务一律开满 subagents 并行，适用于总监与经理，2026-11-04 用户裁定） =="
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '依赖分析' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '依赖分析' 'anam'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '依赖分析' 'director'
 check "$CONTRACT" '依赖分析' '团队契约'
-check "$CONTRACT" '不强制派满' '团队契约'
-check "$CONTRACT" '不设并发上限' '团队契约'
+check "$CONTRACT" '开满 subagents 并行' '团队契约'
+check "$SKILLS_DIR/dmt-director/SKILL.md" '开满 subagents 并行' 'director'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '开满' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" '开满' 'anam'
 
 echo
 echo "== 4b) 经理层路径必须登记（一律直接派工程师子代理，按需求开） =="
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '直接派' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" '直接派' 'anam'
 check "$CONTRACT" '经理一律直接派工程师子代理' '团队契约'
-check "$CONTRACT" '按需求开' '团队契约'
-check "$SKILLS_DIR/dmt-dm/SKILL.md" '按需求开' 'devm'
-check "$SKILLS_DIR/dmt-am/SKILL.md" '按需求开' 'anam'
+check "$CONTRACT" '开满' '团队契约'
+check "$SKILLS_DIR/dmt-dm/SKILL.md" '无依赖票开满' 'devm'
+check "$SKILLS_DIR/dmt-am/SKILL.md" '开满' 'anam'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'teammate 方式' 'devm'
 check "$SKILLS_DIR/dmt-am/SKILL.md" 'teammate 方式' 'anam'
 
@@ -247,7 +250,8 @@ check "$SKILLS_DIR/dmt-director/SKILL.md" '文档门禁' 'director'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" '代码门禁' 'devm'
 check "$SKILLS_DIR/dmt-director/SKILL.md" '不替代' 'director'
 # 2026-11-04 第六十九次：reviewer{n} 归 devm（代码验收由 devm 派，director 只抽查/复验）
-check "$CONTRACT" '`reviewer{n}` 直属 `devm`' '团队契约（reviewer 归 devm）'
+check "$CONTRACT" '主轨直属 `devm`' '团队契约（reviewer 主轨归 devm）'
+check "$CONTRACT" '副轨直属 `director`' '团队契约（reviewer 副轨归 director）'
 check "$SKILLS_DIR/dmt-dm/SKILL.md" 'reviewer{n}' 'devm（派 reviewer）'
 check "$SKILLS_DIR/dmt-reviewer/SKILL.md" 'devm' 'dmt-reviewer（上级 devm）'
 check_absent "$SKILLS_DIR/dmt-director/SKILL.md" '按验收票数派|按票数派 `reviewer1' 'director 不得再派 reviewer（改为抽查/复验）'
@@ -297,7 +301,7 @@ for role in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do ch
 
 echo
 echo "== 4j) 确定性动作必须脚本化（脚本齐备且可执行） =="
-for s in lib-dmt.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh auto-review-model.sh; do
+for s in lib-dmt.sh harness-matrix.sh launch.sh init-project.sh setup-team.sh spawn-helper.sh helper-report.sh close-helper.sh send-msg.sh msg-take.sh msg-done.sh publish.sh file-claim.sh install-skills.sh check-dmt-doc-paths.sh check-dmt-structure.sh auto-review-model.sh; do
   f="$(dirname "$(readlink -f "$0")")/$s"
   if [ -x "$f" ]; then echo "OK   $s"; else echo "FAIL $s 缺失或不可执行"; fail=1; fi
 done
@@ -323,11 +327,15 @@ for role in dmt-director dmt-dm dmt-am; do
 done
 
 echo
-echo "== 4l-b) max-subagents / 饱和派发机制不得回潮（2026-11-02 用户裁定：不强制派满、不设并发上限） =="
-# 负向断言：契约正文与七份技能正文里不得再出现 CAP 探测、派发账本、先派后干、并发账、每波 min(N, CAP) 等饱和派发表述。
+echo "== 4l-b) 无依赖任务一律开满 subagents 并行（2026-11-04 用户裁定，适用于总监与经理；推翻 2026-11-02 按需口径） =="
+# 正向断言：契约与三份 pane 角色技能（director / devm / anam 三个派发角色）正文必须含「开满 subagents 并行」。
+for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md"; do
+  check "$f" '开满 subagents 并行' "$(basename "$(dirname "$f")") 开满并行"
+done
+# 负向断言：旧按需口径（不强制派满 / 不设并发上限）不得回归；CAP 探测、派发账本、先派后干、并发账、每波 min(N, CAP) 等饱和机制脚本名仍不得恢复。
 # （§7 / §8 会复述这些字面，_body 只查正文，历史记录不判红）
 for f in "$CONTRACT" "$SKILLS_DIR/dmt-director/SKILL.md" "$SKILLS_DIR/dmt-pde/SKILL.md" "$SKILLS_DIR/dmt-dm/SKILL.md" "$SKILLS_DIR/dmt-am/SKILL.md" "$SKILLS_DIR/dmt-de/SKILL.md" "$SKILLS_DIR/dmt-ae/SKILL.md" "$SKILLS_DIR/dmt-reviewer/SKILL.md"; do
-  check_absent "$f" 'min\(8, cap\)|min\(N, CAP\)|并发账|先派后干|饱和派发|probe-cap|dispatch-ledger|fanout\.sh|install-hooks|MAX_SUBAGENTS' "$(basename "$(dirname "$f")") 饱和机制回潮"
+  check_absent "$f" '不强制派满|不强制并行|按需并行|min\(8, cap\)|min\(N, CAP\)|并发账|先派后干|probe-cap|dispatch-ledger|fanout\.sh|install-hooks|MAX_SUBAGENTS' "$(basename "$(dirname "$f")") 旧按需口径 / 饱和机制回潮"
 done
 
 echo

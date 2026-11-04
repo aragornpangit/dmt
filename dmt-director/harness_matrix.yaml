@@ -1,0 +1,78 @@
+# dmt harness 兼容矩阵：单一来源（spec 层）。
+#
+# 这是「每个 harness 的技能发现目录 / 技能调用行 / 启动命令 / 并发上限」的唯一权威，
+# 由 dmt-director/scripts/harness-matrix.sh 读取，供 lib-dmt.sh、setup-team.sh、
+# spawn-helper.sh、install-skills.sh 与机检共用。改这里即改全部落点，不要在脚本或
+# 文档里再写死某个 harness 的前缀 / 目录 / 启动参数。
+#
+# 字段说明：
+#   skills.dir_project       项目级技能发现目录（相对项目根）
+#   skills.dir_user          用户级技能发现目录（相对 $HOME）
+#   skills.dir_project_extra 项目级额外目录（opencode 兼容 .claude/skills）
+#   slash_prefix             技能斜杠命令前缀；pi 为 "/skill:"，其余为 "/"
+#   start_cmd                代启动命令（免逐条审批档位）
+#   start_needs_trust        首次进入项目目录需人工确认 trust（一次性）
+#   max_subagents_conc       该 harness 支持的并发 subagent 上限（null = 未知/不设）
+#   max_subagents_env        并发上限对应的环境变量（若有）
+#   doorbell                 门铃通道（herdr agent 的检测名）
+harnesses:
+  codebuddy:
+    skills:
+      dir_project: .codebuddy/skills
+      dir_user: .codebuddy/skills
+    slash_prefix: "/"
+    start_cmd: "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto"
+    start_needs_trust: false
+    max_subagents_conc: 8
+    max_subagents_env: CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS
+    doorbell: codebuddy
+  claude:
+    skills:
+      dir_project: .claude/skills
+      dir_user: .claude/skills
+    slash_prefix: "/"
+    start_cmd: "claude --permission-mode auto"
+    start_needs_trust: false
+    max_subagents_conc: 10
+    max_subagents_env: null
+    doorbell: claude
+  codex:
+    skills:
+      dir_project: .agents/skills
+      dir_user: .agents/skills
+      dir_project_extra: .codex/skills
+    slash_prefix: "/"
+    start_cmd: "codex -a never"
+    start_needs_trust: true
+    max_subagents_conc: 8
+    max_subagents_env: null
+    doorbell: codex
+  opencode:
+    skills:
+      dir_project: .agents/skills
+      dir_user: .agents/skills
+      dir_project_extra: .opencode/skills
+    slash_prefix: "/"
+    start_cmd: "opencode --auto"
+    start_needs_trust: false
+    max_subagents_conc: null
+    max_subagents_env: null
+    doorbell: opencode
+  pi:
+    skills:
+      dir_project: .agents/skills
+      dir_user: .pi/agent/skills
+      dir_project_extra: .pi/skills
+    slash_prefix: "/skill:"
+    start_cmd: "pi --approve"
+    start_needs_trust: true
+    max_subagents_conc: null
+    max_subagents_env: null
+    doorbell: pi
+
+# install-skills.sh --harness all 时铺设的落点（去重后的项目级目录）。
+# 覆盖五个 harness：.agents/skills（codex/opencode/pi）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）
+install_all_dirs:
+  - .agents/skills
+  - .claude/skills
+  - .codebuddy/skills

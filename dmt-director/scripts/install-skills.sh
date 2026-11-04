@@ -35,25 +35,18 @@ case "$TARGET" in
   "$REPO"|"$REPO"/*) echo "拒绝：target 落在技能仓内（$TARGET）—— 技能仓是维护地，不是安装目标" >&2; exit 2 ;;
 esac
 
-# harness → 技能落点目录（可能多个；调用方去重）
-skills_dirs_for() {
-  case "$1" in
-    all)       printf '%s\n' .agents/skills .claude/skills .codebuddy/skills ;;
-    claude)    printf '%s\n' .claude/skills ;;
-    codebuddy) printf '%s\n' .codebuddy/skills ;;
-    codex)     printf '%s\n' .agents/skills .codex/skills ;;
-    opencode)  printf '%s\n' .agents/skills .opencode/skills ;;
-    pi)        printf '%s\n' .agents/skills .pi/skills ;;
-    *) echo "bad harness: $1（want claude|codebuddy|codex|opencode|pi|all）" >&2; return 2 ;;
-  esac
-}
-
+# harness → 技能落点目录：**单一来源＝harness_matrix.yaml**（经 harness-matrix.sh 读取），
+# 不再在脚本里写死 case 分支。`all` 取矩阵的 install_all_dirs。
+MATRIX="$REPO/dmt-director/scripts/harness-matrix.sh"
+[ -x "$MATRIX" ] || { echo "install-skills: 缺 harness-matrix.sh（无法解析落点）" >&2; exit 3; }
+if [ "$HARNESS" = "all" ]; then
+  out="$(bash "$MATRIX" install-dirs)" || exit 2
+else
+  out="$(bash "$MATRIX" install-dirs-for "$HARNESS")" || exit 2
+fi
 DIRS=""
-for h in $(printf '%s' "$HARNESS" | tr ',' ' '); do
-  out="$(skills_dirs_for "$h")" || exit 2
-  for d in $out; do
-    case " $DIRS " in *" $d "*) ;; *) DIRS="$DIRS $d" ;; esac
-  done
+for d in $out; do
+  case " $DIRS " in *" $d "*) ;; *) DIRS="$DIRS $d" ;; esac
 done
 [ -n "$DIRS" ] || { echo "no skill dir resolved for --harness '$HARNESS'" >&2; exit 2; }
 
