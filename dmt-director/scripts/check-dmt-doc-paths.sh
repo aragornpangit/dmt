@@ -433,6 +433,12 @@ if grep -q '\.claude/skills' "$iss" && grep -q '\.codebuddy/skills' "$iss"; then
 else
   echo "FAIL install-skills.sh 未覆盖非 .agents 落点（claude / codebuddy 装不上）"; fail=1
 fi
+# 2026-11-04 第七十一次：改名遗留清理（旧技能名不会自动消失：软链会变断链、副本会变孤儿目录）
+if grep -q 'LEGACY_SKILLS' "$iss"; then
+  echo "OK   install-skills.sh 含历史改名遗留清理"
+else
+  echo "FAIL install-skills.sh 缺历史改名遗留清理（dmt-rve 之类会残留）"; fail=1
+fi
 for s in setup-team.sh spawn-helper.sh; do
   if grep -qF "'/dmt-" "$(dirname "$(readlink -f "$0")")/$s"; then
     echo "FAIL $s 写死技能命令（应经 dmt_skill_cmd 生成）"; fail=1
