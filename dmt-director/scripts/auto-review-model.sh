@@ -15,7 +15,9 @@
 #
 # 用法：bash auto-review-model.sh [--check] [--url URL] [--timeout SEC]
 #        [--settings PATH] [--local-model ID] [--quiet] [--off]
-#   环境变量：DMT_AUTO_REVIEW_URL / DMT_AUTO_REVIEW_LOCAL_MODEL / CODEBUDDY_SETTINGS
+#   环境变量：DMT_LOCAL_MODEL_HOST / DMT_LOCAL_MODEL_PORT（拼端点 URL；.env 可配，见 <.env.example>）
+#             DMT_AUTO_REVIEW_URL 可直接给整条 URL（覆盖 host/port 拼装）
+#             DMT_AUTO_REVIEW_LOCAL_MODEL / CODEBUDDY_SETTINGS
 #             DMT_AUTO_REVIEW_GATE=off  等价于 --off
 #   --check  只报告、不写盘
 #   --quiet  只在「有变化」时输出一行
@@ -23,7 +25,12 @@
 # 退出码恒为 0（绝不阻断 harness 启动）。幂等：值未变则不写盘。
 set -u
 
-URL="${DMT_AUTO_REVIEW_URL:-http://10.223.32.29:30000/v1/models}"
+# 载入 .env（DMT_LOCAL_MODEL_HOST / DMT_LOCAL_MODEL_PORT 等；已导出的环境变量优先）
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$DIR/lib-dmt.sh"
+dmt_load_env
+
+URL="${DMT_AUTO_REVIEW_URL:-http://${DMT_LOCAL_MODEL_HOST:-localhost}:${DMT_LOCAL_MODEL_PORT:-30000}/v1/models}"
 LOCAL_MODEL="${DMT_AUTO_REVIEW_LOCAL_MODEL:-custom-local:Qwen3.8-27b}"
 SETTINGS="${CODEBUDDY_SETTINGS:-$HOME/.codebuddy/settings.json}"
 TIMEOUT=2

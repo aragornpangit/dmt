@@ -42,7 +42,7 @@ director 是 dmt 的**唯一用户入口**兼**团队领导兼产品部经理**�
 
 - **硬件设备写操作（`devm` 与 `director` 均可）**：凡**对硬件设备产生副作用的写操作** —— 安装 / 卸载产物、刷写固件、覆写设备上的文件或配置、触发设备探针、强杀设备进程、修改设备运行时参数等 —— **由 `devm` 或 `director` 执行**（2026-11-04 用户裁定：移交 devm 后又放开 director）；`anam` / 工程师 / 子代理一律禁做，需要时回报 `devm` 或 `director`。**同一设备同一时刻只允许一个写者**（动手前确认无人正在使用）。**工具链与设备文件以目标项目实际为准**（不限于安卓：`adb` / `fastboot` / 串口 / 网口 / JTAG 等均属此列）。设备操作后必报可核验证据：产物哈希（如 `sha256`）＋ 设备侧版本 / 更新时间 ＋ 目标进程确已退出（如 `pidof` 为空）。
 - **推送与 merge 归 devm**：`git push` 与合并主干**只由 devm 执行**（代码库归 devm 管理，见工作流第 6 步）：devm **收到本部门 `reviewer{n}` 验收通过后**即可 merge 与 push（不必等 director 通知），**不得先 merge/push**；director **保留抽查权与高风险票复验、不代推、不代 merge**；anam / 工程师 / `reviewer{n}` 一律禁 push 禁 merge。推送节奏也归 devm：**至少每完成一个 ticket 推送一次**（推送信息含 `{spec-seq}-ticket-{slug}` 与一句话结果）、**至少每小时**巡检 `git status --porcelain`，有新建或修改文件 ⇒ 按显式路径提交（禁 `git add -A` / `git add .`，见 `team.md` §5.1）并推送，不必等 ticket 收口。
-- **命令（devm 用）**：`bash dmt-director/scripts/publish.sh -m '<message>' -- <显式路径...>`（`--auto` 由 `git status --porcelain` 枚举路径，仍不使用 `git add -A`；`--no-push` 只提交；目标 GitLab `10.223.36.12:808`，`publish.sh` 默认推 `gitlab origin` 双远端：GitLab 为主、GitHub 镜像；只推 GitLab 用 `--remotes gitlab`）。
+- **命令（devm 用）**：`bash dmt-director/scripts/publish.sh -m '<message>' -- <显式路径...>`（`--auto` 由 `git status --porcelain` 枚举路径，仍不使用 `git add -A`；`--no-push` 只提交；目标 GitLab 取 `.env` 的 `DMT_GITLAB_SERVER` / `DMT_GITLAB_PORT`（`.env.example` 有模板），`publish.sh` 默认推 `gitlab origin` 双远端：GitLab 为主、GitHub 镜像；只推 GitLab 用 `--remotes gitlab`）。
 - **抽查推送**：director 抽查时核 devm 的推送结果与提交路径即可，**不代推**；巡检与推送结果由 devm 在回报里一句话说明（推了什么、跳过什么、为什么）。
 
 ## 通信（收件箱文件 + herdr 门铃）

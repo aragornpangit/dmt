@@ -6,6 +6,29 @@
 # 本库所在目录（source 时解析一次；用于拼「同目录脚本」的绝对路径，免受调用方后续 cd 影响）
 DMT_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# 载入 .env（内网端点等环境私有配置；不覆盖已存在的环境变量）
+# 查找顺序：$DMT_ENV_FILE → <项目根>/.env → <技能仓根>/.env
+dmt_load_env() {
+  local f="${DMT_ENV_FILE:-}"
+  if [ -z "$f" ]; then
+    local root; root="$(dmt_root 2>/dev/null || true)"
+    for cand in "$root/.env" "$DMT_SCRIPTS_DIR/../../.env"; do
+      [ -n "$cand" ] && [ -f "$cand" ] && { f="$cand"; break; }
+    done
+  fi
+  [ -n "$f" ] && [ -f "$f" ] || return 0
+  # 只用 KEY=VALUE 行；已导出的环境变量优先（.env 不覆盖）
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|\#*) continue ;; esac
+    case "$line" in *=*) ;; *) continue ;; esac
+    local k="${line%%=*}" v="${line#*=}"
+    case "$k" in [A-Za-z_][A-Za-z0-9_]*) ;; *) continue ;; esac
+    # 去掉值两端可能的引号
+    case "$v" in \"*\") v="${v#\"}"; v="${v%\"}" ;; \'*\') v="${v#\'}"; v="${v%\'}" ;; esac
+    if [ -z "${!k:-}" ]; then export "$k=$v"; fi
+  done < "$f"
+}
+
 # 主工作树根：git common dir 的父目录（在 worktree 里跑也指回主树）；非 git 目录回退当前目录
 dmt_root() {
   local r

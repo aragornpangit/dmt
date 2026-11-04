@@ -1,6 +1,6 @@
 # dmt
 
-dmt 团队的角色技能仓：**团队定义与四个角色技能的唯一维护地**。层级：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e` / `pde{n}`）。
+dmt 团队的角色技能仓：**团队定义与七个角色技能的唯一维护地**。层级：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e` / `pde{n}` / `reviewer{n}`）。
 **产品部并入总监**：director 写 PRD / SPEC / 工单时召唤 `pde{n}` 落笔（人类文档亲自落笔），自派 `pde{n}` / `reviewer{n}` 子代理（`dmt-pde` / `dmt-reviewer` 技能，不占 tab 不占 pane），不设产品经理；`devm` pane 在 director tab 内右侧，`anam` 独立 tab。
 **经理直接派工程师**：`devm` / `anam` 一律直接派 `dev-e` / `ana-e` 子代理（按需求开、不强制派满）；建 worktree、实施层初检与一手出处复核由经理收口，**不设队长层**。
 
@@ -50,7 +50,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
 │   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，75 条）
+│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，76 条）
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
 │   └── scripts/                        # 机检 / 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 复核器模型健康门（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
@@ -94,6 +94,23 @@ bash dmt-director/scripts/check-dmt-doc-paths.sh <项目根目录>   # 省略参
 ```
 
 判据 **十八项**（机检共 27 组断言）。**逐项说明与判据维护在 `dmt-director/team.md` §7（单一来源）**，本文件不复制、避免两处漂移。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。
+
+## 内网端点配置（`.env`）
+
+内网地址（GitLab、本地复核器端点等）**不写进仓库正文**，统一用变量名引用、值放在 `.env`：
+
+```bash
+cp .env.example .env && ${EDITOR:-vi} .env   # 填入本机实际地址
+```
+
+| 变量 | 用途 |
+|---|---|
+| `DMT_GITLAB_SERVER` / `DMT_GITLAB_PORT` / `DMT_GITLAB_REPO` | 内网 GitLab（devm 的 `publish.sh` 推送目标） |
+| `DMT_LOCAL_MODEL_HOST` / `DMT_LOCAL_MODEL_PORT` | 本地复核器（`autoModeClassifier`）端点 host / port（拼成 `http://<host>:<port>/v1/models`） |
+| `DMT_AUTO_REVIEW_LOCAL_MODEL` | 本地复核器模型 id |
+
+- `.env` 由 `dmt-director/scripts/lib-dmt.sh` 的 `dmt_load_env` 读取（查找顺序：`$DMT_ENV_FILE` → `<项目根>/.env` → 技能仓根 `.env`）；**已导出的环境变量优先**，`.env` 不覆盖。可用 `DMT_ENV_FILE=<路径>` 指定其它文件。
+- `.env` **不入库**（见 `.gitignore`），模板是 `.env.example`；`DMT_AUTO_REVIEW_URL` 可直接给整条端点 URL，覆盖 host / port 拼装。
 
 ## 维护
 
