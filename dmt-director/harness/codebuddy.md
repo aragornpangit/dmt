@@ -14,7 +14,10 @@
 ## 2. 启动与权限
 
 - 代启动：先跑健康门 `auto-review-model.sh --quiet`，再 `CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto`。
-- 自动档参数 `--permission-mode auto`（判据读 argv，不信屏幕）。
+- 自动档两种，**不要混用**（2026-11-05 实测）：
+  - `--permission-mode auto`：每次需审批的工具调用过自动复核器（有 300s 预算与健康门配套，见下）。
+  - `-y` / `--dangerously-skip-permissions`：**跳过复核器**，但 `--help` 明示 **HIGH/CRITICAL 风险操作仍会询问**（并非全免）。
+  - 判据都读 argv（`dmt_pane_auto_mode` 认 `--permission-mode auto` 与 `--dangerously-skip-permissions`）。
 - auto 模式下**每个需审批的工具调用都要过一次复核器** ⇒ 预算与 allow 规则见 [`../ops/permission-notes.md`](../ops/permission-notes.md)。
 
 ## 3. 技能调用行

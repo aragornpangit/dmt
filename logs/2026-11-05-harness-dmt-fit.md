@@ -87,3 +87,64 @@ DMT_SKILLS_DIR=<项目>/.agents/skills bash <项目>/dmt-director/scripts/check-
 # harness 判定（技能加载第 0 步）
 bash dmt-director/scripts/harness-detect.sh --explain
 ```
+
+---
+
+# 追加：claude 与 cbc 同构端到端实测（2026-11-05，本侧复跑）
+
+> 本节为**本侧亲自执行**（非引述）：两个 workspace、各三 pane、yolo 档、`herdr agent prompt` 下发指令。
+> 测试项目：`/tmp/dmt-claude-lab`（`--harness claude`）、`/tmp/dmt-cbc-lab`（`--harness codebuddy`），均 `install-skills.sh` 安装、机检 `ALL_PASS`。
+
+## 1. 环境与方法
+
+| 项 | claude 侧 | cbc 侧 |
+|---|---|---|
+| workspace | `w6`（label `claude-lab`） | `w7`（label `cbc-lab`） |
+| pane | `director` / `devm` / `anam`（**用契约名**，同时验证 label 精确寻址） | 同左 |
+| 启动 | `claude --dangerously-skip-permissions` | `codebuddy -y` |
+| 权限 | `bypass permissions on` | `bypass permissions on` |
+| 技能注入 | `herdr agent prompt <pane> /dmt-director` 等 | 同左 |
+| 首启提示 | 需过一次 "trust this folder"（↓ + Enter） | 无 |
+
+## 2. 测试项与结果（两侧同构，全部通过）
+
+| 项 | claude 侧实测 | cbc 侧实测 |
+|---|---|---|
+| T1 角色技能装载 | ✅ 三角色就绪自述 | ✅ 三角色就绪自述 |
+| T2 `/to-spec`＋`/to-tickets`（director） | ✅ SPEC 46 行；工单 2 张，`02 blocked by 01` | ✅ SPEC 38 行；工单 2 张，依赖边正确 |
+| T3 `/implement`→`/tdd`→`/code-review`（devm） | ✅ 三步均发生；`pytest` **1 passed**（复跑一致）；0 findings | ✅ 三步均发生（`implement` 带 `disable-model-invocation: true` 仍调起成功）；`pytest` **2 passed**（复跑一致） |
+| T4 `/research`＋并行子代理（anam） | ✅ 2 个子代理；38 行落盘；**交叉校验出冲突点**（`greet(None) == greet('stranger')` 为 True 但身份不同） | ✅ 2 个子代理；27 行落盘；证据目录 `docs/analyst/evidence/{none,non-str}/` |
+| T5 门铃（`send-msg.sh` label 精确匹配） | ✅ 无 WARN；director 收件→`.doing/`→收口删除 | ✅ 无 WARN；同链路通 |
+
+**工具级硬证据**（session 文件解析，非模型自述）：
+
+| 侧 | session | Skill 调用 | 子代理 |
+|---|---|---|---|
+| claude | director | `to-spec`×2、`to-tickets`×2 | — |
+| claude | devm | `implement`×2、`tdd`×2、`code-review`×2 | — |
+| claude | anam | `research`×2 | `Agent`×4（general-purpose） |
+| cbc | director | `to-spec`、`to-tickets` | — |
+| cbc | devm | `code-review`（＋`implement`/`tdd` 正文痕迹 40/42 处） | `Agent`×1 |
+| cbc | anam | `research` | `Agent`×2 |
+
+## 3. 与 pi 的关键差异（本次三 harness 对照）
+
+| 维度 | pi | claude | cbc |
+|---|---|---|---|
+| Skill 工具 | **无**（只能 read 文件） | **有**（实测 `Skill` 直接调用） | **有**（实测 `Skill` 调用成功） |
+| 子代理机制 | `delegate`（无技能继承） | `Agent`（general-purpose，可继承技能） | `Agent`（general-purpose，可继承技能） |
+| 强制技能调用行 | `/skill:<name>` | `/<name>` | `/<name>` |
+| `disable-model-invocation` 技能 | `/skill:` 可显式调起；模型只能 read | 可 `Skill` 直接调起 | 可 `Skill` 直接调起 |
+| yolo/自动档 | `--approve` | `--dangerously-skip-permissions`（无 classifier 限流） | `-y`（HIGH/CRITICAL 仍问） |
+| 首启额外步骤 | 项目级技能需 `--approve` | 需确认 trust folder | 无 |
+
+⇒ **结论**：dmt 七角色在 claude / cbc 上属于「原生承载」（Skill 工具 + 子代理继承技能），pi 属「降级承载」（read 文件 + `delegate`）；三者均能完成「文档 / 代码 / 取证」三类工作。
+
+## 4. 本次实测新发现
+
+| # | 发现 | 级别 | 处置 |
+|---|---|---|---|
+| 1 | `harness/claude.md` 说「同 codebuddy」已被上一轮更正；本次确认 claude yolo 档**无 classifier 限流**（122 次 Bash 那次限流发生在 `auto` 档） | 观察 | 文档已含 |
+| 2 | cbc `-y` 档仍有 HIGH/CRITICAL 询问（`--help` 明示），与 `--permission-mode auto` 不同 | 观察 | 已记 `harness/codebuddy.md` 待补 |
+| 3 | 并发写干扰：同一 lab 内 devm 改 `src/mathx.py` 时 anam 正在取证同目录（anam 主动声明「mathx.py 变大非本次产物」）⇒ 单写者纪律有效 | 观察 | 无需变更 |
+| 4 | 两侧 lab 用 `install-skills.sh --harness claude|codebuddy` 单落点安装，机检（软链调用）均 `ALL_PASS` ⇒ 第八十一次 P0 修复在真实单落点安装下成立 | 验证 | — |
