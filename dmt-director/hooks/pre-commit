@@ -5,7 +5,7 @@
 # 删除也会留在历史里（本轮已把地址抽到 .env，但那是「一次性动作」；本 hook 把它
 # 变成「防回退门禁」）。
 #
-# 安装：bash dmt-director/scripts/install-hooks.sh   （设 core.hooksPath=dmt-director/hooks）
+# 安装：bash dmt-director/scripts/install-git-hooks.sh   （设 core.hooksPath=dmt-director/hooks）
 # 绕过（谨慎）：git commit --no-verify
 set -u
 

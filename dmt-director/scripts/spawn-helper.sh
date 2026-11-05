@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 本体角色用：开 helper pane（{角色}-helper）并代启动 cbc、装载同角色技能分流
+# 本体角色用：开 helper pane（{角色}-helper）并代启动 harness、装载同角色技能与任务
 # helper 机制（用户裁定）：唯一开法判据（2026-11-04 第七十五次，可观测）＝
 #   本体 pane agent_status == working（本体在忙）且该角色有 ≥1 条待办超过 10 分钟未处理。
 #   旧口径「忙不过来 / 回报积压 / 仍有待办 三条同时成立」因无可观测判据而废弃（从不触发）。
@@ -37,12 +37,17 @@ case "$ROLE" in
   anam) SKILL_NAME='dmt-am' ;;
 esac
 
-. "$(cd "$(dirname "$0")" && pwd)/lib-dmt.sh"
+. "$(cd -P "$(dirname "$0")" && pwd -P)/lib-dmt.sh"
 
 HARNESS="$(dmt_harness_name "$HARNESS_ARG")" || exit 2
-# 技能调用行按 harness 生成（pi 要 /skill:<name>，其余 /<name>）；写死一种会在别的 harness 上静默失效
-SKILL="$(dmt_skill_cmd "$HARNESS" "$SKILL_NAME")"
 HARNESS_CMD="$(dmt_harness_cmd "$HARNESS")" || exit 2
+FIRST_PROMPT=0
+if dmt_start_has_first_prompt "$HARNESS"; then FIRST_PROMPT=1; fi
+TASK_PROMPT=""
+if [ -n "$TASK" ]; then
+  TASK_PROMPT="任务（随本轮一次性下发）：$TASK。完成后用 helper-report.sh 单向回报主体；此后不再接收输入。"
+fi
+PROMPT="$(dmt_skill_prompt "$HARNESS" "$SKILL_NAME" "$TASK_PROMPT" "$ROLE")"
 
 h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 # 查询类：失败给空（dry-run / 无 herdr 环境也能走完分支打印）
@@ -67,7 +72,11 @@ start_pane() {
   local pane="$1"
   [ "$START" = 1 ] || { echo "skip start: $pane"; return 0; }
   if [ "$DRY" = 1 ]; then
-    echo "+ [dry] start $pane: $HARNESS_CMD (harness=$HARNESS)  then  $SKILL" >&2
+    if [ "$FIRST_PROMPT" = 1 ]; then
+      echo "+ [dry] start $pane: $HARNESS_CMD '<role+task prompt>' (harness=$HARNESS, first prompt)" >&2
+    else
+      echo "+ [dry] start $pane: $HARNESS_CMD (harness=$HARNESS)  then  $(dmt_skill_cmd "$HARNESS" "$SKILL_NAME")" >&2
+    fi
     [ -z "$TASK" ] || echo "+ [dry] task → $pane（一次性下发，此后不接受输入框内容）: $(printf '%s\n' "$TASK" | head -1)" >&2
     return 0
   fi
@@ -76,15 +85,23 @@ start_pane() {
     echo "already running (agent_status=$st): $pane -- 不重发启动命令"
     return 0
   fi
-  h env HERDR_ENV=1 herdr pane send-text "$pane" "$HARNESS_CMD"
-  h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
-  wait_ready "$pane" || true
-  h env HERDR_ENV=1 herdr pane send-text "$pane" "$SKILL"
-  h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
-  if [ -n "$TASK" ]; then
-    # 任务一次性下发：此后不再向该 pane 发任何输入框内容
-    h env HERDR_ENV=1 herdr pane send-text "$pane" "$TASK"
+  if [ "$FIRST_PROMPT" = 1 ]; then
+    # Codex 的技能与任务必须合成首轮 prompt，避免角色先自行开工或进入交互界面。
+    h env HERDR_ENV=1 DMT_PANE_ROLE="$LABEL" herdr pane send-text "$pane" \
+      "DMT_PANE_ROLE=$LABEL $HARNESS_CMD '$PROMPT'"
     h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
+    wait_ready "$pane" || true
+  else
+    h env HERDR_ENV=1 DMT_PANE_ROLE="$LABEL" herdr pane send-text "$pane" "$HARNESS_CMD"
+    h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
+    wait_ready "$pane" || true
+    h env HERDR_ENV=1 herdr pane send-text "$pane" "$(dmt_skill_cmd "$HARNESS" "$SKILL_NAME")"
+    h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
+    if [ -n "$TASK" ]; then
+      # 任务一次性下发：此后不再向该 pane 发任何输入框内容
+      h env HERDR_ENV=1 herdr pane send-text "$pane" "$TASK"
+      h env HERDR_ENV=1 herdr pane send-keys "$pane" enter
+    fi
   fi
   verify_auto_mode "$pane"
 }

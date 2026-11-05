@@ -11,8 +11,8 @@
 #
 # 改完请跑 `bash check-dmt.sh` 确认 ALL_PASS。
 set -eu
-DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$DIR/../.." && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
+REPO="$(cd -P "$DIR/../.." && pwd -P)"
 YAML="$REPO/dmt-director/dmt_contract.yaml"
 [ -f "$YAML" ] || { echo "bump-version: 缺 $YAML" >&2; exit 2; }
 command -v python3 >/dev/null 2>&1 && python3 -c 'import yaml' >/dev/null 2>&1 || {

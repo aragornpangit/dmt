@@ -38,7 +38,7 @@ dmt 团队的角色技能仓：**团队定义与七个角色技能的唯一维�
 **helper（`{角色}-helper`，本体的纯分身，每角色至多一个）**：`director-helper` / `devm-helper` / `anam-helper` 是本体的**纯分身**——任务随 spawn **一次性下发**，此后**不接受任何输入框内容**；工作成果由 `helper-report.sh` **单向写回主体**（`inbox/<本体>/`，无门铃）；helper **没有自己的 inbox**（不收件）。**唯一开法判据（可观测）**：本 pane `agent_status == working` 且有待办超过 10 分钟未处理。**生命周期由创建者（本体角色）维护**：用 `bash dmt-director/scripts/spawn-helper.sh <director|devm|anam>` 建立（幂等，支持 `--dry-run` / `--no-start`；helper tab label 固定 `helper`（全队共享一个），pane label 固定 `{角色}-helper`，代启动 harness 并装载**同角色技能**）、label 漂移自愈改名、任务完成用 `bash dmt-director/scripts/close-helper.sh <director|devm|anam>` 回收（支持 `--force` / `--dry-run`；**helper tab 保留复用，不随 pane 关闭**）。**独占动作不移交**：硬件设备写操作（`devm` / `director` 本体）与 merge / push（`devm` 本体）均不移交 helper。
 
 成员运行在 Herdr（终端多智能体复用器）中，**按 pane label 识别伙伴**（label 与角色名同名、全 workspace 唯一；不看 tab 内位置，pane id 每次发送前重查）。
-**角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**：先 `msg-take.sh` 移到 `inbox/<自己>/.doing/`（认领），办完 `msg-done.sh` 删除（详见 `OPS.md` §2）。
+**角色间通信 = 收件箱文件 + herdr 门铃**：正文写进收件方 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（项目根，不在 `docs/` 下），herdr 只发一句「你有新消息 …」；收件方读后**不回执**：先 `msg-take.sh` 移到 `inbox/<自己>/.doing/`（认领），办完 `msg-done.sh` 删除（详见 `dmt-director/ops/comms.md`）。
 工作流一句话：anam 做调研（director 评审）→ director 定验收口径并召唤 `pde{n}` 落笔 PRD、SPEC 与工单（文档门禁自评）→ devm 接单排期，**devm / anam 直接派工程师子代理（无依赖任务开满并行、开满到 harness 并发上限）、实施层初检与出处复核由经理收口** → devm 完成票并代码门禁评审 → **devm 按票数派 reviewer1…reviewer{n}**（技能 `dmt-reviewer`；独立于实施该票的 dev-e、以证据为准）对照同 spec-seq 的 SPEC+ticket 逐条验收 → **通过后 devm 直接 merge/push**（reviewer{n} 为子代理、不占 pane 不装技能，`/review`（= `/code-review`）写进派发 prompt；merge 与 push 只归 devm：至少每完成一个 ticket 推送一次、至少每小时巡检未推送变更，代码库归 devm 管理），不通过打回 **dev-e** 返工、不得先 merge/push；**director 保留抽查与高风险票复验**。merge / push **只归 `devm`**；**硬件设备写操作 `devm` 与 `director` 均可**。devm / anam 可**依用户要求与 tickets 计划直接干活**，知会 director 即可；director **默认放行，只有觉得不合适才出面制止**（畅通无阻）。
 
 **团队契约（组织、通信、文件命名、目录职责与纪律的唯一权威）＝ [`dmt-director/team.md`](dmt-director/team.md)。**
@@ -49,13 +49,15 @@ dmt/                                    # 一个角色一个文件夹
 ├── dmt-director/                       # 总监（技能 dmt-director）
 │   ├── SKILL.md
 │   ├── team.md                         # 团队契约（规范层，唯一权威）
-│   ├── OPS.md                          # 操作手册（pane 生命周期 / 收件箱协议 / 文件占用）
-│   ├── CHANGELOG.md                    # 变更历史明细（§8 外移，78 条；更早季度归档在 changelog/）
+│   ├── OPS.md                          # 操作手册兼容入口（按任务路由到 ops/）
+│   ├── ops/*.md                        # 操作手册（runtime / comms / file-claim / helper / permission-notes）
+│   ├── harness/                        # 按 harness 加载（COMMON.md ＋ pi/codebuddy/claude/codex/opencode 各一份差异）
+│   ├── CHANGELOG.md                    # 变更历史明细（全量 84 条；更早季度归档在 changelog/）
 │   ├── harness_matrix.yaml             # harness 兼容矩阵（落点 / 前缀 / 启动命令 / 并发上限；单一来源）
 │   ├── dmt_contract.yaml               # 结构契约（技能清单 / 版本源 / 目录 / 脚本；单一来源）
 │   ├── hooks/pre-commit                # git hook：防内网地址 / 凭证 / .env 入库
 │   ├── README.md                       # 脚本清单（正文见根 README.md）
-│   └── scripts/                        # 机检（散文 + 结构）/ 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / helper 回报 / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 装 hooks / 版本同步 / CHANGELOG 归档 / 复核器健康门 / harness 矩阵读取（+ lib-dmt.sh 公共库）
+│   └── scripts/                        # 机检（散文 + 结构）/ 文件占用 / 初始化 / 一键拉起 / 建团队 / 建 helper / helper 回报 / 关 helper / 发消息 / 认领 / 收口 / 推送 / 安装 / 装 hooks / 版本同步 / CHANGELOG 归档 / 复核器健康门 / harness 矩阵读取 / harness 判定（+ lib-dmt.sh 公共库）
 ├── dmt-pde/SKILL.md                    # 产品工程师（pde{n} 子代理技能，不占 pane）
 ├── dmt-de/SKILL.md                     # 开发工程师（dev-e 子代理技能，不占 pane）
 ├── dmt-ae/SKILL.md                     # 分析工程师（ana-e 子代理技能，不占 pane）
@@ -80,7 +82,7 @@ bash dmt-director/scripts/install-skills.sh <项目根> --copy
 bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebuddy
 ```
 
-脚本做四件事：① **按 harness 建技能落点**并软链或复制七个技能目录（默认 `--harness all` ⇒ `.agents/skills/` ＋ `.claude/skills/` ＋ `.codebuddy/skills/` 三处，覆盖五个 harness）；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根 —— **脚本路径一律写 `dmt-director/scripts/…`**，旧的 `<项目根>/scripts/` 已废弃；③ 把 `team.md` 与 `OPS.md` **软链**到 `docs/`（机检读它；`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
+脚本做四件事：① **按 harness 建技能落点**并软链或复制七个技能目录（默认 `--harness all` ⇒ `.agents/skills/` ＋ `.claude/skills/` ＋ `.codebuddy/skills/` 三处，覆盖五个 harness）；② 把整个 `dmt-director/`（含 `scripts/`）链接或复制到项目根；③ 把 `team.md`、`OPS.md` 与 `ops/` **软链**到 `docs/`（`--copy` 模式改为复制）；④ 调用 `init-project.sh` 建目录、写 `.gitignore` 并跑机检。
 
 > **为什么要三个落点（2026-11-04 逐 harness 探针实测）**：各 harness **只认自己的技能目录**，没有「一处通用」—— `codex` / `opencode` / `pi` 读 `.agents/skills/`（`pi` 的项目级目录需 `--approve`），`claude` **只读** `.claude/skills/`，`codebuddy` **只读** `.codebuddy/skills/`。所以 `install-skills.sh` 默认铺满三处；只装一处会在 claude / codebuddy 上静默装不上。详见 `dmt-director/team.md` §1.2。
 
@@ -89,14 +91,24 @@ bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebud
 
 **五个 harness 的技能发现目录（2026-11-04 逐 harness 探针实测）**：`.agents/skills/` **不是**五者交集 —— 实测只有 `codex` / `opencode` / `pi` 读它，`claude` 与 `codebuddy` **只认各自私有目录**（项目级 `.claude/skills/` / `.codebuddy/skills/`，用户级 `~/.claude/skills/` / `~/.codebuddy/skills/`）。因此 `install-skills.sh` 的 `<target>/.agents/skills/` 落点只覆盖三者（`pi` 还需 `--approve`）；**装到 claude / codebuddy 时必须另软链其私有目录**。另一个易错点：`pi` 的用户级私有目录是 `~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**），`opencode` 的项目级目录是 `.opencode/skills/`（**复数**）。**斜杠写法也不同**：claude / codebuddy / codex / opencode 用 `/dmt-dm`，**pi 用 `/skill:dmt-dm`** —— 启动脚本经 `lib-dmt.sh` 的 `dmt_skill_cmd` 自动生成，不要手敲。完整表（含项目级 / 用户级）见 `dmt-director/team.md` §1.2「harness 兼容」。
 
+**Codex 备选启动**：
+
+```bash
+bash dmt-director/scripts/setup-team.sh --harness codex
+```
+
+Codex 的角色技能与 helper 任务随首轮 prompt 一次下发；mattpocock 插件技能用 `mattpocock-skills:<name>`。首次 trust 人工确认后，再跑 `setup-team.sh --harness codex --force-start`。Codex 在 herdr pane 中没有 `spawn_agent` 时只做本 pane 角色工作；不会伪造嵌套 pane 或 `codex exec` 子代理。详见 `dmt-director/ops/runtime.md`「Codex 差异」。
+
 ## 机检
 
 ```bash
 bash dmt-director/scripts/check-dmt.sh <项目根目录>   # 单一入口：结构断言 + 内容断言
 # 技能未装在 <项目根>/.agents/skills 时，用 DMT_SKILLS_DIR 覆盖
+# 维护 dmt 仓自身（技能正本在仓根，不在 .agents/skills）：
+DMT_SKILLS_DIR="$PWD" bash dmt-director/scripts/check-dmt.sh "$PWD"
 ```
 
-**A 结构断言 + B 内容断言**，事实都来自单一来源：`dmt-director/dmt_contract.yaml`（技能清单 / 版本源 / 目录 / 组织 / 脚本 / **content_assertions**）与 `dmt-director/harness_matrix.yaml`（五 harness 矩阵）——加 / 改断言只改 YAML，不再散落中文 grep。**逐项说明与判据维护在 `dmt-director/team/09-check.md`（单一来源）**。改动路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载或脚本接口后必须重跑。
+**A 结构断言 + B 内容断言**，事实都来自单一来源：`dmt-director/dmt_contract.yaml`（技能清单 / 版本源 / 目录 / 组织 / 脚本 / 操作手册 / 技能预算 / **content_assertions**）与 `dmt-director/harness_matrix.yaml`（五 harness 矩阵）——加 / 改断言只改 YAML，不再散落中文 grep。**逐项说明与判据维护在 `dmt-director/team/09-check.md`（单一来源）**。
 
 ## 内网端点配置（`.env`）
 
@@ -117,13 +129,13 @@ cp .env.example .env && ${EDITOR:-vi} .env   # 填入本机实际地址
 
 ## 维护
 
-- **单一来源**：团队口径只在 `dmt-director/team.md`（规范）/ `OPS.md`（操作）；harness 差异只在 `harness_matrix.yaml`；结构事实只在 `dmt_contract.yaml`。七份技能只写「本角色怎么干」，共性一律写指针（`check-dmt.sh` A6 断言）。
+- **单一来源**：团队常量只在 `dmt-director/team.md`；操作细节按 `dmt-director/OPS.md` 路由到 `ops/`；harness 的**机器事实**只在 `harness_matrix.yaml`、**技能加载说明**只在 `dmt-director/harness/`（一份共性 ＋ 每 harness 一份差异）；结构事实只在 `dmt_contract.yaml`。七份技能只写「本角色怎么干」，harness 差异一律写指针。
 - **版本同步**：版本号权威在 `dmt_contract.yaml`；`bash dmt-director/scripts/bump-version.sh <X.Y.Z>` 一条命令刷进 team.md 与七份 SKILL.md，`--check` 复核同号。
 - **防泄漏门禁**：`bash dmt-director/scripts/install-git-hooks.sh` 启用受版本控制的 `pre-commit`（拦截 `.env`、内网地址、密钥形态）；`launch.sh` 默认安装。误报用 `git commit --no-verify` 绕过。
 - **变更记录**：`CHANGELOG.md` 只留当前季度条目；`bash dmt-director/scripts/archive-changelog.sh` 把更早季度整条原样归档到 `dmt-director/changelog/<YYYYQn>.md`。
 
-- 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓，正本 `team.md` 变更后需重跑 `bash dmt-director/scripts/install-skills.sh <项目根> --copy`。
+- 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` / `docs/ops/` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
 - **`dmt-en`（早期英文镜像仓）已停更**（末版 `5.7.1 · 2026-10-27`）：自 2026-11-04 起**以本仓（`dmt`）为准**，不再双仓并行维护；需要英文版时按本仓当期内容另行翻译，**不要把 `dmt-en` 当权威**。
 - 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步七个技能与机检 4m。
-- 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。
+- 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（仅 CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；Codex 用原生 `spawn_agent`/`wait_agent`，cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。

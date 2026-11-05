@@ -1,6 +1,6 @@
 ### 1.1 组织与成员
 
-**层级**：`director`（总监兼产品部经理）→ 部门经理（`devm` / `anam`）→ 工程师（`dev-e` / `ana-e`；`pde{n}` 直属 `director`）。**`reviewer{n}` 双轨**（2026-11-04 第七十六次）：**主轨直属 `devm`**，做**代码审核**（逐条验收 ticket 代码，一票一 reviewer）；**副轨直属 `director`**，只做**抽查 / 高风险复验**（不逐票、不替代 devm 的主轨验收）。产品部并入总监 —— `director` 写 PRD / SPEC / 工单时**召唤 `pde{n}` 子代理落笔**（一单元一 pde、无依赖单元开满并行），director 定口径、逐份验收并出文档门禁结论；人类文档由 director 落笔；产品支撑同用 `pde{n}`（`dmt-pde` 技能，**不占 tab 不占 pane**）；不设产品经理 pane、不设队长层。**共七个技能**：三个 pane 角色技能（`dmt-director` / `dmt-dm` / `dmt-am`）＋ 四个子代理角色技能（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`）—— **子代理技能名与运行 id 一一对应**（`pde{n}`↔`dmt-pde`、`dev-e`↔`dmt-de`、`ana-e`↔`dmt-ae`、`reviewer{n}`↔`dmt-reviewer`）。
+**层级**：`director` → `devm` / `anam` → `dev-e` / `ana-e`；`pde{n}` 直属 director。`reviewer{n}` 双轨：主轨归 devm，副轨归 director。产品部并入 director，不设产品经理 pane 或队长层。
 
 ```
 director            总监兼产品部经理（label director，屏幕左侧）
@@ -40,4 +40,4 @@ director            总监兼产品部经理（label director，屏幕左侧）
 3. `devm` 与 `anam` 之间**不直连**，跨部门事项经 `director` 转派。
 4. 工程师 `dev-e` / `ana-e` / `pde{n}` **只**向派生他的总监或经理汇报，**不装独立技能**（技能写进派发 prompt，见 §1.4）、**不占 pane**、**不走跨 pane 通信**。
 
-**经理自主开工（畅通无阻，用户裁定 2026-10-26）**：`devm` / `anam` **可依用户要求与 tickets 计划直接干活**，不需要 director 派单、不等事前批准 —— **开工时知会 director 一句**（收件箱 + 门铃：干什么、依据哪份要求 / ticket）即算合规。**director 默认放行**：只有觉得不合适时才出面制止（门铃叫停 + 说明理由），否则**畅通无阻**；不得以「director 未回复」「未获批准」为由拖延开工，director 也不设事前审批。
+**经理自主开工**：`devm` / `anam` 可依用户要求与 tickets 计划直接开工，开工时知会 director。director 默认放行，只有认为不合适时才叫停；不得以未获回复为由拖延。

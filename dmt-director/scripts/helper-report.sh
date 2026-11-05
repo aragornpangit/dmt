@@ -23,7 +23,7 @@ case "$ROLE" in director|devm|anam) ;; *) echo "主体角色必须是 director|d
 [ -f "$BODY" ] || { echo "正文文件不存在：$BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "正文文件为空：$BODY" >&2; exit 2; }
 
-DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 
 # 发送方身份：从 herdr pane label 推导，必须是 {主体}-helper
 #   $DMT_HELPER_ROLE 是自测逃生舱（无 herdr 环境时模拟 helper 身份）

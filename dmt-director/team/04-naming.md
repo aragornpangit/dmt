@@ -12,9 +12,11 @@
 | 人类计划 | `docs/human/human-plan/` | `{human-plan-seq}-plan-{slug}-{YYMMDD-HHMM}--v{N}.md` |
 | 收件箱消息 | `inbox/<收件角色>/` | `{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`（无版本号；认领后进 `.doing/`，办完删除） |
 
+**Codex 调用名**：DMT 角色仍是裸名（`dmt-dm`）；mattpocock 插件技能写限定名（`mattpocock-skills:code-review`）。pane 与收件箱继续用运行 id，herdr agent name 不参与命名。
+
 规则：
 
 1. **spec 与 ticket 必须对齐 `spec-seq`**：同一需求的 SPEC 与其 ticket 用同一个 `spec-seq` 前缀。
 2. **版本语义**：版本内小步更新**就地改同一文件**；实质修订**另立新版本号文件**（新时间戳、`v{N+1}`），并在旧文件头部就地标注「已被 v N+1 取代」。
 3. PRD 按需求方给定的格式只有日期（`YYMMDD`），无时刻；其余产物一律带时刻。
-4. 历史笔误留痕：需求原文的 `ver{seq}`、`YYMMDD-v{seq}` 写法**已作废**，一律以本表为准，历史文件不改名。
+4. 历史文件不改名；新产物只按本表命名。

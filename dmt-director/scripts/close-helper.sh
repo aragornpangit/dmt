@@ -28,7 +28,7 @@ if [ -z "$pane" ]; then
 fi
 
 # 收件箱定位到主工作树根（与 send-msg / msg-take 同口径；在 worktree 里跑也指回主树）
-DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 root="$(dmt_root)"
 inbox="$root/inbox/$ROLE"
 # 未读按方向过滤：只把 ^[0-9]+-{角色}-helper2{角色}- 的消息（含 .doing/）算该 helper 的未读/未收口

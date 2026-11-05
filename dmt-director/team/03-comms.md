@@ -1,10 +1,10 @@
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
-**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §2** —— 方向码表、收件箱路径与 `{seq}`、门铃通道（`agent prompt` 优先 / `send-text` 回退）、三态（`.doing/` / `.seq`）。
+**操作细节见 [`dmt-director/ops/comms.md`](dmt-director/ops/comms.md)** —— 方向码、路径、门铃和三态。
 
 ### 1.4 依赖的 harness 技能（mattpocock，强制使用）
 
-> **单一来源纪律（2026-11-04 第七十七次，硬规则）**：**团队口径只有一个权威 = 本文件**（`team.md`）；`OPS.md` 是操作层。
+> **单一来源纪律**：团队常量只在 `team.md`；`OPS.md` 是操作路由。
 > 七份技能 `SKILL.md` **只写该角色特有的动作**（怎么干），**不得复述**本文件的团队定义（组织 / 层级 / 权限 / 门禁 / 写操作归属 / 并行口径 / 命名）。技能里凡引用共性口径，**一律写成指针**（「见 `dmt-director/team.md` §X」），把契约变动收敛到一处。
 > 判据：改一条团队口径（如并行口径）时，**只应改本文件 + 该角色动手处的指针**，不应再出现「7 份技能都要跟着改同一句」。
 
@@ -20,20 +20,23 @@
 | `dev-e` | `/tdd`、`/implement`、`/code-review`、`/diagnosing-bugs` | TDD 实施、按 SPEC 落地、提交前自审、缺陷分诊 |
 | `ana-e` | `/research`、`/rea`、`/grilling`、`/grill-me`、`/grill-with-docs` | 取证、竞品逆向（`/rea`，REA 专用）、交叉拷问 |
 
-**子代理角色技能（四个，2026-11-04 第六十七次新增 / 统一命名）**：`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 各自一份技能 —— `dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`（**技能名与运行 id 一一对应**；**派发者**：`pde{n}` 由 `director`、`dev-e` / `reviewer{n}` 由 `devm`、`ana-e` 由 `anam`）。派生者把**对应技能名**写进派发 prompt：cbc 下 teammate 继承技能清单、可直接斜杠调用（如 `/dmt-de`）；**pi 下 `delegate` 子代理不注入技能清单、也没有 Skill 工具**，必须写成「`read <技能目录>/dmt-<角色>/SKILL.md` 并按其中「强制技能」节执行」。**实测（2026-11-04）**：cbc teammate 能列出 `dmt-pde` 等技能；pi `delegate` 子代理的 system prompt **无 skills 段**、工具集**无 Skill 工具**（只能 `read` 文件）—— 故「技能名写进 prompt」在 pi 下必须配「读文件路径」，否则不可执行。
+**子代理技能**：`pde{n}` → `dmt-pde`，`dev-e` → `dmt-de`，`ana-e` → `dmt-ae`，`reviewer{n}` → `dmt-reviewer`。派发者在 prompt 写技能名；**各 harness 的“调用行 / 要不要给技能文件路径 / 插件前缀”差异按 harness 加载** —— 见 [`../harness/README.md`](../harness/README.md)（共性 [`../harness/COMMON.md`](../harness/COMMON.md) ＋ `pi.md` / `codebuddy.md` / `claude.md` / `codex.md` / `opencode.md`；派发模板见 [`07b-dispatch.md`](07b-dispatch.md)）。
 
 **技能源文件**（技能名与 [`mattpocock/skills`](https://github.com/mattpocock/skills) 上游目录名**逐字一致**；`/rea` 属 REA、不在该仓，保持原名不加链接）：
 [`/grilling`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md)、[`/grill-me`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md)、[`/grill-with-docs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、
 [`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/implement`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md)、[`/diagnosing-bugs`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md)、[`/improve-codebase-architecture`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/improve-codebase-architecture/SKILL.md)（**可选、非强制**，`dmt-dm` 指针里提及）
 
-**通用技能（pane 常驻角色）**：`cbc-herdr`（CodeBuddy 在 herdr 的状态上报，让 `herdr pane list` 的 `agent_status` 可信）—— `dmt-director` / `dmt-dm` / `dmt-am` 三份技能都必须登记；`dmt-pde`（子代理技能）不登记；子代理不占 pane，不需要。
+**通用技能（仅 CodeBuddy pane）**：`cbc-herdr` 仅用于 CodeBuddy 在 herdr 的状态上报；Codex 使用 herdr 原生状态识别，不加载它。`dmt-director` / `dmt-dm` / `dmt-am` 的 cbc 必须登记；其它 harness 与子代理不登记。
 
-**安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；失败时克隆 `https://github.com/mattpocock/skills.git`，把 `skills/` 下技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录。
+**安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；Codex 用 `codex plugin marketplace add mattpocock/skills`，随后 `codex plugin add mattpocock-skills@mattpocock`。失败时克隆 `https://github.com/mattpocock/skills.git`，把技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录；Codex 插件与兼容副本二选一，避免同名技能重复登记。
 
-**harness 差异（2026-11-04 探针实测，更正第六十二次的「交集」结论）**：只有 `codex` / `opencode` / `pi` 读 `.agents/skills/`（项目级与用户级同理），**`claude` 与 `codebuddy` 都不读**——它们各自只认私有目录（`.claude/skills/` / `.codebuddy/skills/`）；`opencode` 额外兼容 `.claude/skills/`。⇒ **装到哪个 harness 就必须软链到那个 harness 认的目录**，不存在「只装一处、五者共用」的落点（原「`~/.agents/skills/` 是五者唯一交集」的说法经实测作废）。详见 §1.2「harness 兼容」。
+**harness 差异**：`.agents/skills/` 只被 codex / opencode / pi 读取；claude / codebuddy 各用私有目录。目录 / 前缀 / 启动等机器事实见 §1.2 与 [`../harness_matrix.yaml`](../harness_matrix.yaml)；技能怎么加载见 [`../harness/`](../harness/README.md)。
 
-**已知缺口（2026-10 核查）**：上游无 `to-prd`，`implement-spec` 仍在 `in-progress/` 未发布 ⇒ PRD 由 `pde{n}` 按 §4.1 模板落笔、director 定稿；若上游提供 `to-prd`，优先改用。
+**已知缺口**：
+
+- 上游暂无 `to-prd` ⇒ PRD 按 §4.1 模板由 pde 落笔。
+- **转发式技能在 pi 上必须降级**：`grill-with-docs` / `grill-me` / `implement` / `tdd` 正文含 `Call the Skill tool with "<其它技能>"`，而 pi **无 Skill 工具** ⇒ 须改为 `read <镜像根>/<其它技能>/SKILL.md`（不降级会静默失效；边缘与实测见 [`../harness/pi.md`](../harness/pi.md) §5.1）。
 
 ### 1.5 文件占用（编辑前必须检查）
 
-**操作细节见 [`dmt-director/OPS.md`](dmt-director/OPS.md) §3** —— `file-claim.sh` 的 check / claim / release、`rc=3` 处置、TTL 30 分钟、worktree 不豁免。
+**操作细节见 [`dmt-director/ops/file-claim.md`](dmt-director/ops/file-claim.md)**。

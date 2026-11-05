@@ -12,8 +12,11 @@
 #   slash_prefix             技能斜杠命令前缀；pi 为 "/skill:"，其余为 "/"
 #   start_cmd                代启动命令（免逐条审批档位）
 #   start_needs_trust        首次进入项目目录需人工确认 trust（一次性）
-#   max_subagents_conc       该 harness 支持的并发 subagent 上限（null = 未知/不设）
+#   max_subagents_conc       静态默认并发上限（null = 需运行时探测/不设）
 #   max_subagents_env        并发上限对应的环境变量（若有）
+#   max_subagents_config     并发上限的运行时配置（codex 读 [agents] 的会话上限）
+#   skill_prefix             技能限定名前缀（Codex 插件技能使用该前缀）
+#   first_prompt             启动命令是否接受首轮 prompt（true 时技能/任务随启动一次下发）
 #   doorbell                 门铃通道（herdr agent 的检测名）
 harnesses:
   codebuddy:
@@ -25,6 +28,10 @@ harnesses:
     start_needs_trust: false
     max_subagents_conc: 8
     max_subagents_env: CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS
+    max_subagents_config: null
+    skill_prefix: null
+    first_prompt: false
+    tree_mode: full
     doorbell: codebuddy
   claude:
     skills:
@@ -34,18 +41,26 @@ harnesses:
     start_cmd: "claude --permission-mode auto"
     start_needs_trust: false
     max_subagents_conc: 10
-    max_subagents_env: null
+    max_subagents_env: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS
+    max_subagents_config: null
+    skill_prefix: null
+    first_prompt: false
+    tree_mode: full
     doorbell: claude
   codex:
     skills:
       dir_project: .agents/skills
       dir_user: .agents/skills
-      dir_project_extra: .codex/skills
+      dir_project_extra: null
     slash_prefix: "/"
     start_cmd: "codex -a never"
     start_needs_trust: true
     max_subagents_conc: 8
     max_subagents_env: null
+    max_subagents_config: "agents.max_concurrent_threads_per_session"
+    skill_prefix: "mattpocock-skills:"
+    first_prompt: true
+    tree_mode: herdr
     doorbell: codex
   opencode:
     skills:
@@ -57,6 +72,10 @@ harnesses:
     start_needs_trust: false
     max_subagents_conc: null
     max_subagents_env: null
+    max_subagents_config: null
+    skill_prefix: null
+    first_prompt: false
+    tree_mode: full
     doorbell: opencode
   pi:
     skills:
@@ -68,10 +87,15 @@ harnesses:
     start_needs_trust: true
     max_subagents_conc: null
     max_subagents_env: null
+    max_subagents_config: null
+    skill_prefix: null
+    first_prompt: false
+    tree_mode: full
     doorbell: pi
 
 # install-skills.sh --harness all 时铺设的落点（去重后的项目级目录）。
-# 覆盖五个 harness：.agents/skills（codex/opencode/pi）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）
+# 覆盖五个 harness：.agents/skills（codex/opencode/pi）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）。
+# codex 同时发现 .codex/skills，但安装只用 .agents/skills，避免同一技能登记两次。
 install_all_dirs:
   - .agents/skills
   - .claude/skills

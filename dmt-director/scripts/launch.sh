@@ -25,11 +25,11 @@ for a in "$@"; do
   esac
 done
 if [ "${#ARGS[@]}" -gt 0 ]; then
-  ROOT="$(cd "${ARGS[0]}" && pwd)"
+  ROOT="$(cd -P "${ARGS[0]}" && pwd -P)"
 else
   ROOT="$PWD"
 fi
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
 # 目标根不能是技能脚本目录本身（否则 docs/、inbox/、locks/、技能全装进 scripts/）
 case "$ROOT" in
   */dmt-director/scripts|*/dmt-director) echo "[launch] 目标根不能是技能目录：$ROOT" >&2; exit 2 ;;

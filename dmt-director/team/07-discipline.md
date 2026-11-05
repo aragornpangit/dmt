@@ -20,11 +20,11 @@
 1. 派发前先做**依赖分析**：只有无依赖任务适合并行；共享文件、共享构建目标、有顺序验收关系的任务**必须串行**。
 2. **经理层路径（硬约束）**：`devm` / `anam` **一律直接派工程师子代理** —— `devm` 派 `dev-e`（一票一 worktree）、`anam` 派 `ana-e`，**不开任何中间层 pane**（队长层已取消）。工程师子代理随任务收口回收。
 3. **无依赖任务一律开满 subagents 并行（`director` / `devm` / `anam`；2026-11-04 用户裁定，推翻「按需、可少派」）**：任务间**无依赖**（不同文件面 / 共享输入 / 共享构建目标 / 顺序验收以外）⇒ **必须开满并行、到 harness 并发上限**（`harness_matrix.yaml` 的 `max_subagents_conc`，经 `dmt_concurrency_cap` 读：codebuddy 8/env、claude 10、codex 8），**不得自行留一手串行**。串行**仅限**真依赖（共享文件 / 构建目标 / 顺序验收 / 同一设备 / 同一 REA 会话）与第 7 条 worktree 单写者，**且须写明理由**。任务收口后子代理随收口回收。
-   - **手段**：cbc 用 **teammate 方式**（`Agent` 带 `name`）；pi 用 dynamic workflow `runs.all`（`agent` 字段填 `delegate`）；其它 harness 用多个并行子代理。**派发 prompt 模板 + pi `delegate` 承载详情见 [`team/07b-dispatch.md`](07b-dispatch.md)**。
+   - **手段**：cbc 用 **teammate 方式**（`Agent` 带 `name`）；pi 用 dynamic workflow `runs.all`（`agent` 字段填 `delegate`）；Codex 用 `spawn_agent` 并行派发、`wait_agent` 收结果；Codex 在 herdr 会话中若没有这些接口，只做本 pane 角色工作，不自建嵌套 pane。**派发 prompt 模板与各 harness 承载详情见 [`team/07b-dispatch.md`](07b-dispatch.md)**。
    - **废止项**（不回潮）：2026-11-02 的「按需、可少派、任务小就自做」作废；开工先落账、每波按上限拆波、并发位计数、回报首行交账及其理由白名单等饱和机制脚本仍保持删除、不得恢复。
 4. **产品工作（director 自派 `pde{n}`）**：产品线无 pane、无队长层，**无依赖产品单元一律开满 `pde{n}` 并行**（一单元一 `pde{n}`，全部无依赖单元同时派出，派发手段同第 3 条）；`director` 的评审前预检同理。
 5. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）、**文件写入纪律**（改 bash 用单引号 heredoc / Write/Edit；禁把脚本正文放进 JS 模板字符串；Edit 的 `oldString` 必须唯一）。**骨架与 reviewer 变体照 [`team/07b-dispatch.md`](07b-dispatch.md) 填空，不要现编。**
-6. 子代理一律后台/异步派发，**派完立即结束本轮**，由完成通知唤醒再验收；不做轮询。
+6. 子代理**派完立即结束本轮**，由完成通知或 harness 的等待原语唤醒再验收；Codex 用 `wait_agent` 在父轮等待，不用 shell 轮询。
 7. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
 8. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
 9. **一子代理一单元队列（2026-10-27 事故后立规，复盘见 `logs/2026-10-27-serial-queue-incident.md`）**：

@@ -1,9 +1,13 @@
 # dmt 变更语义摘要（自动生成，勿手改）
 
-> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 80 条。
+> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 84 条。
 
 | 日期 | 条目 | 版本 | 要点 |
 |---|---|---|---|
+| 2026-11-05 | 用户要求·第八十一次：harness × dmt 实测缺陷集中修复 ＋ 汇总归档，版本 `5.18.2` | 5.18.2 | 用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 /tmp/pi-summary.txt、摘要版 /tmp/pi-msg.txt）的实测 |
+| 2026-11-05 | 用户要求·第八十次：转发式技能在 pi 上的降级 —— `harness/pi.md` §5.1，版本 `5.18.1` | 5.18.1 | 用户要求在 workspace4（w5 / director-pi / devm-pi / anam-pi）用 pi 承载三角色实测「技能能否加载并使用」，实测 |
+| 2026-11-05 | 用户要求·第七十九次：技能按 harness 加载 —— 共性一份 ＋ 每 harness 一份差异，版本 `5.18.0` | 5.18.0 | 用户要求「把 pi / opencode / cbc / claude / codex 五个 harness 共性的内容做在一个单一来源的文件中 |
+| 2026-11-05 | 用户要求·第七十八次：Codex 升为正式备选 harness，版本 `5.17.0` | 5.17.0 | 用户要求「DMT 增加对 Codex 的支持，把 Codex 作为 DMT 的备选 harness 之一」 |
 | 2026-11-04 | 用户要求·第七十七次：再瘦身 —— pane 技能公共块抽分节 / 07 附节外移 / OPS 事故复盘外移，版本 `5.16.15` | 5.16.15 | 用户认可「agent 读取文件的再瘦身」评估并执行 P1–P3 |
 | 2026-11-04 | 用户要求·第七十六次：质量瘦身 —— P1 机检迁 YAML / P2 文档压缩 / P3 CHANGELOG 归档 / P4 技能去重 / P5 合并机检，版本 `5.16.14` | 5.16.14 | 用户采纳 AI 工程评估的 5 项优化并逐条落地 |
 | 2026-11-04 | 用户要求·第七十五次：工程化加固 —— harness 矩阵单一来源 / helper 补全 / 结构化机检 / 版本自动化 / 防泄漏 hooks / reviewer 双轨，版本 `5.16.13` | 5.16.13 | 用户接受一批 AI 工程建议并逐条落地（A1–3 / B4–6 / C7–9） |

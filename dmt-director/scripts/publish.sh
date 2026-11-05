@@ -4,7 +4,7 @@
 #   --auto 由 git status 枚举改动路径（仍是显式路径，不用 git add -A）
 set -eu
 # 载入 .env（DMT_GITLAB_SERVER / DMT_GITLAB_PORT / DMT_GITLAB_REPO；已导出的环境变量优先）
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 . "$DIR/lib-dmt.sh"
 dmt_load_env
 MSG=""; AUTO=0; PUSH=1; REMOTES="gitlab origin"

@@ -5,8 +5,8 @@
 # check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.16.15
-date: "2026-11-04"
+version: 5.18.2
+date: "2026-11-05"
 
 skills:
   dmt-director: { run_id: director,      kind: pane,  pane: true }
@@ -36,6 +36,34 @@ artifact_dirs:
   - docs/human/human-plan
 runtime_dirs:
   - inbox
+
+ops_docs:
+  - runtime.md
+  - comms.md
+  - file-claim.md
+  - helper.md
+  - permission-notes.md
+
+# 按 harness 加载的说明文件（一份共性 + 每 harness 一份差异）。
+# 目录固定 dmt-director/harness/；harness 名集合必须与 harness_matrix.yaml 的 key 一致（机检 A8）。
+harness_docs:
+  common: COMMON.md
+  readme: README.md
+  per_harness:
+    - pi.md
+    - codebuddy.md
+    - claude.md
+    - codex.md
+    - opencode.md
+
+skill_budgets:
+  dmt-director: 4500
+  dmt-dm: 4000
+  dmt-am: 4000
+  dmt-pde: 3000
+  dmt-de: 3000
+  dmt-ae: 3000
+  dmt-reviewer: 3500
 
 org:
   director:
@@ -69,6 +97,7 @@ scripts:
   - digest-changelog.sh
   - install-git-hooks.sh
   - auto-review-model.sh
+  - harness-detect.sh
 
 forbidden_scripts:
   - probe-cap.sh
@@ -85,9 +114,9 @@ content_assertions:
   requirement_coverage:
     files:
       "{skills}/dmt-director/SKILL.md":
-        require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/human-arch/", "docs/human/human-plan/", "docs/team.md", "setup-team.sh"]
+        require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/", "team.md", "setup-team.sh"]
       "{skills}/dmt-dm/SKILL.md":
-        require: ["docs/dev/tickets/", "归 devm", "硬件设备写操作"]
+        require: ["docs/dev/tickets/", "reviewer{n}", "publish.sh"]
       "{skills}/dmt-am/SKILL.md":
         require: ["docs/analyst/"]
         forbid: ["docs/pd/prd/", "docs/dev/tickets/"]
@@ -101,10 +130,38 @@ content_assertions:
         require: ["pde{n}", "reviewer{n}", "单线指挥"]
   helper:
     files:
-      "{docs}/OPS.md":
-        require: ["close-helper.sh", "一次性下发", "不接受任何输入框内容", "单向汇报", "没有自己的 inbox", "pane label", "不按 tab 内位置"]
       "{scripts}/spawn-helper.sh":
-        require: ["一次性下发"]
+        require: ["一次性下发", "dmt_skill_prompt", "FIRST_PROMPT"]
+  codex_harness:
+    files:
+      "{repo}/dmt-director/harness_matrix.yaml":
+        require: ["first_prompt: true", "skill_prefix: \"mattpocock-skills:\"", "max_subagents_config", "tree_mode: herdr"]
+      "{scripts}/setup-team.sh":
+        require: ["dmt_start_has_first_prompt", "dmt_skill_prompt", "角色技能 prompt"]
+      "{scripts}/lib-dmt.sh":
+        require: ["dmt_skill_ref", "skill_policy_ref", "dmt_tool_mode", "dmt_herdr"]
+      "{docs}/team/02-runtime.md":
+        require: ["mattpocock-skills:<name>", "首轮 prompt", "pane label"]
+      "{docs}/team/07b-dispatch.md":
+        require: ["Codex harness 承载", "spawn_agent", "wait_agent"]
+      "{docs}/ops/comms.md":
+        require: ["pane label", "agent name"]
+  documentation:
+    files:
+      "{docs}/team/09-check.md":
+        require: ["DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
+      "{repo}/dmt-director/hooks/pre-commit":
+        require: ["install-git-hooks.sh"]
+        forbid: ["install-hooks.sh"]
+  maintenance_only:
+    repo_only: true
+    files:
+      "{repo}/README.md":
+        require: ["全量 84 条", "DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
+  install_ops:
+    files:
+      "{scripts}/install-skills.sh":
+        require: ["只替换 DMT 拥有的入口", "cp \"$TARGET/dmt-director/ops/\"*.md \"$TARGET/docs/ops/\"", "cp -r \"$TARGET/dmt-director/team\" \"$TARGET/docs/team\"", "docs/harness"]
   concurrency:
     files:
       "{docs}/team/07-discipline.md":
@@ -126,16 +183,16 @@ content_assertions:
         require: ["merge 与 push 只归 devm", "只许 `devm` 或 `director` 执行", "至少每完成一个 ticket 推送一次", "至少每小时"]
         forbid: ["只许 `director` 执行", "装机只归 director", "装机归 director", "adb install|bcr_t36_calib|bcr_dump_prefs"]
       "{skills}/dmt-dm/SKILL.md":
-        require: ["归 devm", "硬件设备写操作"]
+        require: ["reviewer{n}", "publish.sh"]
       "{skills}/dmt-director/SKILL.md":
-        require: ["硬件设备写操作", "不代推"]
+        require: ["docs/handoff/", "reviewer{n}"]
         forbid: ["git push[^。]{0,20}只由[ ]*director"]
   gates:
     files:
       "{docs}/team/07-discipline.md":
         require: ["文档门禁", "代码门禁", "每批至少抽 1 票", "100% 复验"]
       "{docs}/team/01-org.md":
-        require: ["主轨直属 `devm`", "副轨直属 `director`"]
+        require: ["主轨归 devm", "副轨归 director"]
       "{skills}/dmt-director/SKILL.md":
         require: ["文档门禁", "每批至少抽 1 票", "不替代"]
       "{skills}/dmt-dm/SKILL.md":
@@ -148,14 +205,36 @@ content_assertions:
         require: ["raw.githubusercontent.com"]
   inbox_three_state:
     files:
-      "{docs}/OPS.md":
+      "{docs}/ops/comms.md":
         require: [".doing/", ".seq", "msg-take.sh", "msg-done.sh"]
       "{docs}/team/10-pane-role.md":
-        require: ["msg-take.sh", "msg-done.sh"]
+        require: ["ops/comms.md"]
+  harness_loading:
+    files:
+      "{skills}/dmt-director/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-dm/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-am/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-pde/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-de/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-ae/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-reviewer/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+  harness_forwarding:
+    files:
+      "{docs}/harness/pi.md":
+        require: ["Skill tool"]
+      "{docs}/team/03-comms.md":
+        require: ["Skill tool"]
   file_claim:
     files:
-      "{docs}/OPS.md":
-        require: ["file-claim"]
+      "{docs}/ops/file-claim.md":
+        require: ["file-claim.sh", "TTL 30 分钟"]
       "{docs}/team/10-pane-role.md":
         require: ["file-claim"]
       "{skills}/dmt-pde/SKILL.md":

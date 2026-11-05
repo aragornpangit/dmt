@@ -26,7 +26,7 @@
 set -u
 
 # 载入 .env（DMT_LOCAL_MODEL_HOST / DMT_LOCAL_MODEL_PORT 等；已导出的环境变量优先）
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 . "$DIR/lib-dmt.sh"
 dmt_load_env
 

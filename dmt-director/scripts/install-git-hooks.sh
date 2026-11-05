@@ -6,8 +6,8 @@
 #
 # 用法：bash dmt-director/scripts/install-git-hooks.sh [--uninstall] [--dry-run]
 set -eu
-DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$DIR/../.." && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
+REPO="$(cd -P "$DIR/../.." && pwd -P)"
 HOOKS="$REPO/dmt-director/hooks"
 DRY=0; UNINSTALL=0
 while [ $# -gt 0 ]; do

@@ -1,4 +1,4 @@
-# 权限档位与 auto 复核：事故实证与逃生舱（`OPS.md` §1 按需引用）
+# 权限档位与 auto 复核：事故实证与逃生舱
 
 ## 档位复验（第六十三次）
 
@@ -6,6 +6,8 @@
 
 - **判据读 argv，不读屏幕**：`dmt_pane_auto_mode <pane>` 逐 token 判（`--permission-mode auto` / `--dangerously-skip-permissions` / `--yolo` / `--approve` / `--auto` / `-a never` / `--ask-for-approval never`）；**子串匹配会把 `--autocompact auto` 误判**，故逐 token。rc=0 自动 / 1 非自动 / 2 拿不到 argv。
 - **接线**：`setup-team.sh` / `spawn-helper.sh` 在「就绪 + 输技能」后调 `verify_auto_mode`；rc=1 打 `WARN` + 打印 argv，rc=2 只 `INFO`。
+
+**Codex 备选 harness**：技能与 helper 任务随 `codex -a never '<角色技能 prompt>'` 的首轮 prompt 下发。首次 trust 只允许人工确认一次；确认前不粘贴技能文本，确认后重跑 `setup-team.sh --harness codex --force-start`。pane label 是角色身份，agent name 只用于 herdr 展示；权限档仍按 `-a never` / `--ask-for-approval never` 等 argv 复验，不以 `agent_status` 代替。
 - **修正**：非自动档 ⇒ `setup-team.sh --force-start`（或重开 pane）。
 
 ## auto 复核（`autoModeClassifier`）已知坑与现行配置

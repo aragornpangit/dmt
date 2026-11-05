@@ -12,7 +12,7 @@ set -u
 
 # 锁登记固定落在「主工作树」根：worktree 里跑也写回 <main>/locks/，
 # 否则 director 在项目根巡检 locks/ 看不到，且各分支 .gitignore 未必有 locks/。
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
 . "$DIR/lib-dmt.sh"
 ROOT="$(dmt_root)"
 LOCKS="${DMT_LOCKS_DIR:-$ROOT/locks}"

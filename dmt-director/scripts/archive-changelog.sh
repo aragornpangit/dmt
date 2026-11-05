@@ -11,8 +11,8 @@
 #
 # 说明：条目跨越其季度的判定按条目首行日期（- **YYYY-MM-DD …）。归档文件按时间倒序。
 set -eu
-DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$DIR/../.." && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
+REPO="$(cd -P "$DIR/../.." && pwd -P)"
 export CL="$REPO/dmt-director/CHANGELOG.md" ARCH_DIR="$REPO/dmt-director/changelog"
 DRY=0; CHECK=0; KEEP=""
 while [ $# -gt 0 ]; do

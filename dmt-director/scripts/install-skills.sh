@@ -9,7 +9,8 @@
 # 默认 --harness all ⇒ 上面三处全装（五个 harness 全覆盖）；也可只装指定 harness 的落点。
 # 不必另装 codex / pi 的私有目录（.codex/skills、.pi/skills）—— 它们已经读 .agents/skills/。
 #
-# 契约：<target>/docs/team.md 与 <target>/docs/OPS.md（link 模式＝软链、copy 模式＝复制，机检按同目录查找）
+# 契约：<target>/docs/team.md、<target>/docs/OPS.md 与 <target>/docs/ops/
+# （link 模式＝软链、copy 模式＝复制，机检按同目录查找）
 # 脚本与契约正本落到 <target>/dmt-director/（team.md 里的命令一律写 dmt-director/scripts/…）
 set -eu
 
@@ -28,8 +29,8 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$TARGET" ] || { echo "usage: install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,opencode,pi]" >&2; exit 2; }
 
-REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-TARGET="$(cd "$TARGET" && pwd)"
+REPO="$(cd -P "$(dirname "$0")/../.." && pwd -P)"
+TARGET="$(cd -P "$TARGET" && pwd -P)"
 # 防自引用：target 落在技能仓内时拒绝（否则会把软链建到自身，造出 <repo>/dmt-director/dmt-director 之类残留）
 case "$TARGET" in
   "$REPO"|"$REPO"/*) echo "拒绝：target 落在技能仓内（$TARGET）—— 技能仓是维护地，不是安装目标" >&2; exit 2 ;;
@@ -87,15 +88,35 @@ mkdir -p "$TARGET/docs"
 #   · copy 模式＝**复制** → 目标项目不跟随本仓（正本变更后需重跑本脚本，见 README「维护」）。
 rm -f "$TARGET/docs/team.md" "$TARGET/docs/OPS.md"
 if [ "$MODE" = "copy" ]; then
+  # 只替换 DMT 拥有的入口；目标项目自己的 docs 子目录保留。
+  rm -rf "$TARGET/docs/ops" "$TARGET/docs/team" "$TARGET/docs/changelog" "$TARGET/docs/harness"
+  rm -f "$TARGET/docs/CHANGELOG.md" "$TARGET/docs/CHANGELOG-DIGEST.md"
+  mkdir -p "$TARGET/docs/ops"
   cp "$TARGET/dmt-director/team.md" "$TARGET/docs/team.md"
   cp "$TARGET/dmt-director/OPS.md"  "$TARGET/docs/OPS.md"
+  cp "$TARGET/dmt-director/ops/"*.md "$TARGET/docs/ops/"
+  cp -r "$TARGET/dmt-director/team" "$TARGET/docs/team"
+  cp -r "$TARGET/dmt-director/harness" "$TARGET/docs/harness"
+  cp "$TARGET/dmt-director/CHANGELOG.md" "$TARGET/dmt-director/CHANGELOG-DIGEST.md" "$TARGET/docs/"
+  cp -r "$TARGET/dmt-director/changelog" "$TARGET/docs/changelog"
 else
+  # 软链模式可能从旧的穿插安装切换而来；先移除文档入口，再补建 ops/ 与 harness/。
+  rm -rf "$TARGET/docs/ops" "$TARGET/docs/harness"
+  mkdir -p "$TARGET/docs/ops"
+  ln -sfn ../dmt-director/harness "$TARGET/docs/harness"
   ln -sfn ../dmt-director/team.md "$TARGET/docs/team.md"
   ln -sfn ../dmt-director/OPS.md  "$TARGET/docs/OPS.md"
+  for f in "$TARGET/dmt-director/ops/"*.md; do
+    ln -sfn "../../dmt-director/ops/$(basename "$f")" "$TARGET/docs/ops/$(basename "$f")"
+  done
+  ln -sfn ../dmt-director/team "$TARGET/docs/team"
+  ln -sfn ../dmt-director/CHANGELOG.md "$TARGET/docs/CHANGELOG.md"
+  ln -sfn ../dmt-director/CHANGELOG-DIGEST.md "$TARGET/docs/CHANGELOG-DIGEST.md"
+  ln -sfn ../dmt-director/changelog "$TARGET/docs/changelog"
 fi
 
 # 初始化 + 机检。DMT_SKILLS_DIR 指向本次实际装的第一个落点（--harness claude 之类不含 .agents 时，
 # 机检默认的 <target>/.agents/skills 并不存在，会把技能断言全部误报红）。
 FIRST_DIR="$(printf '%s' "$DIRS" | awk '{print $1}')"
-DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$TARGET/dmt-director/scripts/init-project.sh" "$TARGET"
+DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-director/scripts/init-project.sh" "$TARGET"
 echo "installed ($MODE, --harness $HARNESS) into $TARGET"

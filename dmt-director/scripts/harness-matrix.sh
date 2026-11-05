@@ -13,7 +13,7 @@
 # 本脚本是「harness 差异」的唯一读取口：lib-dmt.sh / install-skills.sh / 机检都经它取，
 # 不再各写一份 case 分支。
 set -eu
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
 MATRIX="${DMT_HARNESS_MATRIX:-$DIR/../harness_matrix.yaml}"
 
 if ! command -v python3 >/dev/null 2>&1; then

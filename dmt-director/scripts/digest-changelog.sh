@@ -7,8 +7,8 @@
 # 用法：bash digest-changelog.sh [--dry-run]
 #   输出：dmt-director/CHANGELOG-DIGEST.md
 set -eu
-DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$DIR/../.." && pwd)"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
+REPO="$(cd -P "$DIR/../.." && pwd -P)"
 CL="$REPO/dmt-director/CHANGELOG.md"
 OUT="$REPO/dmt-director/CHANGELOG-DIGEST.md"
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1

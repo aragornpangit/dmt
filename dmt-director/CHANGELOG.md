@@ -1,7 +1,40 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 80 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 84 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-05（用户要求·第八十一次：harness × dmt 实测缺陷集中修复 ＋ 汇总归档，版本 `5.18.2`）**：
+  用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 `/tmp/pi-summary.txt`、摘要版 `/tmp/pi-msg.txt`）的实测结果**汇总归档**并**一并修复**所报缺陷。归档件：[`../logs/2026-11-05-harness-dmt-fit.md`](../logs/2026-11-05-harness-dmt-fit.md)。
+  ① **P0 软链根因（两侧共同命中）** —— `check-dmt.sh:18` 等 **20 个脚本**用 `cd "$(dirname …)" && pwd`（不解析软链）⇒ 软链安装在目标项目时 `REPO` 被算成项目根：`A3)` 被误判「维护仓自身」而 **SKIP**（漏检产物目录）、`maintenance_only` 组被误启用（假红）。统一改 `cd -P … && pwd -P`；本侧复测：lab **软链调用**由「`SKIP` ＋ `maintenance_only` 假红」→ **`ALL_PASS`**（报告侧同结论：readlink 修复后 305 FAIL → 9 FAIL）。
+  ② **label 命名（多 harness 同 workspace）** —— `dmt_pane_by_label` 增**唯一前缀回退**（精确 `director` 优先，`director-*` 命中多个则给空、**不猜**）；`send-msg.sh` 复用该函数、收发名接受 `<角色>-<后缀>`。来源＝workspace4 实测（三 pane 名为 `director-pi` / `devm-pi` / `anam-pi` 时按契约名寻址全空，anam 按纪律停手上报）。
+  ③ **其余缺陷** —— `init-project.sh` 建 `docs/handoff/`（契约 §3 列了但未建）＋ `.gitignore` 增 `__pycache__/` 与 `*.pyc`（子代理 python 探针残留）；A7 提取链接前**先剥围栏 / 行内代码**（4 条伪链接假红：`x[i]`、`+out1`、`[a-z0-9_]+`）；`harness/claude.md` §2 更正「同 codebuddy」→「claude **无本地复核器**；`auto` 档依赖远程 classifier 会限流（报告实测 122 次 Bash 中 9 次被 rate-limited）」并给 yolo 档选项与 `permissions.defaultMode` 造成的 argv 误报面；`harness_matrix.yaml` 的 claude `max_subagents_env` 填 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`；`harness/COMMON.md` 增 **§7「产物边界」「加载 ≠ 开工」**（两侧实测：子代理堆 26 个抓取件；pane 装载后自发开工、devm 真建 detached worktree）；清理误建嵌套目录 `dmt-director/team/dmt-director/`。
+  **未修（留痕）**：目标项目 docs 安装面缺件（P1）⇒ 需**重跑 `install-skills.sh`**（脚本侧已铺 `team.md` / `ops/` / `team/` / `harness/`）；用户级与项目级技能重复安装（文档提示，未强制清理）。
+  **实测**：维护仓 `ALL_PASS`（0 FAIL）；`/tmp/dmt-pi-lab` 软链调用与仓内调用均 `ALL_PASS`。
+  **版本升 `5.18.2`**（七技能同号）。
+
+- **2026-11-05（用户要求·第八十次：转发式技能在 pi 上的降级 —— `harness/pi.md` §5.1，版本 `5.18.1`）**：
+  用户要求在 workspace4（`w5` / `director-pi` / `devm-pi` / `anam-pi`）用 pi 承载三角色实测「技能能否加载并使用」，实测暴露并处置一个语义缺口。
+  ① **实测（三个 pi pane ＋ 三个子代理）** —— director-pi 测 `to-spec` / `to-tickets` / `grill-with-docs`、devm-pi 测 `tdd` / `implement`、anam-pi 测 `research` / `grill-with-docs`：**7/7 技能文件读取通路全部打通**（pane 角色与 `delegate` 子代理都能沿 `dmt-<角色>/SKILL.md` → `team/03-comms.md` §1.4 → `harness/pi.md` §5 的链路找到并 read 本机镜像路径）。子代理留痕里出现 `harness/COMMON.md` 与 `harness/pi.md` ⇒ 「按 harness 加载」机制被端到端执行。
+  ② **缺口** —— `grill-with-docs` 正文**只有一句** `Call the Skill tool twice, for "grilling" and "domain-modeling"`，而 **pi 无 Skill 工具** ⇒ 照正文执行会**静默失效**（技能「跑起来」了、内部转发步骤不发生）。同族影响：`grill-me`、`implement`（内部要调 `tdd` / `code-review`）、`tdd`（参考性调 `codebase-design`）。另两条实测：**技能目录不统一**（`grill-with-docs` 在 `engineering/`、不在 `productivity/`，有角色按后者找而误判不存在）；**子代理不能自动调起下游技能**，派生者必须注入绝对路径。
+  ③ **落地** —— `harness/pi.md` 新增 §5.1「转发式技能必须降级」（规则＝把 `Call the Skill tool with "X"` 改为 `read <镜像根>/X/SKILL.md`，附受影响技能表 ＋ 三条实测注意）；`team/03-comms.md` §1.4「已知缺口」补同源一行。
+  ④ **机检与安装** —— `dmt_contract.yaml` 增 `harness_forwarding` 断言组（`{docs}/harness/pi.md` 与 `{docs}/team/03-comms.md` 各须含 `Skill tool`）；为此 `install-skills.sh` 把 `harness/` 也铺到 **`docs/harness`**（link 软链 / copy 复制，与 `ops/`、`team/` 同规格），`install_ops` 断言补 `docs/harness`。
+  **实测**：维护仓机检 `ALL_PASS`；`/tmp/dmt-pi-lab` 重装后 `docs/harness` 就位、机检 `ALL_PASS`。
+  **版本升 `5.18.1`**（七技能同号）。
+
+- **2026-11-05（用户要求·第七十九次：技能按 harness 加载 —— 共性一份 ＋ 每 harness 一份差异，版本 `5.18.0`）**：
+  用户要求「把 pi / opencode / cbc / claude / codex 五个 harness 共性的内容做在一个单一来源的文件中；各 harness 不同的内容做成多个 harness-based 文件；按 harness 加载 harness-based 文件」。
+  ① **判定脚本** —— 新增 `dmt-director/scripts/harness-detect.sh`（无参判定本会话 harness；`--pane` / `--explain` 供诊断）：判据优先级 = `$DMT_HARNESS` → **herdr 前台进程 argv** → 环境标记（精确变量）→ 父进程链 → `unknown`（rc=1，**不得默认**）。两条实测定标：**argv 必须先于环境标记**（pi 会话带 `CLAUDE_CODE_*` 兼容变量，用通配判 claude 会把 pi 误判成 claude）；**codebuddy 的 argv basename 是 `cbc`** 不是 `codebuddy`。机检自测用 `$DMT_PANE_ARGV` ＋ `$DMT_DETECT_NO_PARENT` 两个逃生舱（同 `$DMT_HARNESS_CMD` 思路）。
+  ② **按 harness 拆文件** —— 新增 `dmt-director/harness/`：`COMMON.md`（五 harness 共性：技能清单与角色对应、强制技能口径、安装回退、变更后重载、技能预算、子代理共同边界）＋ 每 harness 一份差异（`pi.md` / `codebuddy.md` / `claude.md` / `codex.md` / `opencode.md`）＋ `README.md`（加载协议）。差异内容：发现目录、启动与权限、调用行、**技能如何到达模型**（pane 角色 / 子代理）、强制技能取法、子代理承载、特有约束。**机器事实仍单一来源 `harness_matrix.yaml`**；`harness/*.md` 是说明层，两者一致性由机检 A6b 守住。
+  ③ **技能加载入口** —— 七份角色 `SKILL.md` 增「## 0. 按 harness 加载（每次加载先做）」：跑 `harness-detect.sh` → 读 `COMMON.md` → 读 `harness/<harness>.md`。`team/02-runtime.md`、`team/03-comms.md` §1.4、`team/09-check.md` 的散落 harness 差异改为指针（单一来源纪律）。
+  ④ **机检** —— `dmt_contract.yaml` 增 `harness_docs` 清单与 `harness_loading` 断言组（七技能各须含 `harness-detect.sh` 与 `harness/COMMON.md`）、脚本清单加 `harness-detect.sh`；`check-dmt.sh` 增 **A6b**（harness 文件齐备 ＋ 与矩阵 key 一致 ＋ 七技能含第 0 步 ＋ 检测脚本五 harness 自测 ＋ 判不出时 `unknown` 且 rc=1）。
+  **实测**：`harness-detect.sh` 对真实 pane 判定正确（`w2:p2D`→pi、`w2:p2A`→codex、`w2:p1`→codebuddy、`w2:pC`→claude）；`env -i` 自测五 harness 各自命中、`/usr/bin/vim` → `unknown` rc=1；维护仓机检 `ALL_PASS`（0 FAIL）。
+  **版本升 `5.18.0`**（七技能同号）。
+
+- **2026-11-05（用户要求·第七十八次：Codex 升为正式备选 harness，版本 `5.17.0`）**：
+  用户要求「DMT 增加对 Codex 的支持，把 Codex 作为 DMT 的备选 harness 之一」。
+  ① **启动**：`setup-team.sh --harness codex` 把角色技能与启动命令作为**首轮 prompt 一次下发**，不再先启动 TUI 再粘贴第二行；首次 trust 由用户确认后，以 `--force-start` 重跑。`spawn-helper.sh` 把角色技能、任务、回执要求合成一次 helper spawn。② **通信**：门铃先按 pane `label` 解析 pane id，再向该 pane 发 `agent prompt`；Codex agent name 不再承担角色身份。③ **子代理**：增加 Codex `spawn_agent` / `wait_agent` 派发模板；herdr 角色 pane 没有该接口时明确记为 `[SUBAGENT_UNAVAILABLE]`，只做本 pane 工作，不伪造嵌套 pane 或 `codex exec` 子代理。④ **技能与并发**：mattpocock 技能使用 `mattpocock-skills:<name>`，DMT 技能保持裸名 `dmt-*`；Codex 并发从 `~/.codex/config.toml` 的 `[agents].max_concurrent_threads_per_session` 读取，矩阵仍提供静态回退。⑤ **机检**：内容断言覆盖 Codex 启动、通信与派发路径；A7 区分仓内正本和软链安装两种相对链接解析。⑥ **文档**：runtime / comms / permission-notes / 派单模板 / 根 README 同步说明。
+  **实测**：Codex 0.166 从临时项目 `.agents/skills/` 与 `.codex/skills/` 发现 7 个 DMT 技能；mattpocock 插件技能以 `mattpocock-skills:<name>` 出现在公开目录；真实 `dmt` herdr 会话中 pane label 与 agent name 发生漂移；dry-run 证明启动只发首轮 prompt、helper 任务并入首轮。**边界**：完整多 pane 自动派发仍需在真实 Codex 会话中验收。
+  **版本升 `5.17.0`**（七技能同号）。
 
 - **2026-11-04（用户要求·第七十七次：再瘦身 —— pane 技能公共块抽分节 / 07 附节外移 / OPS 事故复盘外移，版本 `5.16.15`）**：
   用户认可「agent 读取文件的再瘦身」评估并执行 P1–P3。

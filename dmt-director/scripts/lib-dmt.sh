@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # dmt 脚本公共库：工作树根 / 角色解析 / pane 查询。被各脚本 source，不单独执行。
-# 用法：DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
+# 用法：DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 # 目的：同一判据只有一份实现 —— 复制粘贴出来的副本已经分叉过（dry-run 守卫、fail-closed 修复各漏一处）。
 
 # 本库所在目录（source 时解析一次；用于拼「同目录脚本」的绝对路径，免受调用方后续 cd 影响）
-DMT_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DMT_SCRIPTS_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # 载入 .env（内网端点等环境私有配置；不覆盖已存在的环境变量）
 # 查找顺序：$DMT_ENV_FILE → <项目根>/.env → <技能仓根>/.env
@@ -41,26 +41,49 @@ dmt_root() {
   fi
 }
 
-# 角色解析：参数（空或 "-"）⇒ $DMT_ROLE ⇒ herdr pane label
+# 角色解析：参数（空或 "-"）⇒ $DMT_ROLE ⇒ $DMT_PANE_ROLE ⇒ herdr pane label
 dmt_role() {
-  local r="${1:-}"
+  local r="${1:-}" pane
   case "$r" in ""|-) r="${DMT_ROLE:-}" ;; esac
+  if [ -z "$r" ] && [ -n "${DMT_PANE_ROLE:-}" ]; then r="$DMT_PANE_ROLE"; fi
   if [ -z "$r" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
-    r="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
+    pane="$(dmt_herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
       | jq -r --arg p "$HERDR_PANE_ID" '.result.panes[]? | select(.pane_id==$p) | .label' 2>/dev/null | head -1 || true)"
+    r="$pane"
   fi
   printf '%s' "$r"
 }
 
+# herdr 查询统一入口。$DMT_HERDR_SOCKET_PATH 可显式指定当前 workspace 的 socket；
+# 其余情况沿用 herdr 的 session 发现。
+dmt_herdr() {
+  if [ -n "${DMT_HERDR_SOCKET_PATH:-}" ]; then
+    HERDR_SOCKET_PATH="$DMT_HERDR_SOCKET_PATH" HERDR_ENV=1 herdr "$@" 2>/dev/null
+  else
+    HERDR_ENV=1 herdr "$@" 2>/dev/null
+  fi
+}
+
 # pane label -> pane id（不存在给空；herdr 不可用也给空）
+#
+# 匹配顺序（2026-11-05 第八十一次：多 harness 同 workspace 场景）：
+#   ① 精确 label == <角色名>（契约默认写法）
+#   ② 否则按「<角色名>-*」前缀回退（如 director-pi / devm-pi；多套团队同 workspace 时用）
+#     回退**必须唯一**：命中多个 ⇒ 给空（不猜，调用方按「label 不符 ⇒ 停下问用户」处置）
 dmt_pane_by_label() {
-  HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null \
-    | jq -r --arg l "$1" '.result.panes[]? | select(.label==$l) | .pane_id' 2>/dev/null | head -1 || true
+  local want="$1" out id hits n
+  out="$(dmt_herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null || true)"
+  id="$(printf '%s' "$out" | jq -r --arg l "$want" '.result.panes[]? | select(.label==$l) | .pane_id' 2>/dev/null | head -1 || true)"
+  [ -n "$id" ] && { printf '%s' "$id"; return 0; }
+  hits="$(printf '%s' "$out" | jq -r --arg p "${want}-" '.result.panes[]? | select((.label // "") | startswith($p)) | .pane_id' 2>/dev/null || true)"
+  n="$(printf '%s\n' "$hits" | sed '/^$/d' | wc -l | tr -d ' ')"
+  [ "$n" = "1" ] && printf '%s' "$(printf '%s\n' "$hits" | sed '/^$/d' | head -1)"
+  return 0
 }
 
 # pane 的 agent_status（unknown = 该 pane 没有 agent 在跑）
 dmt_pane_status() {
-  HERDR_ENV=1 herdr pane get "$1" 2>/dev/null \
+  dmt_herdr pane get "$1" 2>/dev/null \
     | jq -r '.result.pane.agent_status // "unknown"' 2>/dev/null || echo unknown
 }
 
@@ -68,7 +91,7 @@ dmt_pane_status() {
 # $DMT_PANE_ARGV 可整体覆盖 —— 仅供机检自测判据（与 $DMT_HARNESS_CMD 同思路的逃生舱）。
 dmt_pane_argv() {
   if [ -n "${DMT_PANE_ARGV+x}" ]; then printf '%s' "${DMT_PANE_ARGV}"; return 0; fi
-  HERDR_ENV=1 herdr pane process-info --pane "$1" 2>/dev/null \
+  dmt_herdr pane process-info --pane "$1" 2>/dev/null \
     | jq -r '.result.process_info.foreground_processes[0].argv // [] | join(" ")' 2>/dev/null || true
 }
 
@@ -116,6 +139,90 @@ dmt_wait_ready() {
   done
   echo "WARN: $pane still unknown after ${limit}s" >&2
   return 1
+}
+
+# 启动回执：pane 输出必须同时含角色名与一次性凭据，才证明角色技能确实已加载。
+# rc=2 表示参数/凭据缺失；rc=1 表示超时。
+dmt_confirm_role_ready() {
+  local pane="$1" role="$2" token="$3" limit="${4:-60}" i=0 text=""
+  [ -n "$pane" ] && [ -n "$role" ] && [ -n "$token" ] || return 2
+  while [ "$i" -lt "$limit" ]; do
+    text="$(dmt_herdr pane read "$pane" --source recent-unwrapped --lines 240 2>/dev/null || true)"
+    if printf '%s' "$text" | grep -qF -- "$role" &&
+       printf '%s' "$text" | grep -qF -- "$token"; then
+      return 0
+    fi
+    sleep 1; i=$((i + 1))
+  done
+  return 1
+}
+
+# 生成角色启动说明。技能按 harness 限定名给出，避免 Codex 插件技能短名静默不展开。
+dmt_skill_prompt() {
+  local h="${1:-codebuddy}" name="${2:?dmt_skill_prompt <harness> <skill-name>}" extra="${3:-}"
+  local label="${4:-$name}" ref tree_mode
+  ref="$(dmt_skill_ref "$h" "$name")"
+  tree_mode="$(dmt_tool_mode "$h")"
+  if [ "$h" = "codex" ] && [ "$tree_mode" = "herdr" ]; then
+    printf '请立即使用技能 `%s`（%s）。Codex 默认无子代理编排工具；若当前有 spawn_agent / send_message / wait_agent，只能在本 pane 现有人员架构内使用。不得用 exec 启动 codex exec 子进程。完全读取并执行技能；角色为 `%s`。%s' \
+      "$ref" "$name" "$label" "$extra"
+    return 0
+  fi
+  printf '请立即使用技能 `%s`（%s）。完全读取并执行该技能；角色为 `%s`。%s' \
+    "$ref" "$name" "$label" "$extra"
+}
+
+# 某技能在当前 harness 的注册名；DMT 自身技能不加插件前缀。
+dmt_skill_ref() {
+  local h="${1:-codebuddy}" name="${2:?dmt_skill_ref <harness> <skill-name>}" prefix
+  if [ "$h" = "codex" ]; then
+    skill_policy_ref "$name" || return 1
+    return 0
+  fi
+  prefix="$(dmt_harness_field "$h" skill_prefix)"
+  if [ -n "$prefix" ]; then printf '%s%s' "$prefix" "$name"; else printf '%s' "$name"; fi
+}
+
+# Codex 的注册名取决于当前会话 catalog：配置里有独立条目时是裸名，只有插件时是
+# mattpocock-skills:<name>。解析失败回退插件限定名，避免静默变成普通提问。
+skill_policy_ref() {
+  local name="$1" prefix standalone
+  case "$name" in
+    dmt-*) printf '%s' "$name"; return 0 ;;
+  esac
+standalone="$(DMT_SKILL_NAME="$name" python3 - "${CODEX_HOME:-$HOME/.codex}/config.toml" <<'PY' 2>/dev/null || true
+import os, sys, tomllib
+try:
+    path = sys.argv[1]
+    c = tomllib.load(open(path, "rb"))
+except Exception:
+    c = {}
+name = os.environ["DMT_SKILL_NAME"]
+skills = c.get("skills", {})
+enabled = skills.get("enabled", True) if isinstance(skills, dict) else True
+for entry in skills.get("config", []) if isinstance(skills, dict) else []:
+    if isinstance(entry, dict) and f"/skills/{name}/SKILL.md" in str(entry.get("path", "")):
+        enabled = entry.get("enabled", True)
+        break
+try:
+    text = open(path, encoding="utf-8", errors="ignore").read()
+except Exception:
+    text = ""
+if enabled and f"/skills/{name}/SKILL.md" in text:
+    print("standalone")
+PY
+)"
+  if [ -n "$standalone" ]; then
+    printf '%s' "$name"
+    return 0
+  fi
+  prefix="$(dmt_harness_field codex skill_prefix)"
+  if [ -n "$prefix" ]; then printf '%s%s' "$prefix" "$name"; else printf '%s' "$name"; fi
+}
+
+# 启动器是否支持首轮 prompt；true 时技能与任务必须随启动一次下发。
+dmt_start_has_first_prompt() {
+  [ "$(dmt_harness_field "$1" first_prompt)" = "true" ]
 }
 
 # helper 开法判据（2026-11-04 第七十五次，可观测）：本体在忙 且 有待办积压。
@@ -178,8 +285,28 @@ dmt_harness_field() {
 }
 
 # 该 harness 的并发 subagent 上限（harness 侧能力；空＝未知/不设）。
+#   runtime_override 可按当前用户的配置覆盖矩阵静态默认值：codex 的
+#   [agents].max_concurrent_threads_per_session 才是实际会话上限。
 dmt_harness_max_conc() {
-  dmt_harness_field "$1" max_subagents_conc
+  local h="$1" n cfg path val
+  n="$(dmt_harness_field "$h" max_subagents_conc)"
+  cfg="$(dmt_harness_field "$h" max_subagents_config)"
+  if [ "$cfg" = "agents.max_concurrent_threads_per_session" ]; then
+    path="${CODEX_HOME:-$HOME/.codex}/config.toml"
+    if [ -f "$path" ]; then
+      val="$(DMT_CODEX_CONFIG="$path" python3 - 2>/dev/null <<'PY'
+import os, tomllib
+try:
+    c = tomllib.load(open(os.environ["DMT_CODEX_CONFIG"], "rb"))
+    print(c.get("agents", {}).get("max_concurrent_threads_per_session", ""))
+except Exception:
+    pass
+PY
+)"
+      [ -n "$val" ] && n="$val"
+    fi
+  fi
+  printf '%s' "$n"
 }
 
 # 并发上限对应的环境变量名（空＝无）。
@@ -219,4 +346,13 @@ dmt_harness_cmd() {
   [ -n "$cmd" ] || { echo "bad harness: $h" >&2; return 2; }
   # 展开 $DMT_SCRIPTS_DIR（矩阵里以字面量存放，避免把机器相关绝对路径写进受版本控制的 YAML）
   printf '%s' "${cmd//\$DMT_SCRIPTS_DIR/$DMT_SCRIPTS_DIR}"
+}
+
+# codex 在 herdr 中若无原生子代理接口，直接内联为单进程 harness；
+# 其它容器模式仍走账号配置，不改变普通用户选择。
+dmt_tool_mode() {
+  local h="$1" mode
+  mode="$(dmt_harness_field "$h" tree_mode)"
+  [ -n "$mode" ] || mode='full'
+  printf '%s' "$mode"
 }

@@ -12,23 +12,30 @@ BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
 # 发方白名单：director|devm|anam|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
 # helper 是纯分身（用户裁定）：无自己的 inbox、不接受输入框内容 —— 任务随 spawn-helper 一次性下发
-for who in "$TO"; do
-  case "$who" in
-    director|devm|anam) ;;
-    director-helper|devm-helper|anam-helper)
-      echo "helper 不接受输入框内容、无自己的 inbox（任务随 spawn-helper 一次性下发，成果由 helper 单向汇报主体）：$TO 不能作收方" >&2; exit 2 ;;
-    *) echo "bad role: $TO (want director|devm|anam)" >&2; exit 2 ;;
+# 角色名归一化：允许 <角色> 或 <角色>-<后缀>（多 harness 同一 workspace，如 director-pi / devm-pi）。
+# 无后缀＝契约默认；带后缀＝同一 workspace 里并存多套团队时的区分（寻址走 dmt_pane_by_label 的回退）。
+role_base() {
+  case "${1:-}" in
+    director|devm|anam) printf '%s' "$1" ;;
+    director-*|devm-*|anam-*) printf '%s' "${1%%-*}" ;;
+    *) printf '' ;;
   esac
-done
+}
+# 收方：helper 无自己的 inbox，不接受；发方：<角色>-helper 合法。
+case "$TO" in
+  *-helper)
+    echo "helper 不接受输入框内容、无自己的 inbox（任务随 spawn-helper 一次性下发，成果由 helper 单向汇报主体）：$TO 不能作收方" >&2; exit 2 ;;
+esac
+[ -n "$(role_base "$TO")" ] || { echo "bad role: $TO (want director|devm|anam，可带 -后缀)" >&2; exit 2; }
 case "$FROM" in
-  director|devm|anam|director-helper|devm-helper|anam-helper) ;;
-  *) echo "bad role: $FROM (want director|devm|anam|{角色}-helper)" >&2; exit 2 ;;
+  *-helper) ;;
+  *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want director|devm|anam|{角色}-helper)" >&2; exit 2; } ;;
 esac
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 
 # 收件箱定位到主工作树根（在 worktree 里跑也指回主树）
-DIR="$(cd "$(dirname "$0")" && pwd)"; . "$DIR/lib-dmt.sh"
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 ROOT="$(dmt_root)"
 BOX="$ROOT/inbox/$TO"
 mkdir -p "$BOX/.doing"
@@ -74,8 +81,8 @@ case "$FROM" in
   *-helper) echo "$NAME"; exit 0 ;;
 esac
 
-pane="$(HERDR_ENV=1 herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" \
-  | jq -r --arg l "$TO" '.result.panes[] | select(.label==$l) | .pane_id' | head -1 || true)"
+# 寻址复用 lib-dmt.sh 的 dmt_pane_by_label（精确优先，唯一前缀回退；多命中给空 ⇒ 不猜）
+pane="$(dmt_pane_by_label "$TO")"
 [ -n "$pane" ] || { echo "WARN: pane label '$TO' not found; message written, doorbell skipped" >&2; echo "$NAME"; exit 0; }
 
 MSG="你有新消息 ${NAME}，在 inbox/${TO}/"
