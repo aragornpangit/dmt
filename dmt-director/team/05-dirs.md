@@ -13,7 +13,7 @@
 | `docs/human/human-plan/` | director | 人类计划文档 | 无 |
 | `dmt-director/team.md`（正本；`install-skills.sh` 把 `team.md` 与 `OPS.md` 软链到 `docs/`，把 `ops/` 内的文件软链到 `docs/ops/`） | director | 团队契约（本文件；安装后入口为 `docs/team.md`） | 软链跟随正本（`--copy` 模式除外） |
 | `docs/handoff/` | director / devm | 交接说明（`{director,devm}-{slug}-{YYMMDD-HHMM}-v{N}.md`；**抽查 / 复验结论亦可写此处**）；其余情形仅在用户要求时写 | 无 |
-| `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 [`dmt-director/ops/comms.md`](dmt-director/ops/comms.md) |
+| `inbox/<收件角色>/` | 发送方写、收件方读后删 | 角色间消息（运行时通道，**不入库**，**在项目根目录、不在 `docs/` 下**） | 方向与 `{seq}` 见 [`dmt-director/ops/comms.md`](../ops/comms.md) |
 
 1. 上述路径是**唯一允许位置**，不得写到 `docs/pd/`（除 `prd/`、`spec/`）、`docs/dev/`（除 `tickets/`）、`docs/human/`（除 `human-arch/`、`human-plan/`）、`docs/test/` 或其它任何位置；收件箱只在项目根 `inbox/` 下，不进 `docs/`；不得自建新的文档目录。
 2. 各部门的产物目录**互不越界**：只读引用可以，移动/改名不可以。
@@ -34,6 +34,6 @@ bash dmt-director/scripts/init-project.sh <项目根>   # 省略参数＝当前�
 
 - **完成判据**：机检输出 `ALL_PASS`。缺目录时脚本报 `FAIL 目录缺失`，director 补齐后重跑。
 - **只建目录、不建产物**：空目录不预置占位文件，避免被误认为已有交付物。
-- **`locks/` 是运行时通道**：文件占用登记见 [`dmt-director/ops/file-claim.md`](dmt-director/ops/file-claim.md)，不入库。
+- **`locks/` 是运行时通道**：文件占用登记见 [`dmt-director/ops/file-claim.md`](../ops/file-claim.md)，不入库。
 - **anam / devm 不自建产物目录**：发现自己的目标目录缺失，回报 director（收件箱目录属运行时通道，可按需 `mkdir -p` 兜底）。
 - 契约文件 `dmt-director/team.md` 与技能安装不在本步骤内（安装见 `README.md`）。

@@ -1,6 +1,6 @@
 ---
 name: dmt-am
-version: 5.18.7
+version: 5.18.8
 description: 分析经理（anam），负责调研拆题、派 ana-e 取证、复核一手出处并收口报告。用于市场 / 竞品 / 技术选型 / 二进制证据调研。触发词：dmt、anam、分析经理、调研、ana-e、竞品、逆向、REA、research。
 ---
 

@@ -1,6 +1,6 @@
 ### 1.3 通信方式（收件箱文件 + herdr 门铃）
 
-**操作细节见 [`dmt-director/ops/comms.md`](dmt-director/ops/comms.md)** —— 方向码、路径、门铃和三态。
+**操作细节见 [`dmt-director/ops/comms.md`](../ops/comms.md)** —— 方向码、路径、门铃和三态。
 
 ### 1.4 依赖的 harness 技能（mattpocock，强制使用）
 
@@ -30,7 +30,7 @@
 
 **安装**：`npx skills@latest add mattpocock/skills -a <agent>`（pi / opencode / codebuddy / amp / cursor / devin / windsurf）；Codex 用 `codex plugin marketplace add mattpocock/skills`，随后 `codex plugin add mattpocock-skills@mattpocock`。失败时克隆 `https://github.com/mattpocock/skills.git`，把技能目录 copy 到 `~/.agents/skills/` 再软链到 harness 技能目录；Codex 插件与兼容副本二选一，避免同名技能重复登记。
 
-**harness 差异**：`.agents/skills/` 只被 codex / opencode / pi 读取；claude / codebuddy 各用私有目录。目录 / 前缀 / 启动等机器事实见 §1.2 与 [`../harness_matrix.yaml`](../harness_matrix.yaml)；技能怎么加载见 [`../harness/`](../harness/README.md)。
+**harness 差异**：`.agents/skills/` 只被 codex / opencode / pi 读取；claude / codebuddy 各用私有目录。目录 / 前缀 / 启动等机器事实见 §1.2 与 [`../../dmt-director/harness_matrix.yaml`](../../dmt-director/harness_matrix.yaml)；技能怎么加载见 [`../harness/`](../harness/README.md)。
 
 **已知缺口**：
 
@@ -39,4 +39,4 @@
 
 ### 1.5 文件占用（编辑前必须检查）
 
-**操作细节见 [`dmt-director/ops/file-claim.md`](dmt-director/ops/file-claim.md)**。
+**操作细节见 [`dmt-director/ops/file-claim.md`](../ops/file-claim.md)**。

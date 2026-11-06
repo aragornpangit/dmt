@@ -2,7 +2,7 @@
 
 > 三份 pane 技能（`dmt-director` / `dmt-dm` / `dmt-am`）的**身份与 pane、通信、helper、文件占用**四条完全同构，只差角色名 / 方向码 / 上下级；本文件写共性，各技能只写「本角色差异」一行。
 
-## 身份与 pane（细节见 [`dmt-director/ops/runtime.md`](dmt-director/ops/runtime.md)）
+## 身份与 pane（细节见 [`dmt-director/ops/runtime.md`](../ops/runtime.md)）
 
 - **身份＝pane label**：角色名＝自己的 pane label，全 workspace 唯一；**不按 tab 位置识别、不记 pane id**（重启即变）。启动自检：`herdr pane get "$HERDR_PANE_ID"` 的 label 不符 ⇒ `pane rename` 自愈。
 - **不自建 tab / pane**（唯一例外：全队共享 `helper` tab 不存在时建）；`director` 除外（它建 `devm` / `anam` pane，见其技能）。
@@ -10,7 +10,7 @@
 
 ## 通信 / helper / 占用
 
-分别见 [`dmt-director/ops/comms.md`](dmt-director/ops/comms.md)、[`dmt-director/ops/helper.md`](dmt-director/ops/helper.md)、[`dmt-director/ops/file-claim.md`](dmt-director/ops/file-claim.md)。本页不再复述操作步骤。
+分别见 [`dmt-director/ops/comms.md`](../ops/comms.md)、[`dmt-director/ops/helper.md`](../ops/helper.md)、[`dmt-director/ops/file-claim.md`](../ops/file-claim.md)。本页不再复述操作步骤。
 
 ## 结尾收工
 

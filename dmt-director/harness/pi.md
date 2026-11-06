@@ -1,6 +1,6 @@
 # harness 差异：pi（pi-coding-agent）
 
-> 共性见 [`COMMON.md`](COMMON.md)；机器可读事实（目录 / 前缀 / 启动 / 并发）单一来源 [`../harness_matrix.yaml`](../harness_matrix.yaml)。
+> 共性见 [`COMMON.md`](COMMON.md)；机器可读事实（目录 / 前缀 / 启动 / 并发）单一来源 [`../harness_matrix.yaml`](../../dmt-director/harness_matrix.yaml)。
 > 本节除标注外**均为 2026-11-05 本机实测**（`harness-detect.sh` 逐 pane 复核 + `pi -p --approve` 会话探针）。
 
 ## 1. 技能发现目录

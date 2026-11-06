@@ -1,6 +1,6 @@
 # harness 差异：claude（Claude Code）
 
-> 共性见 [`COMMON.md`](COMMON.md)；机器可读事实单一来源 [`../harness_matrix.yaml`](../harness_matrix.yaml)。
+> 共性见 [`COMMON.md`](COMMON.md)；机器可读事实单一来源 [`../harness_matrix.yaml`](../../dmt-director/harness_matrix.yaml)。
 
 ## 1. 技能发现目录
 

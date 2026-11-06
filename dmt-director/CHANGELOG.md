@@ -1,7 +1,18 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 89 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 90 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十七次：断链清零 —— 仓内 10 处真断链 ＋ 安装态 13 处，版本 `5.18.8`）**：
+  用户要求「断链要删除」。
+  ① **仓内 10 处真断链（命令行全清）**：`dmt-director/team/{02-runtime,03-comms,05-dirs,10-pane-role}.md` 里写成 `](dmt-director/ops/…)`，从 `team/` 出发解析成 `team/dmt-director/ops/…` ⇒ 改为 `](../ops/…)`（仓内 `team/`→`dmt-director/ops/`、安装后 `docs/team/`→`docs/ops/` 两边都成立）。
+  ② **机检 A7 过宽回退（根因）**：原逻辑在解析失败后还会 `[ -e "$target" ]`（相对**仓根**再试一次）⇒ 把上述错误写法判成 OK，10 处断链长期不可见。**已删掉该回退**，链接必须从所在文件解析；自测：把 `../ops/runtime.md` 改回旧写法 ⇒ `FAIL 断链 … -> dmt-director/ops/runtime.md` ＋ `HAS_FAIL`。
+  ③ **安装态断链 23 → 0**：
+     · `harness/*.md` 的 `](../harness_matrix.yaml)` → `](../../dmt-director/harness_matrix.yaml)`（软链目录下 `../` 的词法歧义，改后仓内/安装后都成立）；`team/03-comms.md` 同项一并改；
+     · 指向仓内 `logs/` 的 5 处链接（`CHANGELOG.md`、`harness/README.md`、`BACKLOG.md`）改为**纯文本路径**（`logs/` 是仓内材料、不随安装分发，链接必然失效）。
+  ④ **判据（可复跑）**：仓内机检 `ALL_PASS`；安装到临时项目后遍历 `docs/**/*.md` 的相对链接 ⇒ **断链 0**（改前 23）。
+  ⑤ `dmt-en` 同步同样改法（英文）。
+  **版本升 `5.18.8`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十六次：pi 子代理白名单实证整形 ＋ 机检 A6c，版本 `5.18.7`）**：
   用户追问「pi 调用的 subagents 用的是什么 skills」，实测发现**白名单宣称与实况不符**。
@@ -28,7 +39,7 @@
 
 - **2026-11-06（用户要求·第八十四次：五 harness 测试报告 ＋ 逐 harness 改善清单与落实，版本 `5.18.5`）**：
   用户要求「把各 harness 的测试报告和改善方案记录下来，然后针对各个 harness 单独改善」。
-  ① **报告** —— 新增 [`../logs/2026-11-06-harness-test-report.md`](../logs/2026-11-06-harness-test-report.md)：统一测试方法（同一 lab 结构、契约名 pane、T1–T5、会话文件取证）＋五 harness 总览表 ＋逐 harness 明细（现象／实测／注意／遗留）＋横向结论 ＋可复跑命令。
+  ① **报告** —— 新增 `../logs/2026-11-06-harness-test-report.md`（仓内 `logs/2026-11-06-harness-test-report.md`）：统一测试方法（同一 lab 结构、契约名 pane、T1–T5、会话文件取证）＋五 harness 总览表 ＋逐 harness 明细（现象／实测／注意／遗留）＋横向结论 ＋可复跑命令。
   ② **改善清单** —— 新增 [`harness/BACKLOG.md`](../dmt-director/harness/BACKLOG.md)：按 harness 分组 25 项，每项带**判据**与状态（`DONE` / `WATCH` / `OPEN`），`WATCH` 仅 codex `spawn_agent`（上游缺陷，附 Full Access 下复测证据）。
   ③ **逐 harness 落实** ——
      · **pi**：矩阵 `max_subagents_conc` 由 `null` → **8**（pi-subagents 默认 `maxTasks=8`/`concurrency=4`），`harness/pi.md` §7 同步；
@@ -47,7 +58,7 @@
   ③ **硬约束二：codex 的 shell 复用陈旧常驻 shell 环境** —— codex 进程 `/proc/<pid>/environ` 是 `w9`/`bcr-nh`（正确），但其 `exec_command`（`bash -lc`）里是 `w1`/`bcr-nihui`（已废弃 session）；前置 `env HERDR_…=正确值 codex` **无效**（复用统一执行器的常驻 shell）。⇒ `lib-dmt.sh` 新增 **`dmt_herdr_env_fix [目标label]`**（父 shell 修正：当前 socket 连不上时扫 `~/.config/herdr/sessions/*/herdr.sock`，按「目标 label ＋ `cwd==$PWD`」**唯一**命中则 export 修正，多命中不动），`send-msg.sh` 寻址前调用。**本地模拟 codex 陈旧环境：`rc=0`、无 WARN**。
   ④ **修 ③ 过程中抓到并修掉自身两个缺陷**：(a) `dmt_pane_by_label` 里 `[ … ] && { … }` 在 `set -e` 下遇假分支**终止整个脚本**（表现为 `send-msg.sh` 静默 `rc=1`）⇒ 改 `if`；(b) 第三级「查到 pane 并 export」写在**命令替换子 shell** 里、传不回父进程 ⇒ 抽出 `dmt_herdr_env_fix` 在父 shell 先行修正。
   ⑤ **`spawn_agent` 定级** —— 三角色均真实调用（1/2/2 次）但子代理回「消息队列为空」/角色漂移 ⇒ 按 §4 记 `[SUBAGENT_UNAVAILABLE]`，由本 pane 代行；已写入 `harness/codex.md` §6.2。
-  **归档**：[`../logs/2026-11-05-harness-dmt-fit.md`](../logs/2026-11-05-harness-dmt-fit.md) 追加 codex 节 ＋「五 harness 最终对照」表。
+  **归档**：`../logs/2026-11-05-harness-dmt-fit.md`（仓内 `logs/2026-11-05-harness-dmt-fit.md`） 追加 codex 节 ＋「五 harness 最终对照」表。
   **版本升 `5.18.4`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十二次：pi 能力缺口的两条正解 —— 自定义 agent 注入技能 ＋ 启动参数装载，版本 `5.18.3`）**：
@@ -61,7 +72,7 @@
   **版本升 `5.18.3`**（七技能同号）。
 
 - **2026-11-05（用户要求·第八十一次：harness × dmt 实测缺陷集中修复 ＋ 汇总归档，版本 `5.18.2`）**：
-  用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 `/tmp/pi-summary.txt`、摘要版 `/tmp/pi-msg.txt`）的实测结果**汇总归档**并**一并修复**所报缺陷。归档件：[`../logs/2026-11-05-harness-dmt-fit.md`](../logs/2026-11-05-harness-dmt-fit.md)。
+  用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 `/tmp/pi-summary.txt`、摘要版 `/tmp/pi-msg.txt`）的实测结果**汇总归档**并**一并修复**所报缺陷。归档件：`../logs/2026-11-05-harness-dmt-fit.md`（仓内 `logs/2026-11-05-harness-dmt-fit.md`）。
   ① **P0 软链根因（两侧共同命中）** —— `check-dmt.sh:18` 等 **20 个脚本**用 `cd "$(dirname …)" && pwd`（不解析软链）⇒ 软链安装在目标项目时 `REPO` 被算成项目根：`A3)` 被误判「维护仓自身」而 **SKIP**（漏检产物目录）、`maintenance_only` 组被误启用（假红）。统一改 `cd -P … && pwd -P`；本侧复测：lab **软链调用**由「`SKIP` ＋ `maintenance_only` 假红」→ **`ALL_PASS`**（报告侧同结论：readlink 修复后 305 FAIL → 9 FAIL）。
   ② **label 命名（多 harness 同 workspace）** —— `dmt_pane_by_label` 增**唯一前缀回退**（精确 `director` 优先，`director-*` 命中多个则给空、**不猜**）；`send-msg.sh` 复用该函数、收发名接受 `<角色>-<后缀>`。来源＝workspace4 实测（三 pane 名为 `director-pi` / `devm-pi` / `anam-pi` 时按契约名寻址全空，anam 按纪律停手上报）。
   ③ **其余缺陷** —— `init-project.sh` 建 `docs/handoff/`（契约 §3 列了但未建）＋ `.gitignore` 增 `__pycache__/` 与 `*.pyc`（子代理 python 探针残留）；A7 提取链接前**先剥围栏 / 行内代码**（4 条伪链接假红：`x[i]`、`+out1`、`[a-z0-9_]+`）；`harness/claude.md` §2 更正「同 codebuddy」→「claude **无本地复核器**；`auto` 档依赖远程 classifier 会限流（报告实测 122 次 Bash 中 9 次被 rate-limited）」并给 yolo 档选项与 `permissions.defaultMode` 造成的 argv 误报面；`harness_matrix.yaml` 的 claude `max_subagents_env` 填 `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`；`harness/COMMON.md` 增 **§7「产物边界」「加载 ≠ 开工」**（两侧实测：子代理堆 26 个抓取件；pane 装载后自发开工、devm 真建 detached worktree）；清理误建嵌套目录 `dmt-director/team/dmt-director/`。
