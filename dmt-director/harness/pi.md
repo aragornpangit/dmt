@@ -26,13 +26,46 @@
 
 ## 4. 技能如何到达模型
 
-| 场景 | 做法 |
-|---|---|
-| pane 常驻角色 | 由用户或 `setup-team.sh` 在**输入框**敲 `/skill:dmt-<角色>`；pi 把该技能正文注入上下文 |
-| 子代理 | pi 的 `delegate` 子代理**无 Skill 工具、也不注入技能清单** ⇒ 派发 prompt 必须给**绝对路径**：`read <技能目录>/dmt-<角色>/SKILL.md` |
-| 模型自行发起 | **没有** Skill 工具；只能「读 SKILL.md」或由用户敲 `/skill:` |
+**pi 的两个硬限制**（2026-11-05 实测）：
 
-- `disable-model-invocation: true` 的技能（mattpocock 的 `to-spec` / `to-tickets` / `implement` / `grill-me` / `grill-with-docs` 等）**不出现在模型可见的技能清单**里，**但 `/skill:<name>` 仍可显式调起**（实测 `/skill:to-spec` 正常展开并注入）。
+1. **没有 Skill 工具** —— 模型不能自己「调用技能」，只能读 `SKILL.md`；技能正文进上下文只有三条路：用户/派发者敲 `/skill:<name>`、启动参数 `--skill <path>`、系统提示里的 `<available_skills>` 目录（由 `inheritSkills` / `skills` 决定是否有）。
+2. **子代理默认不继承技能** —— 内置 `delegate` 的 agent 定义是 `inheritSkills: false`（实测：其 system prompt **没有** `<available_skills>` 段），所以子代理里既敲不了 `/skill:` 也没清单。
+
+### 4.1 子代理侧：用自定义 agent 定义注入技能（推荐正解）
+
+pi-subagents 允许自定义 agent（`~/.pi/agent/agents/**/*.md` 用户级、`<项目>/.pi/agents/**/*.md` 项目级），frontmatter 支持三个关键字段：`inheritSkills`、`skills`、`skillPath`。
+
+**实测三档粒度**（同一项目、同一派发方式，只改 agent 定义）：
+
+| agent 定义 | 子代理 system prompt 里的 `<available_skills>` | 适用 |
+|---|---|---|
+| 内置 `delegate`（`inheritSkills: false`，无 `skills`） | **无** | 一次性脚本活；技能靠 prompt 给路径 |
+| `inheritSkills: false` + `skills: dmt-pde` | **只有 `dmt-pde`**（精确白名单） | **推荐给 dmt 四个子代理角色**（最小权限） |
+| `inheritSkills: true` + `skills: [...]` | **全量技能目录**（dmt-* 七个 + tdd/code-review 等） | 需要自主发现的通用 agent |
+
+⇒ **dmt 的落地形态**：给 `dev-e` / `ana-e` / `pde{n}` / `reviewer{n}` 各写一份 agent 定义，`inheritSkills: false` ＋ `skills:` 精确列出该角色的角色技能与强制技能。模板见 [`pi-agents/`](pi-agents/README.md)（`install-skills.sh --harness pi` 会铺到项目 `.pi/agents/`）。
+
+**注意语义**：`skills` 是「选定子集」，`inheritSkills: true` 是「保留父的整个目录」；两者同时给时**以白名单为准的前提是 `inheritSkills: false`**（实测 `inheritSkills: true` 时是全量，`skills` 不裁剪）。
+
+### 4.2 pane 侧：启动参数或斜杠命令把技能装进去
+
+| 途径 | 实测 | 说明 |
+|---|---|---|
+| `pi --skill <技能目录>` | ✅ 装载成功（**项目级路径也可，无需 `--approve`**） | 一个 pane 可重复 `--skill` 多次；适合「启动即带角色技能」 |
+| `pi --approve` ＋ 项目 `.agents/skills/` | ✅ 自动发现 | 不带 `--approve` 时只看到文件、不进清单（实测：模型答「磁盘上有但未加载」） |
+| 输入框 `/skill:dmt-<角色>` | ✅ | 写 `/dmt-<角色>` 不报错但**静默变普通提问** |
+| 用户级 `~/.agents/skills/`、`~/.pi/agent/skills/` | ✅ | 无需 approve |
+
+### 4.3 兜底（现状保留）
+
+都不适用时（例如不允许改 agent 定义）：派发 prompt 里给**绝对路径** `read <技能目录>/dmt-<角色>/SKILL.md`，并按 `§5.1` 处理转发式技能。这条永远有效，但依赖模型照 prompt 执行、且每个下游技能都要逐条给路径。
+
+### 4.4 已知坑
+
+- **同名技能重复注册**：实测子代理清单里 `tdd` / `code-review` 各出现两次（`~/.agents/skills/mattpocock-skills/...` 与 pi git 包各一份）⇒ 用 `skills:` 显式点名可避开歧义；两个都装时优先保留一份。
+- **`delegate` 的 tools 白名单不含 `subagent`**（其定义 `tools: read, grep, find, ls, bash, edit, write, contact_supervisor`）⇒ 子代理不能再派子代理；需要嵌套时在自定义 agent 里加 `allowNestedSubagents: true` 或 `tools: subagent`。
+- **项目级 agent 定义同样受 trust 约束**：Pi 未批准项目 trust 时忽略项目 agent（`agentScope` 回退为 user）。
+- `disable-model-invocation: true` 的技能（`to-spec` / `to-tickets` / `implement` / `grill-me` / `grill-with-docs` 等）**不出现在模型可见清单**，但 `/skill:<name>` 仍可显式调起；写进自定义 agent 的 `skills:` 也不受该标记阻挡（它只影响「模型自动选择」）。
 
 ## 5. 强制技能（mattpocock）在 pi 上的取法
 

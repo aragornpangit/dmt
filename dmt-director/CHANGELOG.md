@@ -1,7 +1,17 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 84 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 85 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十二次：pi 能力缺口的两条正解 —— 自定义 agent 注入技能 ＋ 启动参数装载，版本 `5.18.3`）**：
+  用户指出「pi-coding-agent 不能使用 Skill 工具、不能在子代理中继承技能，有什么解决方案」并要求写进 dmt 的 pi 文件。**全部方案经实测（非推演）**，落在 [`harness/pi.md`](../dmt-director/harness/pi.md) §4.1–§4.4 与新增 [`harness/pi-agents/`](../dmt-director/harness/pi-agents/README.md)。
+  ① **实测矩阵（同一项目、同一派发方式，只改 agent 定义）** —— 内置 `delegate`（`inheritSkills: false`、无 `skills`）⇒ 子代理 system prompt **无 `<available_skills>` 段**；自定义 agent `inheritSkills: false` ＋ `skills: dmt-pde` ⇒ **只有 `dmt-pde`**（精确白名单）；自定义 agent `inheritSkills: true` ＋ `skills: [...]` ⇒ **全量技能目录**（dmt-* 七个 ＋ tdd/code-review）⇒ **`skills` 只在 `inheritSkills: false` 时才起到裁剪作用**（这是文档里最容易写错的语义）。
+  ② **pane 侧三条通路实测** —— `pi --skill <技能目录>` ✅（**项目级路径也可，无需 `--approve`**）；`pi --approve` ＋ 项目 `.agents/skills/` ✅ 自动发现（**不带 `--approve` 时模型答「磁盘上有但未加载」**）；输入框 `/skill:<name>` ✅（写 `/dmt-<role>` 静默变普通提问）。
+  ③ **落地** —— 新增 `harness/pi-agents/`：`dev-e` / `ana-e` / `pde{n}` / `reviewer{n}` 四份 agent 定义模板（`inheritSkills: false` ＋ 按 `team/03-comms.md` §1.4 精确列强制技能），`install-skills.sh --harness pi|all` 铺到目标项目 `.pi/agents/`；派发时 `agent` 字段直接填 `dmt-dev-e` 等，不再用 `delegate`。**兜底路径保留**（prompt 给绝对路径 read）。
+  ④ **机检** —— `dmt_contract.yaml` 增 `pi_capability_gap` 断言组（`harness/pi.md` 须含 `Skill 工具` / `inheritSkills` / `skills:` / `skillPath` / `--skill` / `--approve`；`pi-agents/README.md` 须含白名单写法）；`check-dmt.sh` A6b 增 5 条「模板齐备」＋ 4 条「每份都用 `inheritSkills: false` ＋ `skills:`」＋「`install-skills.sh` 铺 `.pi/agents`」断言。
+  ⑤ **已知坑（写入 §4.4）** —— 同名技能重复注册（实测 `tdd`/`code-review` 各出现两次）；`delegate` 的 tools 白名单不含 `subagent` ⇒ 子代理不能再派子代理（需 `allowNestedSubagents: true`）；项目级 agent 定义同受 trust 约束；`disable-model-invocation: true` 只影响「模型自动选择」，写进 `skills:` 不受阻挡。
+  **实测**：`install-skills.sh --harness pi` 装到探针项目后，派 `agent: dmt-dev-e` 的子代理回复「技能＝`dmt-de`/`tdd`/`code-review`/`diagnosing-bugs`，**没有** `dmt-director`」⇒ 白名单生效；维护仓机检 `ALL_PASS`。
+  **版本升 `5.18.3`**（七技能同号）。
 
 - **2026-11-05（用户要求·第八十一次：harness × dmt 实测缺陷集中修复 ＋ 汇总归档，版本 `5.18.2`）**：
   用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 `/tmp/pi-summary.txt`、摘要版 `/tmp/pi-msg.txt`）的实测结果**汇总归档**并**一并修复**所报缺陷。归档件：[`../logs/2026-11-05-harness-dmt-fit.md`](../logs/2026-11-05-harness-dmt-fit.md)。

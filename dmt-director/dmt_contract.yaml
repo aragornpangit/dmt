@@ -5,8 +5,8 @@
 # check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.18.2
-date: "2026-11-05"
+version: 5.18.3
+date: "2026-11-06"
 
 skills:
   dmt-director: { run_id: director,      kind: pane,  pane: true }
@@ -49,6 +49,8 @@ ops_docs:
 harness_docs:
   common: COMMON.md
   readme: README.md
+  # pi 子代理 agent 定义模板（install-skills.sh 铺到 <target>/.pi/agents/）
+  pi_agents_dir: pi-agents
   per_harness:
     - pi.md
     - codebuddy.md
@@ -157,7 +159,7 @@ content_assertions:
     repo_only: true
     files:
       "{repo}/README.md":
-        require: ["全量 84 条", "DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
+        require: ["全量 85 条", "DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
   install_ops:
     files:
       "{scripts}/install-skills.sh":
@@ -225,6 +227,12 @@ content_assertions:
         require: ["harness-detect.sh", "harness/COMMON.md"]
       "{skills}/dmt-reviewer/SKILL.md":
         require: ["harness-detect.sh", "harness/COMMON.md"]
+  pi_capability_gap:
+    files:
+      "{docs}/harness/pi.md":
+        require: ["Skill 工具", "inheritSkills", "skills:", "skillPath", "--skill", "--approve"]
+      "{docs}/harness/pi-agents/README.md":
+        require: ["inheritSkills: false", "skills:"]
   harness_forwarding:
     files:
       "{docs}/harness/pi.md":

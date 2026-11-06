@@ -168,6 +168,23 @@ print(" ".join(n for n in names if n))'); do
 else
   bad "缺 harness 目录：$HARNESS_DIR"
 fi
+# pi 子代理 agent 定义模板（四份 + README）；install-skills.sh 铺到 <target>/.pi/agents/
+PI_AG="$HARNESS_DIR/pi-agents"
+if [ -d "$PI_AG" ]; then
+  for f in README.md dmt-dev-e.md dmt-ana-e.md dmt-pde.md dmt-reviewer.md; do
+    if [ -s "$PI_AG/$f" ]; then ok "pi agent 定义 $f"; else bad "pi agent 定义缺失或为空：$f"; fi
+  done
+  # 每份定义都必须用白名单形态（inheritSkills: false + skills:），否则「精确注入」退化为「全量继承」
+  for f in "$PI_AG"/dmt-*.md; do
+    b="$(basename "$f")"
+    if grep -q '^inheritSkills: false' "$f" && grep -q '^skills:' "$f"; then ok "pi agent $b 用白名单（inheritSkills: false + skills:）"; else bad "pi agent $b 缺 inheritSkills: false 或 skills:"; fi
+  done
+else
+  bad "缺 pi agent 定义目录：$PI_AG"
+fi
+# install-skills.sh 必须会把模板铺到 .pi/agents/
+if grep -q '\.pi/agents' "$SCRIPT_DIR/install-skills.sh"; then ok "install-skills.sh 铺 .pi/agents"; else bad "install-skills.sh 未铺 .pi/agents"; fi
+
 # harness 名集合：契约 per_harness ↔ 矩阵 key（两处必须一一对应）
 declared="$(python3 -c '
 import os,yaml

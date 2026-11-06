@@ -115,6 +115,22 @@ else
   ln -sfn ../dmt-director/changelog "$TARGET/docs/changelog"
 fi
 
+# pi 子代理 agent 定义（.pi/agents/）：只装给 pi（或 all）。
+# 为什么单列：pi 的 delegate 默认 inheritSkills: false ⇒ 子代理无技能清单；
+# 这些定义用 inheritSkills: false + skills: 精确白名单把角色技能注入子代理（见 harness/pi.md §4.1）。
+case " $HARNESS " in
+  *" all "*|*" pi "*)
+    mkdir -p "$TARGET/.pi/agents"
+    for f in "$REPO/dmt-director/harness/pi-agents/"*.md; do
+      b="$(basename "$f")"
+      [ "$b" = "README.md" ] && continue
+      rm -f "$TARGET/.pi/agents/$b"
+      if [ "$MODE" = "copy" ]; then cp "$f" "$TARGET/.pi/agents/$b"; else ln -sfn "$f" "$TARGET/.pi/agents/$b"; fi
+    done
+    echo "pi agents -> $TARGET/.pi/agents ($MODE)"
+    ;;
+esac
+
 # 初始化 + 机检。DMT_SKILLS_DIR 指向本次实际装的第一个落点（--harness claude 之类不含 .agents 时，
 # 机检默认的 <target>/.agents/skills 并不存在，会把技能断言全部误报红）。
 FIRST_DIR="$(printf '%s' "$DIRS" | awk '{print $1}')"

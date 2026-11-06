@@ -11,6 +11,8 @@
 2. 读共性与差异：`harness/COMMON.md` + `harness/<harness>.md`。
 3. 按差异文件里的「技能到达模型 / 强制技能调用行 / 子代理承载」执行。
 
+**pi 子代理 agent 定义**：`pi-agents/` 给 dmt 四个子代理角色各一份 agent 定义（`inheritSkills: false` ＋ `skills:` 白名单），由 `install-skills.sh --harness pi` 铺到目标项目 `.pi/agents/` —— 解决 pi 子代理「无技能清单、无 Skill 工具」的问题。机制与实测见 [`pi.md`](pi.md) §4.1。
+
 **单一来源**：目录 / 斜杠前缀 / 启动命令 / 并发上限等**机器可读事实**只在 [`../harness_matrix.yaml`](../harness_matrix.yaml)；本目录 `.md` 是给人 / 模型读的说明，两者一致性由机检（A8）守住。
 
 **操作层**：pane 形态、启动顺序、权限档位复验见 [`../ops/runtime.md`](../ops/runtime.md)；门铃与收件箱见 [`../ops/comms.md`](../ops/comms.md)。
