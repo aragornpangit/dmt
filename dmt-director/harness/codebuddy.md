@@ -33,6 +33,12 @@
 
 `/<name>`（如 `/code-review`）。
 
+## 5.1 子代理权限继承（2026-11-06 实测补）
+
+- 矩阵 `start_cmd` 已带 **`--subagent-permission-mode bypassPermissions`**：否则 teammate / 子代理可能回落到 `default` 档，逐条撞审批（表现为「子代理卡住 / 脚本超时」，错因在权限层）。
+- 若人工启动会话（不经 `setup-team.sh`），需自行补该参数，或确认用户级 settings 的默认档位已是 auto/bypass。
+- 并行数量：`CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS`（矩阵默认 8）。
+
 ## 6. 特有约束
 
 - **`cbc-herdr` 必须登记**（`dmt-director` / `dmt-dm` / `dmt-am` 三个 pane）：cbc 不在 herdr 编译期内置支持列表里，靠 `cbc-herdr` 上报 working / idle / blocked，否则 `agent_status` 恒为 `unknown`（就绪判据失效）。

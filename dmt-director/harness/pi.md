@@ -104,6 +104,6 @@ pi-subagents 允许自定义 agent（`~/.pi/agent/agents/**/*.md` 用户级、`<
 ## 7. pi 特有约束
 
 - **`cbc-herdr` 不需要**：herdr 原生识别 pi（manifest `pi.toml`；`herdr agent explain` 可见），`agent_status` 直接可信。
-- **并发上限未声明**（矩阵 `null`）：pi-subagents 的实际默认是 workflow `maxTasks=8` / `concurrency=4`（另有 `maxConcurrentAsyncRuns` 配置项）—— 派发前按此自判。
+- **并发上限**：矩阵已填 **8**（pi-subagents 默认 workflow `maxTasks=8` / `concurrency=4`，可按调用 `concurrency` 覆盖；另有 `maxConcurrentAsyncRuns` 限制顶层异步运行数，`0`=不限）。
 - **门铃**：`herdr agent prompt <pane>` 对 pi pane 可用（agent kind = `pi`）；返回非 `agent_prompted` 时回退 `pane send-text` + `pane send-keys enter`（`send-msg.sh` 已内置）。
 - **时序风险（未实测）**：`dmt_wait_ready` 只等 `agent_status != unknown`，pi TUI 起得慢 ⇒ `/skill:…` 可能早于输入就绪；启动后请用 `dmt_confirm_role_ready` 以「角色名 ＋ 一次性凭据同时出现在 pane 输出」复核技能确实加载。

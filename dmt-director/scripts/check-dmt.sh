@@ -168,6 +168,24 @@ print(" ".join(n for n in names if n))'); do
 else
   bad "缺 harness 目录：$HARNESS_DIR"
 fi
+# harness 改善项的机检锚点（2026-11-06 第八十四次）：BACKLOG 声称已改的项，必须在配置里真实存在
+if [ -d "$HARNESS_DIR" ] && [ -s "$HARNESS_DIR/BACKLOG.md" ]; then ok "harness 改善清单 BACKLOG.md"; else bad "缺 harness/BACKLOG.md"; fi
+PI_CONC="$(bash "$SCRIPT_DIR/harness-matrix.sh" get pi max_subagents_conc 2>/dev/null || true)"
+if [ -n "$PI_CONC" ] && [ "$PI_CONC" != "null" ]; then ok "pi 并发上限已声明（$PI_CONC）"; else bad "pi 并发上限仍为 null（BACKLOG P3 声称已填）"; fi
+CBC_CMD="$(bash "$SCRIPT_DIR/harness-matrix.sh" get codebuddy start_cmd 2>/dev/null || true)"
+case "$CBC_CMD" in
+  *--subagent-permission-mode*) ok "cbc 启动含 --subagent-permission-mode（子代理权限继承）" ;;
+  *) bad "cbc 启动缺 --subagent-permission-mode（BACKLOG C2 声称已加）" ;;
+esac
+CODEX_CMD="$(bash "$SCRIPT_DIR/harness-matrix.sh" get codex start_cmd 2>/dev/null || true)"
+case "$CODEX_CMD" in
+  *danger-full-access*) ok "codex 启动含 --sandbox danger-full-access" ;;
+  *) bad "codex 启动缺 --sandbox danger-full-access（BACKLOG X1 声称已改）" ;;
+esac
+# 报告与清单必须互相可达（避免"报告说改了、清单没记"）
+if grep -q 'BACKLOG.md' "$HARNESS_DIR/README.md" 2>/dev/null; then ok "harness/README.md 指向 BACKLOG"; else bad "harness/README.md 未指向 BACKLOG"; fi
+if grep -q 'harness-test-report' "$HARNESS_DIR/BACKLOG.md" 2>/dev/null; then ok "BACKLOG 指向测试报告"; else bad "BACKLOG 未指向测试报告"; fi
+
 # pi 子代理 agent 定义模板（四份 + README）；install-skills.sh 铺到 <target>/.pi/agents/
 PI_AG="$HARNESS_DIR/pi-agents"
 if [ -d "$PI_AG" ]; then

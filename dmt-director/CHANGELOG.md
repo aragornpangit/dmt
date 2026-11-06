@@ -1,7 +1,21 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 86 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 87 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十四次：五 harness 测试报告 ＋ 逐 harness 改善清单与落实，版本 `5.18.5`）**：
+  用户要求「把各 harness 的测试报告和改善方案记录下来，然后针对各个 harness 单独改善」。
+  ① **报告** —— 新增 [`../logs/2026-11-06-harness-test-report.md`](../logs/2026-11-06-harness-test-report.md)：统一测试方法（同一 lab 结构、契约名 pane、T1–T5、会话文件取证）＋五 harness 总览表 ＋逐 harness 明细（现象／实测／注意／遗留）＋横向结论 ＋可复跑命令。
+  ② **改善清单** —— 新增 [`harness/BACKLOG.md`](../dmt-director/harness/BACKLOG.md)：按 harness 分组 25 项，每项带**判据**与状态（`DONE` / `WATCH` / `OPEN`），`WATCH` 仅 codex `spawn_agent`（上游缺陷，附 Full Access 下复测证据）。
+  ③ **逐 harness 落实** ——
+     · **pi**：矩阵 `max_subagents_conc` 由 `null` → **8**（pi-subagents 默认 `maxTasks=8`/`concurrency=4`），`harness/pi.md` §7 同步；
+     · **codebuddy**：`start_cmd` 增 **`--subagent-permission-mode bypassPermissions`**（否则子代理回落 `default` 档逐条撞审批），`harness/codebuddy.md` 新增 §5.1；
+     · **codex**：上一轮已改 `--sandbox danger-full-access` 与 `dmt_herdr_env_fix`，本轮纳入 BACKLOG 并加机检锚点；
+     · **opencode**：矩阵注释显式声明「上游 2.2.5 未提供并发入口 ⇒ 记 `null` 而非漏填」，`harness/opencode.md` §6 同步；
+     · **claude**：维持既有四条（无本地复核器 / argv 误报面 / 重复安装 / `max_subagents_env`）。
+  ④ **机检（防"清单说改了、配置没改"）** —— A6b 新增 6 条锚点：`BACKLOG.md` 存在、pi 并发非 `null`、cbc `start_cmd` 含 `--subagent-permission-mode`、codex `start_cmd` 含 `danger-full-access`、`harness/README.md` 指向 BACKLOG、BACKLOG 指向报告。
+  **实测**：维护仓机检 `ALL_PASS`；`harness-matrix.sh get` 复核三项新值均生效。
+  **版本升 `5.18.5`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十三次：codex 端到端实测 ＋ 两项硬约束修复，版本 `5.18.4`）**：
   用户要求「把 codex 跑完」。在 `w9`（label `codex-lab`，三 pane 契约名，`codex -a never`）跑完 T1–T5。

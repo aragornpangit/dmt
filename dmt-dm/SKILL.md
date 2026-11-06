@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.18.4
+version: 5.18.5
 description: 开发经理（devm），负责开发工单排期、worktree、实施、代码门禁、独立验收与合并推送。用于接单开工、派 dev-e、组织 reviewer、整合交付和硬件设备写操作。触发词：dmt、devm、开发经理、ticket、worktree、验收、merge、push、dev-e、reviewer。
 ---
 
