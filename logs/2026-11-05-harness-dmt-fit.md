@@ -148,3 +148,55 @@ bash dmt-director/scripts/harness-detect.sh --explain
 | 2 | cbc `-y` 档仍有 HIGH/CRITICAL 询问（`--help` 明示），与 `--permission-mode auto` 不同 | 观察 | 已记 `harness/codebuddy.md` 待补 |
 | 3 | 并发写干扰：同一 lab 内 devm 改 `src/mathx.py` 时 anam 正在取证同目录（anam 主动声明「mathx.py 变大非本次产物」）⇒ 单写者纪律有效 | 观察 | 无需变更 |
 | 4 | 两侧 lab 用 `install-skills.sh --harness claude|codebuddy` 单落点安装，机检（软链调用）均 `ALL_PASS` ⇒ 第八十一次 P0 修复在真实单落点安装下成立 | 验证 | — |
+
+---
+
+# 追加：opencode 同构端到端实测（2026-11-05/06，本侧执行）
+
+> 与前两节同一测试计划（T1–T5），换 harness = **opencode v2.2.5**。
+
+## 1. 环境
+
+| 项 | 值 |
+|---|---|
+| workspace | `w8`（label `opencode-lab`）→ 测毕已回收 |
+| 项目 | `/tmp/dmt-opencode-lab`，`install-skills.sh --harness opencode`（落点 `.agents/skills/` ＋ `.opencode/skills/`） |
+| pane | `director` / `devm` / `anam`（契约名） |
+| 启动 | `opencode --auto`（屏幕显示 `bypass permissions` 语义） |
+| 安装机检 | 软链调用 `ALL_PASS` |
+
+## 2. 结果（全部通过）
+
+| 项 | 实测 |
+|---|---|
+| T1 角色技能装载 | ✅ 三角色按技能自述就绪 |
+| T2 `to-spec`＋`to-tickets` | ✅ SPEC **38 行** ＋ 工单 **2 张**（`001-1 → 001-2` 线性依赖） |
+| T3 `implement`→`tdd`→`code-review` | ✅ `skill` 工具调用三次均成功；`pytest` **2 passed**（复跑一致）；**未派子代理**（理由充分：lab 非 git 仓、无法按纪律建 worktree ⇒ 属按纪律的降级拒绝） |
+| T4 `research`＋并行子代理 | ✅ `skill`＝`research`；`subagent` 工具 ×2（`ana-e: None 入参取证` / `ana-e: 非 str 入参取证`）；落盘 37 行；顶层 session 交叉复核 |
+| T5 门铃 `send-msg.sh` | ✅ 无 WARN；director 收件 → `.doing/` → 收口删除 |
+
+**工具级硬证据**（`~/.local/share/opencode/opencode.db` → `session_v2` / `session_message`）：
+- director：`skill`×1（`dmt-director`）、`read`×13、`write`×3、`shell`×10
+- devm：`skill`×4（`dmt-dm` / `implement` / `tdd` / `code-review`）、`shell`×14、`edit`×1
+- anam：`skill`×2（`dmt-am` / `research`）、**`subagent`×2**、`write`×1
+
+## 3. 本次新增发现（已写入 `harness/opencode.md` §3）
+
+| # | 发现 | 处置 |
+|---|---|---|
+| 1 | **斜杠命令清单不完整**：`/to-spec`、`/to-tickets` 未进 opencode 斜杠清单（敲了不生效），但 **`skill` 工具能按 id 加载**（`implement`/`tdd`/`code-review`/`research` 实测成功，**含带 `disable-model-invocation: true` 者 ⇒ opencode 不过滤该标记**） | 文档改为「**优先用 `skill` 工具**；不可用时按 §4 直读 `SKILL.md`」 |
+| 2 | director 实测**主动**走了 §4 文件回退（报「未进技能清单」→ 直读 `~/.agents/skills/mattpocock-skills/skills/engineering/{to-spec,to-tickets}/SKILL.md`）⇒ **`harness/opencode.md` §4 的回退路径被真实使用且有效** | 保留并强调 |
+| 3 | **启动初期输入未就绪**：首次 `herdr agent prompt /dmt-*` 后 pane 仍 idle、输入框留着未提交的内容；补 `send-keys enter` 或等待后恢复 | 已在 §3 记「首次注入后复核 pane 输出」 |
+| 4 | 门铃 **`herdr agent prompt` 对 opencode 可用**（与 pi/claude/cbc 一致） | — |
+| 5 | opencode 读 `~/.claude/skills/` ⇒ mattpocock 技能走该用户级落点即可，无需项目级额外安装 | 已在 §1 |
+
+## 4. 四 harness 总结（pi / claude / cbc / opencode）
+
+| 维度 | pi | claude | cbc | opencode |
+|---|---|---|---|---|
+| 技能装载 | `/skill:` / read | `/dmt-*` / Skill 工具 | `/dmt-*` / Skill 工具 | `skill` 工具（斜杠清单不全） |
+| Skill 工具 | ❌ | ✅ | ✅ | ✅（id 加载） |
+| 子代理 | `delegate`（不继承技能） | `Agent` | `Agent` | `subagent` |
+| 自动档 | `--approve` | `--dangerously-skip-permissions` | `-y`（HIGH/CRITICAL 仍问） | `--auto` |
+| 门铃 `agent prompt` | ✅ | ✅ | ✅ | ✅（首启需复核提交） |
+| 端到端结论 | 可用（降级承载） | 可用 | 可用 | 可用 |

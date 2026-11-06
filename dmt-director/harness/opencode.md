@@ -20,6 +20,12 @@
 
 `/<技能名>`。
 
+**2026-11-05 实测补充（重要）**：
+
+- **斜杠命令清单不完整**：`/to-spec`、`/to-tickets` 实测**未进** opencode 的斜杠清单，敲了不生效；但 **`skill` 工具能按 id 加载**（`implement` / `tdd` / `code-review` / `research` 实测均成功，含带 `disable-model-invocation: true` 者）。
+- ⇒ **优先用 `skill` 工具**（id 即技能名）；工具也不可用时按 §4 直读 `SKILL.md`。director 实测就是走了这条回退：报「`/to-spec`、`/to-tickets` 未进本项目 opencode 技能清单」，改为直读 `~/.agents/skills/mattpocock-skills/skills/engineering/<name>/SKILL.md`。
+- **门铃（`herdr agent prompt`）可用**：实测 `send-msg.sh` 发 `director` 成功（无 WARN，收件方认领并收口）。但**首次启动后的最初几十秒**输入可能未就绪 ⇒ 首次注入技能后需复核 pane 输出是否真的开始工作（必要时补 `send-keys enter`）。
+
 ## 4. 技能如何到达模型
 
 - 技能进清单、可斜杠调用；不能调起时改读技能文件路径。
