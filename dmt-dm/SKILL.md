@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.19.0
+version: 5.19.1
 description: 开发经理（devm），负责工单落笔、队长派单、队长 pane 生命周期、疑问裁决、合并与推送。用于接单出票、派 devl、管理 dmt-dev tab、整合交付和向 director 汇报。触发词：dmt、devm、开发经理、ticket、to-tickets、devl、队长、worktree、merge、push。
 ---
 

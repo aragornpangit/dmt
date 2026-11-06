@@ -51,7 +51,7 @@
 | O2 | 启动初期输入未就绪（`agent prompt` 只填入不提交） | 文档写明「首次注入后复核 pane 输出，必要时补 `send-keys enter`」 | **DONE** |
 | O3 | 并发上限未声明 | 矩阵 `opencode.max_subagents_conc` 注明「上游未提供入口，按任务规模自判」 | **DONE**（显式声明为不设，而非留空） |
 | O4 | 技能发现目录易踩单复数（`.opencode/skills/` vs `skill/`） | `harness/opencode.md` §1 已写明单数不生效 | **DONE** |
-| O5 | OpenCode v2 支持 `@<skill-id>` 显式引用，但未在本机 2.2.5 实测 | 在 opencode 2.2.5 pane 中 `herdr agent prompt <pane> '@to-spec'` 能让技能正文进入上下文；同名文件存在时选中 skill 而非文件；`skill({id})` 仍可用 | **OPEN** |
+| O5 | OpenCode v2 统一用 `@<skill-id>` 加载技能（2026-11-06 用户裁定） | 在 opencode 2.2.5 pane 中 `herdr agent prompt <pane> '@to-spec'` 能让技能正文进入上下文；同名文件存在时选中 skill 而非文件；`skill({id})` 仍可用 | **OPEN**（契约已改，2.2.5 复测待补） |
 
 ## 跨 harness
 

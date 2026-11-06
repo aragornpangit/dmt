@@ -94,7 +94,7 @@ bash dmt-director/scripts/install-skills.sh <项目根> --harness claude,codebud
 软链整个角色目录时，`dmt-director/` 里的契约、说明与机检脚本一并可见，不影响技能加载。
 装到其他 harness 的用户级技能目录时，规则同样是**目录名即技能名**。
 
-**五个 harness 的技能发现目录（2026-11-04 逐 harness 探针实测）**：`.agents/skills/` **不是**五者交集 —— 实测只有 `codex` / `opencode` / `pi` 读它，`claude` 与 `codebuddy` **只认各自私有目录**（项目级 `.claude/skills/` / `.codebuddy/skills/`，用户级 `~/.claude/skills/` / `~/.codebuddy/skills/`）。因此 `install-skills.sh` 的 `<target>/.agents/skills/` 落点只覆盖三者（`pi` 还需 `--approve`）；**装到 claude / codebuddy 时必须另软链其私有目录**。另一个易错点：`pi` 的用户级私有目录是 `~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**），`opencode` 的项目级目录是 `.opencode/skills/`（**复数**）。**斜杠写法也不同**：claude / codebuddy / codex / opencode 用 `/dmt-dm`，**pi 用 `/skill:dmt-dm`** —— 启动脚本经 `lib-dmt.sh` 的 `dmt_skill_cmd` 自动生成，不要手敲。完整表（含项目级 / 用户级）见 `dmt-director/team.md` §1.2「harness 兼容」。
+**五个 harness 的技能发现目录（2026-11-04 逐 harness 探针实测）**：`.agents/skills/` **不是**五者交集 —— 实测只有 `codex` / `opencode` / `pi` 读它，`claude` 与 `codebuddy` **只认各自私有目录**（项目级 `.claude/skills/` / `.codebuddy/skills/`，用户级 `~/.claude/skills/` / `~/.codebuddy/skills/`）。因此 `install-skills.sh` 的 `<target>/.agents/skills/` 落点只覆盖三者（`pi` 还需 `--approve`）；**装到 claude / codebuddy 时必须另软链其私有目录**。另一个易错点：`pi` 的用户级私有目录是 `~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**），`opencode` 的项目级目录是 `.opencode/skills/`（**复数**）。**技能调用写法也不同**：claude / codebuddy / codex 用 `/dmt-dm`，**opencode 用 `@dmt-dm`**，**pi 用 `/skill:dmt-dm`** —— 启动脚本经 `lib-dmt.sh` 的 `dmt_skill_cmd` 自动生成，不要手敲。完整表（含项目级 / 用户级）见 `dmt-director/team.md` §1.2「harness 兼容」。
 
 **Codex 备选启动**：
 

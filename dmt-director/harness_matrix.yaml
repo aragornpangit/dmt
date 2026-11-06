@@ -71,14 +71,15 @@ harnesses:
       dir_project: .agents/skills
       dir_user: .agents/skills
       dir_project_extra: .opencode/skills
-    slash_prefix: "/"
+    # 2026-11-06 用户裁定：opencode v2 用 @<skill-id> 显式引用技能（斜杠清单不全，/to-spec 等不生效）
+    slash_prefix: "@"
     start_cmd: "opencode --auto"
     # 上游（opencode 2.2.5）未提供并发入口 ⇒ 显式声明为「不设」，派发前按任务规模自判
     max_subagents_conc: null
     max_subagents_env: null
     max_subagents_config: null
     skill_prefix: null
-    subagent_skill: unknown
+    subagent_skill: invoke
     first_prompt: false
     tree_mode: full
     doorbell: opencode
@@ -89,6 +90,7 @@ harnesses:
       # 2026-11-06 实测 pi 实现（collectAncestorAgentsSkillDirs）：项目级只沿祖先链扫
       # `.agents/skills`，**不扫** `.pi/skills` ⇒ 该项目不再铺（铺了也不生效）。
       dir_project_extra: null
+    # pane 角色用 /skill:<name>；子代理 delegate / 自定义 agent 无 Skill 工具，走 skills: 白名单 + read SKILL.md
     slash_prefix: "/skill:"
     start_cmd: "pi --approve"
     # pi-subagents 默认：workflow maxTasks=8 / concurrency=4（2026-11-06 实测文档）

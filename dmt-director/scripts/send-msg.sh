@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 发收件箱消息 + herdr 门铃（文件名与方向自动生成）
 # 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run]
-#   from ∈ director|devm|anam|{角色}-helper；to ∈ director|devm|anam（helper 无自己的 inbox、不接受输入框内容）
+#   from ∈ director|devm|anam|devl{n}|{角色}-helper；to ∈ director|devm|anam|devl{n}（helper 无自己的 inbox、不接受输入框内容）
 #   helper 发出的单向汇报只写箱、不按门铃（本体扫箱收取）
 # 序号：max(扫描 inbox/<to>/** 含 .doing/ 的现有最大号, inbox/<to>/.seq 高水位) + 1
 set -eu
@@ -10,13 +10,14 @@ FROM="${2:?missing from}"
 SLUG="${3:?missing slug}"
 BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
-# 发方白名单：director|devm|anam|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
+# 发方白名单：director|devm|anam|devl{n}|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
 # helper 是纯分身（用户裁定）：无自己的 inbox、不接受输入框内容 —— 任务随 spawn-helper 一次性下发
 # 角色名归一化：允许 <角色> 或 <角色>-<后缀>（多 harness 同一 workspace，如 director-pi / devm-pi）。
 # 无后缀＝契约默认；带后缀＝同一 workspace 里并存多套团队时的区分（寻址走 dmt_pane_by_label 的回退）。
 role_base() {
   case "${1:-}" in
     director|devm|anam) printf '%s' "$1" ;;
+    devl[0-9]*) printf '%s' "$1" ;;
     director-*|devm-*|anam-*) printf '%s' "${1%%-*}" ;;
     *) printf '' ;;
   esac
@@ -26,10 +27,10 @@ case "$TO" in
   *-helper)
     echo "helper 不接受输入框内容、无自己的 inbox（任务随 spawn-helper 一次性下发，成果由 helper 单向汇报主体）：$TO 不能作收方" >&2; exit 2 ;;
 esac
-[ -n "$(role_base "$TO")" ] || { echo "bad role: $TO (want director|devm|anam，可带 -后缀)" >&2; exit 2; }
+[ -n "$(role_base "$TO")" ] || { echo "bad role: $TO (want director|devm|anam|devl{n}，可带 -后缀)" >&2; exit 2; }
 case "$FROM" in
   *-helper) ;;
-  *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want director|devm|anam|{角色}-helper)" >&2; exit 2; } ;;
+  *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want director|devm|anam|devl{n}|{角色}-helper)" >&2; exit 2; } ;;
 esac
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }

@@ -139,9 +139,10 @@ if [ ! -x "$MATRIX" ]; then bad "缺 harness-matrix.sh"; else
     dir="$(bash "$MATRIX" get "$h" skills.dir_project 2>/dev/null || true)"
     if [ -n "$pre" ] && [ -n "$cmd" ] && [ -n "$dir" ]; then ok "harness $h（dir=$dir prefix=$pre）"; else bad "harness $h 字段不完整"; fi
   done
-  for h in codebuddy claude codex opencode; do
+  for h in codebuddy claude codex; do
     [ "$(bash "$MATRIX" get "$h" slash_prefix)" = "/" ] && ok "$h 前缀 /" || bad "$h 前缀应为 /"
   done
+  [ "$(bash "$MATRIX" get opencode slash_prefix)" = "@" ] && ok "opencode 前缀 @" || bad "opencode 前缀应为 @"
   [ "$(bash "$MATRIX" get pi slash_prefix)" = "/skill:" ] && ok "pi 前缀 /skill:" || bad "pi 前缀应为 /skill:"
 fi
 
@@ -387,8 +388,10 @@ for src in sorted(set(files)):
     except OSError:
         continue
     # 排除围栏代码块与行内代码里的伪链接（2026-11-05 实测噪声源：`x[i]`、`+out1`、`[a-z0-9_]+`）
-    text = re.sub(r"```.*?```", "", text, flags=re.S)
-    text = re.sub(r"`[^`]*`", "", text)
+    # 用空格而不是空串替换：空串会把相邻 token 粘成伪链接
+    # （2026-11-06 实测：`(text,format)` 等行内代码被删后，[UNK]…(text,format) 被误判为链接）
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    text = re.sub(r"`[^`]*`", " ", text)
     for target in pattern.findall(text):
         key = (src, target)
         if key not in seen:

@@ -1,7 +1,21 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 92 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 93 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第九十次：opencode 用 `@<skill-id>`、pi pane 用 `/skill:<name>` 的技能加载口径，版本 `5.19.1`）**：
+  ① **用户裁定**：opencode v2 的斜杠清单不完整（`/to-spec`、`/to-tickets` 实测不生效），统一改用 **`@<skill-id>`** 显式引用技能。
+  ② **矩阵**：`harness_matrix.yaml` 的 opencode `slash_prefix` 由 `/` 改为 `@`，`subagent_skill` 由 `unknown` 改为 `invoke`；`dmt_skill_cmd` 对 opencode 自动生成 `@<技能名>`。
+  ③ **文档**：`harness/opencode.md` §3/§4/§5、`team/02-runtime.md`、`team/10-pane-role.md`、`team/03-comms.md`、`team/07b-dispatch.md`、`harness/COMMON.md`、`README.md` 同步；子代理派发 prompt 也写 `@<技能名>`，不可用时回退 `skill({id})` 或直读 `SKILL.md`。
+  ④ **机检**：`dmt_contract.yaml` 新增 `opencode_mention` 断言（`@<技能名>` ＋ `skill({id})` 回退）。
+  ⑤ **pi 口径确认**：pane 角色用 **`/skill:<name>`**（矩阵 `slash_prefix: "/skill:"`，`dmt_skill_cmd pi dmt-dm` ⇒ `/skill:dmt-dm`）；子代理 `delegate` / 自定义 agent **无 Skill 工具**，不能用 `/skill:`，走 `skills:` 白名单注入 ＋ `read SKILL.md`。文档补注，行为不变。
+  **Why**：用户 2026-11-06 明确要求 opencode 用 `@skill` 方式加载。
+  ⑥ **消息脚本白名单补 `devl{n}`（线上迁移阻塞项）**：`send-msg.sh` / `msg-take.sh` / `msg-done.sh` 的 `role_base()` 与 `case` 只认 `director|devm|anam|{角色}-helper`，与 `ops/comms.md` 允许的 `devl{n}2devm` 直接冲突 —— 队长上报报 `bad role: devl2`（rc=2）。三处白名单加 `devl[0-9]*`；dry-run 验证 `send-msg.sh devm devl1` 生成 `382-devl12devm-test-*.md`。
+  ⑦ **`devl-pane.sh` 扩容等分修复**：`pane split` 只切最底层 pane、不重排祖先比例，第 3 个队长只剩 8 行（`MIN_DEVL_ROWS=14`）。新增 `rebalance_devl_column`：从最底层 split 往上逐个 `pane resize` 到 `1/(n-i)`；`remove` 后 `sleep 1` 等 layout 树收敛再重排（`0.2s` 会按旧比例算）。实测 add 得到 17/17/16，remove 得到 25/25。
+  ⑧ **机检 A7 断链误报修复**：行内代码替换成空串会把相邻 token 粘成伪链接（`docs/analyst/025-…md -> text,format`）；改为替换成空格。复跑后仓内与线上均 `ALL_PASS`。
+  **Why**：用户 2026-11-06 明确要求 opencode 用 `@skill` 方式加载技能；⑥⑦⑧ 是线上迁移检查中暴露的阻塞项。
+  **实测**：仓内与线上（`bcr-nh`）机检均 `ALL_PASS`；`devl-pane.sh list` 得到 `count=3 min=2 max=0 cap=3 height=50`；opencode 2.2.5 的 `@<skill-id>` 行为复测待补（BACKLOG O5）。
+  **版本升 `5.19.1`**（八技能同号）。
 
 - **2026-11-06（用户要求·第八十九次：恢复开发队长层 ＋ 评审下移 ＋ devm 只做集成，版本 `5.19.0`）**：
   ① **组织改四层**：`director` → `devm` → `devl{n}` → `dev-e`；`devl{n}` 是 pane 角色（`dmt-devl`），`dmt-dev` tab 左侧 `devm`、右侧竖排 `devl1…devl{n}`（`DEVL_MIN=2`，可增；几何上限 `floor(tab_height / 14)`，不设策略上限）；`anam` 移到 `director` tab 右侧。

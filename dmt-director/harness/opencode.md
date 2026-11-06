@@ -18,22 +18,24 @@
 
 ## 3. 技能调用行
 
-`/<技能名>`。
+**`@<技能名>`**，例如 `@dmt-dm`、`@code-review`。
 
-**2026-11-05 实测补充（重要）**：
+**2026-11-06 用户裁定（覆盖此前的斜杠写法）**：opencode v2 用 **`@<skill-id>`** 显式引用技能；`@` 是 mention 语法，不是斜杠前缀。`dmt_skill_cmd` 对 opencode 生成 `@<技能名>`。
 
-- **斜杠命令清单不完整**：`/to-spec`、`/to-tickets` 实测**未进** opencode 的斜杠清单，敲了不生效；但 **`skill` 工具能按 id 加载**（`implement` / `tdd` / `code-review` / `research` 实测均成功，含带 `disable-model-invocation: true` 者）。
-- ⇒ **优先用 `skill` 工具**（id 即技能名）；工具也不可用时按 §4 直读 `SKILL.md`。director 实测就是走了这条回退：报「`/to-spec`、`/to-tickets` 未进本项目 opencode 技能清单」，改为直读 `~/.agents/skills/mattpocock-skills/skills/engineering/<name>/SKILL.md`。
+**2026-11-05 实测补充（仍然有效）**：
+
+- **斜杠命令清单不完整**：`/to-spec`、`/to-tickets` 实测**未进** opencode 的斜杠清单，敲了不生效 ⇒ 这就是改用 `@<skill-id>` 的原因。
+- **`skill` 工具可按 id 加载**（`implement` / `tdd` / `code-review` / `research` 实测均成功，含带 `disable-model-invocation: true` 者）。`@<skill-id>` 不可用时回退 `skill({id})`，再不可用按 §4 直读 `SKILL.md`。
 - **门铃（`herdr agent prompt`）可用**：实测 `send-msg.sh` 发 `director` 成功（无 WARN，收件方认领并收口）。但**首次启动后的最初几十秒**输入可能未就绪 ⇒ 首次注入技能后需复核 pane 输出是否真的开始工作（必要时补 `send-keys enter`）。
 
 ## 4. 技能如何到达模型
 
-- 技能进清单、可斜杠调用；不能调起时改读技能文件路径。
-- 子代理：按 harness 自身的并行子代理机制承载（模板见 [`../team/07b-dispatch.md`](../team/07b-dispatch.md)）。
+- pane 角色：启动后用 `@<技能名>` 加载（如 `@dmt-dm`）。
+- 子代理：在派发 prompt 里写 `@<技能名>`（如 `@dmt-de`、`@dmt-reviewer`），并写明“必须加载该技能后再开工”；`@` 不可用时回退 `skill({id})` 或直读 `SKILL.md`。模板见 [`../team/07b-dispatch.md`](../team/07b-dispatch.md)。
 
 ## 5. 强制技能
 
-`/<name>`。
+`@<name>`，例如 `@code-review`、`@tdd`。
 
 ## 6. 特有约束
 

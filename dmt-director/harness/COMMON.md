@@ -42,7 +42,7 @@
 
 ## 6. 子代理的共同边界
 
-子代理（`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`）**不占 pane、不进收件箱**，只向派生者回报；**每个子代理都必须加载其职责对应的技能**（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`），不能只贴技能正文代替调用。**怎么把技能交到子代理手里**是各 harness 的差异（见差异文件 §4 与 `harness_matrix.yaml` 的 `subagent_skill`）：能直接调用的走斜杠 / `skill` 工具，不能的读 `SKILL.md` 路径。队长 `devl{n}` 是 pane 角色，自己加载 `/dmt-devl`；它派子代理时按同一规则下发技能（[`../team/07b-dispatch.md`](../team/07b-dispatch.md)）。
+子代理（`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`）**不占 pane、不进收件箱**，只向派生者回报；**每个子代理都必须加载其职责对应的技能**（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`），不能只贴技能正文代替调用。**怎么把技能交到子代理手里**是各 harness 的差异（见差异文件 §4 与 `harness_matrix.yaml` 的 `subagent_skill`）：能直接调用的走斜杠（cbc/claude/codex）或 `@<技能名>`（opencode），不能的读 `SKILL.md` 路径（pi/codex）。队长 `devl{n}` 是 pane 角色，自己加载 `/dmt-devl`；它派子代理时按同一规则下发技能（[`../team/07b-dispatch.md`](../team/07b-dispatch.md)）。
 
 ## 7. 两条共同纪律（2026-11-05 pi / claude 双侧实测补）
 

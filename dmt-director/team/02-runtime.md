@@ -9,12 +9,12 @@
 | `claude` | 项目级 `.claude/skills/`；用户级 `~/.claude/skills/` | `claude --permission-mode auto` | `/dmt-dm` |
 | `codebuddy` | 项目级 `.codebuddy/skills/`；用户级 `~/.codebuddy/skills/` | `codebuddy --permission-mode auto` | `/dmt-dm` |
 | `codex` | 项目级 `.agents/skills/`、`.codex/skills/`；用户级 `~/.agents/skills/`、`~/.codex/skills/` | `codex -a never '<角色技能 prompt>'` | `/dmt-dm`；插件技能 `mattpocock-skills:<name>` |
-| `opencode` | 项目级 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`（**复数**）；用户级 `~/.agents/skills/`、`~/.claude/skills/` | `opencode --auto` | `/dmt-dm` |
-| `pi` | 项目级**只认** `.agents/skills/`（沿祖先链扫描，`.pi/skills` 不生效）；用户级 `~/.agents/skills/`、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**） | `pi --approve` | **`/skill:dmt-dm`** |
+| `opencode` | 项目级 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`（**复数**）；用户级 `~/.agents/skills/`、`~/.claude/skills/` | `opencode --auto` | **`@dmt-dm`** |
+| `pi` | 项目级**只认** `.agents/skills/`（沿祖先链扫描，`.pi/skills` 不生效）；用户级 `~/.agents/skills/`、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**） | `pi --approve` | **`/skill:dmt-dm`**（仅 pane 角色；子代理无 Skill 工具，读 `SKILL.md`） |
 
 **约束**：
 
-1. 技能调用统一经 `lib-dmt.sh: dmt_skill_cmd`；pi 用 `/skill:<name>`，其余用 `/<name>`。Codex 插件技能另经 `dmt_skill_ref` 生成限定名。
+1. 技能调用统一经 `lib-dmt.sh: dmt_skill_cmd`；opencode 用 `@<name>`，pi 用 `/skill:<name>`，其余用 `/<name>`。Codex 插件技能另经 `dmt_skill_ref` 生成限定名。
 2. `install-skills.sh` 默认装 `.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 三处；只装一处会漏 harness。
 3. Codex 首次进入项目需人工确认 trust；其技能与 helper 任务必须随首轮 prompt 下发。pi 启动必须带 `--approve`。
 4. 启动后必须用 `dmt_pane_auto_mode` 读 argv 复验自动档；角色技能是否正确加载，用该角色实际产物与回执核验。非自动档用 `setup-team.sh --force-start` 重开。事故细节见 [`dmt-director/ops/permission-notes.md`](../ops/permission-notes.md)。
