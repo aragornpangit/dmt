@@ -1,7 +1,14 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 94 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 95 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第九十二次：记两笔缺口 —— `dmt-en` 未同步 ＋ `send-msg.sh` 不校验方向，未升号）**：
+  ① **用户指出的缺口定位**：用户报「`send-msg.sh` 收件方白名单只认 `director|devm|anam`，`devl{n}` 不是合法收件方」。**本仓已不是这样** —— `5.19.1` 的 `role_base()` 同时供 `TO` 与 `FROM` 使用，`send-msg.sh devl1 devm … --dry-run` 实测 `rc=0` 并生成 `001-devm2devl1-…md`。**该缺口真实存在的位置是 `dmt-en`**：它停在 `5.18.9`，`send-msg.sh` 第 4/13/19/29 行仍是 `director|devm|anam`，实测 `send-msg.sh devl1 devm … --dry-run` ⇒ `bad role: devl1 (want director|devm|anam，可带 -后缀)`，`rc=2`。
+  ② **记录口径**：`README.md` 的 `dmt-en` 同步行由「当前 `5.18.8`，待同步 `5.19.0`」更正为「`dmt-en` 当前 `5.18.9`，落后 `5.19.x` 整批（缺 `dmt-devl` / 四层组织 / `devl-pane.sh`）」，并写明**该白名单缺口不能单点补** —— `dmt-en` 尚无队长层，补了也没有 `devl` pane 可投递，只能整批同步。
+  ③ **本仓新查出的缺口（登记 BACKLOG A5，`OPEN`）**：`send-msg.sh` 只校验**角色合法**、不校验**方向合法**，`ops/comms.md` 的「允许方向」表是纯文档。2026-11-06 实测五个非法方向**全部 `rc=0` 并落盘方向码文件**：`devl1→devl2`（队长互连）、`director→devl{n}`（越级）、`anam→devl{n}`（跨部门）、`devl{n}→anam`、`devl{n}→director`（越级上报）。
+  **Why**：用户要求「已有缺口再记一笔」；同时避免把 `dmt-en` 的落后误判成本仓缺陷，也避免把「补白名单」当成同步方案。
+  **未升号**（只增记录与文档更正，契约行为零变更；`5.19.2` 仍是当前行为版本）。
 
 - **2026-11-06（第九十一次：`devl-pane.sh` 新增 `rebalance` 子命令，版本 `5.19.2`）**：
   ① **缺口**：`rebalance_devl_column` 原先只被 `add` / `remove` 内部调用；队长 pane 若被脚本外的方式关掉（手工 `pane close`、进程退出、用户调布局），重排不会触发，列内行高就此歪掉 —— 线上实测 devl1 剩 9 行、devl2 19 行，9 行低于 `MIN_DEVL_ROWS=14`。

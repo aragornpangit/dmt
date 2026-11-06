@@ -1,9 +1,10 @@
 # dmt 变更语义摘要（自动生成，勿手改）
 
-> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 94 条。
+> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 95 条。
 
 | 日期 | 条目 | 版本 | 要点 |
 |---|---|---|---|
+| 2026-11-06 | 用户要求·第九十二次：记两笔缺口 —— `dmt-en` 未同步 ＋ `send-msg.sh` 不校验方向，未升号 | — | ① 用户指出的缺口定位：用户报「send-msg.sh 收件方白名单只认 director|devm|anam，devl{n} 不是合法收件方」 |
 | 2026-11-06 | 第九十一次：`devl-pane.sh` 新增 `rebalance` 子命令，版本 `5.19.2` | 5.19.2 | ① 缺口：rebalance_devl_column 原先只被 add / remove 内部调用 |
 | 2026-11-06 | 用户要求·第九十次：opencode 用 `@<skill-id>`、pi pane 用 `/skill:<name>` 的技能加载口径，版本 `5.19.1` | 5.19.1 | ① 用户裁定：opencode v2 的斜杠清单不完整（/to-spec、/to-tickets 实测不生效），统一改用 @<skill-id> 显式引用技能 |
 | 2026-11-06 | 用户要求·第八十九次：恢复开发队长层 ＋ 评审下移 ＋ devm 只做集成，版本 `5.19.0` | 5.19.0 | ① 组织改四层：director → devm → devl{n} → dev-e |
