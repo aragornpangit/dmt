@@ -52,7 +52,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── OPS.md                          # 操作手册兼容入口（按任务路由到 ops/）
 │   ├── ops/*.md                        # 操作手册（runtime / comms / file-claim / helper / permission-notes）
 │   ├── harness/                        # 按 harness 加载（COMMON.md ＋ pi/codebuddy/claude/codex/opencode 各一份差异）
-│   ├── CHANGELOG.md                    # 变更历史明细（全量 87 条；更早季度归档在 changelog/）
+│   ├── CHANGELOG.md                    # 变更历史明细（全量 88 条；更早季度归档在 changelog/）
 │   ├── harness_matrix.yaml             # harness 兼容矩阵（落点 / 前缀 / 启动命令 / 并发上限；单一来源）
 │   ├── dmt_contract.yaml               # 结构契约（技能清单 / 版本源 / 目录 / 脚本；单一来源）
 │   ├── hooks/pre-commit                # git hook：防内网地址 / 凭证 / .env 入库

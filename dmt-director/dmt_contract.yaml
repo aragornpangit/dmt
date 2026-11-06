@@ -5,7 +5,7 @@
 # check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.18.5
+version: 5.18.6
 date: "2026-11-06"
 
 skills:
@@ -117,7 +117,7 @@ content_assertions:
   requirement_coverage:
     files:
       "{skills}/dmt-director/SKILL.md":
-        require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/", "team.md", "setup-team.sh"]
+        require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/", "team.md", "ops/runtime.md"]
       "{skills}/dmt-dm/SKILL.md":
         require: ["docs/dev/tickets/", "reviewer{n}", "publish.sh"]
       "{skills}/dmt-am/SKILL.md":
@@ -160,7 +160,7 @@ content_assertions:
     repo_only: true
     files:
       "{repo}/README.md":
-        require: ["全量 87 条", "DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
+        require: ["全量 88 条", "DMT_SKILLS_DIR=\"$PWD\" bash dmt-director/scripts/check-dmt.sh \"$PWD\""]
   install_ops:
     files:
       "{scripts}/install-skills.sh":
@@ -179,7 +179,7 @@ content_assertions:
         require: ["依赖分析", "开满", "完成即报"]
         forbid: ["不强制派满", "不强制并行", "按需并行"]
       "{skills}/dmt-pde/SKILL.md":
-        require: ["开满"]
+        require: ["一实例一产品单元"]
   write_ops:
     files:
       "{docs}/team/07-discipline.md":
@@ -197,14 +197,14 @@ content_assertions:
       "{docs}/team/01-org.md":
         require: ["主轨归 devm", "副轨归 director"]
       "{skills}/dmt-director/SKILL.md":
-        require: ["文档门禁", "每批至少抽 1 票", "不替代"]
+        require: ["文档门禁", "每批至少抽 1 票", "副轨"]
       "{skills}/dmt-dm/SKILL.md":
         require: ["代码门禁", "reviewer{n}"]
       "{skills}/dmt-reviewer/SKILL.md":
         require: ["/code-review", "devm"]
   skill_links:
     files:
-      "{docs}/team.md":
+      "{docs}/team/03-comms.md":
         require: ["raw.githubusercontent.com"]
   inbox_three_state:
     files:

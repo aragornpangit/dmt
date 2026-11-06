@@ -1,7 +1,20 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 87 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 88 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十五次：机检自身假 PASS 修复 ＋ 5 条真实缺口，版本 `5.18.6`）**：
+  英文化 `dmt-en` 时发现 `check-dmt.sh` 的**内容断言存在假 PASS**。
+  ① **根因**：断言展开用 `printf '%s' "$req" | tr '|' '\n'` —— **末尾无换行**，`while read` 遇 EOF 返回非 0 ⇒ **循环静默丢弃最后一条 `require` / `forbid` 串**；对只有一条 require 的断言（如 `concurrency: dmt-pde`）等于 **100% 未执行却报 OK**。修复：`printf '%s\n'`（两处）。**这是机检可信度的根问题**：修好后 dmt 仓立刻从 `ALL_PASS` 暴露 **5 条真实 FAIL**。
+  ② **暴露并修正的 5 条**（断言与现实漂移，均按「断言描述真实约束」处理）：
+     · `requirement_coverage: dmt-director/SKILL.md` —— `setup-team.sh` 已改由 `ops/runtime.md` 承载 ⇒ 断言改指 `ops/runtime.md`；
+     · `concurrency: dmt-director/SKILL.md` —— 缺「完成即报」（dm / am 都有，director 漏）⇒ **补文档**（并行段加「完成即报」），与另两角色对齐；
+     · `concurrency: dmt-pde/SKILL.md` —— `开满` 不适用于 pde（它是子代理、不派子代理）⇒ 断言改 `一实例一产品单元`；
+     · `gates: dmt-director/SKILL.md` —— `不替代` 措辞已不存在 ⇒ 断言改 `副轨`（SKILL 实有「自派 `reviewer{n}` 副轨」）；
+     · `skill_links` —— `raw.githubusercontent.com` 已移入 `team/03-comms.md` §1.4 ⇒ 断言目标改 `team/03-comms.md`。
+  ③ **教训（并入第 16 条）**：**「机检报 OK」本身也需要被验证** —— 断言执行器若有静默丢弃，会让缺口长期不可见；本轮是**跨仓英文化**（必须重写全部断言串）才把它逼出来。**配套动作**：断言展开一律带尾换行；新增「单条 require 的断言」时先自测一条**必然 FAIL** 的串，确认它真会报。
+  **实测**：修复后 dmt 仓 `ALL_PASS`（5 条逐条修完）；`dmt-en` 同步用英文断言跑 `ALL_PASS`。
+  **版本升 `5.18.6`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十四次：五 harness 测试报告 ＋ 逐 harness 改善清单与落实，版本 `5.18.5`）**：
   用户要求「把各 harness 的测试报告和改善方案记录下来，然后针对各个 harness 单独改善」。

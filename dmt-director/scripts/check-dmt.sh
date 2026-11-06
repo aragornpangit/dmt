@@ -353,7 +353,9 @@ while IFS=$'\t' read -r group tmpl req forb; do
     while IFS= read -r r; do
       [ -n "$r" ] || continue
       grep -qF -- "$r" "$path" 2>/dev/null || miss="$miss [$r]"
-    done < <(printf '%s' "$req" | tr '|' '\n')
+    # 末尾必须带换行：`printf '%s'` 无尾换行时，read 遇 EOF 返回非 0，
+    # 循环会静默丢掉最后一条 require（实测：单条 require 的断言 100% 未执行却报 OK）
+    done < <(printf '%s\n' "$req" | tr '|' '\n')
     if [ -n "$miss" ]; then bad "$who 缺要求串：$miss"; else ok "$who 含全部要求串"; fi
   fi
   if [ -n "$forb" ]; then
@@ -361,7 +363,7 @@ while IFS=$'\t' read -r group tmpl req forb; do
     while IFS= read -r p; do
       [ -n "$p" ] || continue
       if grep -qE -- "$p" "$path" 2>/dev/null; then hit="$hit /$p/"; fi
-    done < <(printf '%s' "$forb" | tr '|' '\n')
+    done < <(printf '%s\n' "$forb" | tr '|' '\n')
     if [ -n "$hit" ]; then bad "$who 含禁用串：$hit"; else ok "$who 不含禁用串"; fi
   fi
 done <<< "$ASSERT_TSV"
