@@ -52,7 +52,7 @@ dmt/                                    # 一个角色一个文件夹
 │   ├── OPS.md                          # 操作手册兼容入口（按任务路由到 ops/）
 │   ├── ops/*.md                        # 操作手册（runtime / comms / file-claim / helper / permission-notes）
 │   ├── harness/                        # 按 harness 加载（COMMON.md ＋ pi/codebuddy/claude/codex/opencode 各一份差异）
-│   ├── CHANGELOG.md                    # 变更历史明细（全量 90 条；更早季度归档在 changelog/）
+│   ├── CHANGELOG.md                    # 变更历史明细（全量 91 条；更早季度归档在 changelog/）
 │   ├── harness_matrix.yaml             # harness 兼容矩阵（落点 / 前缀 / 启动命令 / 并发上限；单一来源）
 │   ├── dmt_contract.yaml               # 结构契约（技能清单 / 版本源 / 目录 / 脚本；单一来源）
 │   ├── hooks/pre-commit                # git hook：防内网地址 / 凭证 / .env 入库
@@ -64,6 +64,8 @@ dmt/                                    # 一个角色一个文件夹
 ├── dmt-reviewer/SKILL.md                    # 审核工程师（reviewer{n} 子代理技能，不占 pane）
 ├── dmt-dm/SKILL.md                     # 开发经理
 ├── dmt-am/SKILL.md                     # 分析经理
+├── scripts/                           # 仓级辅助脚本（不随安装分发）：
+│   └── sync-mattpocock-codex-compat.sh # 把 to-spec / to-tickets / implement 的兼容副本装进 $CODEX_HOME/skills
 └── logs/                              # 事故复盘档（如 2026-10-27-serial-queue-incident.md）
 ```
 
@@ -136,6 +138,6 @@ cp .env.example .env && ${EDITOR:-vi} .env   # 填入本机实际地址
 
 - 本仓是 dmt 的**唯一维护地**。技能落点（`.agents/skills/`、`.claude/skills/`、`.codebuddy/skills/` 下的 `<角色>/`，由 `install-skills.sh` 按 `--harness` 铺设）与 **`docs/team.md` / `docs/OPS.md` / `docs/ops/` 均以软链安装**（默认 `link` 模式）⇒ 随本仓更新、改完即生效，**无需重跑安装**。仅 `--copy` 安装的项目不跟随本仓。
 - 技能内的契约引用不依赖相对路径（写作「`dmt-director/team.md`（本仓；装到项目后为 `docs/team.md`）」），因此软链安装不会断链。
-- **`dmt-en`（早期英文镜像仓）已停更**（末版 `5.7.1 · 2026-10-27`）：自 2026-11-04 起**以本仓（`dmt`）为准**，不再双仓并行维护；需要英文版时按本仓当期内容另行翻译，**不要把 `dmt-en` 当权威**。
+- **`dmt-en`（英文镜像仓）与 `dmt` 同步维护**（当前 `5.18.8`，七技能 ＋ `harness/` 层）：中文仓 `dmt` 是**权威源**，两仓不一致时以 `dmt` 为准并按本仓当期内容重新同步；**不要把 `dmt-en` 当权威**。
 - 脚本接口变更（参数、输出、退出码）视为契约变更，必须同步七个技能与机检 4m。
 - 依赖 harness 侧技能：`herdr`（pane 控制与 label 识别）、`cbc-herdr`（仅 CodeBuddy 状态上报）、`pi-subagents`（仅 pi harness；Codex 用原生 `spawn_agent`/`wait_agent`，cbc 用 Agent/team 子代理），以及 mattpocock 的 [`/to-spec`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-spec/SKILL.md)、[`/to-tickets`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-tickets/SKILL.md)、[`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)、[`/tdd`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md)、[`/research`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/research/SKILL.md) 等（安装与回退见 `team.md` §1.4）。

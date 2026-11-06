@@ -1,7 +1,22 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 90 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 91 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十八次：herdr 自愈全覆盖 ＋ 审计修复，版本 `5.18.9`）**：
+  ① **修复 1（herdr 自愈全覆盖）**：`dmt_herdr` 改为**惰性自愈**（首次调用若当前环境连不上，先修 socket/session）；修正顺序＝`want(label)` → **祖先进程 `/proc/<pid>/environ`**（codex 进程自身 env 正确，只有它复用的常驻 shell 陈旧）→ cwd 唯一命中 → 不猜。`setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `harness-detect.sh` 的裸 `herdr` 全部改走 `dmt_herdr`（合计 21 处）。**实测**：模拟 `HERDR_SESSION=bcr-nihui` ＋ 旧 workspace ⇒ 自愈到 `bcr-nh`/`w2`，`dmt_herdr pane list` 成功；正常环境不误伤（session 不变）。
+  ② **修复 2（`.pi/skills` 落点）**：读 pi 实现确认 `collectAncestorAgentsSkillDirs` **只沿祖先链扫 `.agents/skills`**，不扫 `.pi/skills` ⇒ 矩阵 `pi.dir_project_extra` 置 `null`（铺了也不生效），`team/02-runtime.md` 表格同步（原写「项目级 `.agents/skills/`、`.pi/skills/`」）。
+  ③ **修复 3（install 目标目录）**：`install-skills.sh` 目标不存在时自动 `mkdir -p`（此前 `cd -P` 在 `set -eu` 下直接失败，报错指向 line 33）。
+  ④ **修复 4（仓级脚本登记）**：契约新增 `repo_scripts`（`scripts/sync-mattpocock-codex-compat.sh`），`README.md` 目录树补该目录；机检新增 **A6d**（`repo_scripts` ↔ 仓根 `scripts/` 双向一致，未登记即 FAIL）。
+  ⑤ **审计（AI 开发软件专家视角）发现并修复的不一致**：
+     · `README.md` 仍写「`dmt-en` 已停更（末版 5.7.1）」—— 实际已同步 `5.18.9`，改为「同步维护、以 dmt 为权威源」；
+     · 矩阵字段 `start_needs_trust` **无任何消费点**（5 处）⇒ 删除；
+     · 契约 `org:` 段**无任何机检消费**、与 `team/01-org.md` 重复定义 ⇒ 删除（删后机检仍 `ALL_PASS`，反证其死数据）；
+     · `team/09-check.md` 只列到 A6b，实际已有 A6c/A6d/A7 ⇒ 补齐；
+     · 机检项编号顺序错乱（A6b→A6d→A6c）⇒ 调整为 A6b→A6c→A6d→A7。
+  ⑥ **审计判定为「合理、不改」的项**：7 份 SKILL 的第 0 步与「不做 X」边界行（自包含需要）；子代理角色 SKILL 62–74% 相似度（模板化，但各自动作不同）；`pane`/`tab`、`收口`/`关闭`、`派单`/`派发` 中英混用（语义清晰、无歧义）；`ops/*` 与 `team/*` 重叠 4–12%（分工层不同）。
+  **实测**：机检 `ALL_PASS`；安装到新目录 `rc=0` 且不再创建 `.pi/skills`；模拟陈旧环境自愈通过。
+  **版本升 `5.18.9`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十七次：断链清零 —— 仓内 10 处真断链 ＋ 安装态 13 处，版本 `5.18.8`）**：
   用户要求「断链要删除」。

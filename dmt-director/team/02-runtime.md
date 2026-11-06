@@ -10,7 +10,7 @@
 | `codebuddy` | 项目级 `.codebuddy/skills/`；用户级 `~/.codebuddy/skills/` | `codebuddy --permission-mode auto` | `/dmt-dm` |
 | `codex` | 项目级 `.agents/skills/`、`.codex/skills/`；用户级 `~/.agents/skills/`、`~/.codex/skills/` | `codex -a never '<角色技能 prompt>'` | `/dmt-dm`；插件技能 `mattpocock-skills:<name>` |
 | `opencode` | 项目级 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`（**复数**）；用户级 `~/.agents/skills/`、`~/.claude/skills/` | `opencode --auto` | `/dmt-dm` |
-| `pi` | 项目级 `.agents/skills/`、`.pi/skills/`；用户级 `~/.agents/skills/`、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**） | `pi --approve` | **`/skill:dmt-dm`** |
+| `pi` | 项目级**只认** `.agents/skills/`（沿祖先链扫描，`.pi/skills` 不生效）；用户级 `~/.agents/skills/`、`~/.pi/agent/skills/`（**不是 `~/.pi/skills/`**） | `pi --approve` | **`/skill:dmt-dm`** |
 
 **约束**：
 
