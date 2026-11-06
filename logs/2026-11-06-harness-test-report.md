@@ -3,6 +3,7 @@
 > **范围**：dmt 七角色技能在 **pi / codebuddy(cbc) / claude / codex / opencode** 五个 harness 上的
 > 「技能发现 → 装载 → 强制技能调用 → 子代理承载 → pane 通信（门铃）」全链路实测。
 > **判据**：每项都要有**可复跑的证据**（脚本输出 / session 文件解析 / 产物路径），不接受模型自述。
+> **English summary**：[`2026-11-06-harness-test-report.en.md`](2026-11-06-harness-test-report.en.md)（同一批结论的英文版，供 GitHub 读者）。
 > **配套**：缺陷与改善见 [`../../dmt-director/harness/BACKLOG.md`](../../dmt-director/harness/BACKLOG.md)；
 > 逐 harness 差异规则见 [`../../dmt-director/harness/`](../../dmt-director/harness/README.md)。
 

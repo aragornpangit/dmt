@@ -1,5 +1,6 @@
 # 各 harness 改善清单（BACKLOG）
 
+> **English summary**：see [`../../logs/2026-11-06-harness-test-report.en.md`](../../logs/2026-11-06-harness-test-report.en.md).
 > 来源：五 harness 端到端实测（[`../../logs/2026-11-06-harness-test-report.md`](../../logs/2026-11-06-harness-test-report.md)）。
 > 状态：`DONE` = 已改进融进仓；`WATCH` = 环境侧/上游侧问题，仓内只能兜底并留痕；`OPEN` = 待办。
 > **纪律**：每项必须写「判据」（怎么验证改好了），不接受「改完就算」。
