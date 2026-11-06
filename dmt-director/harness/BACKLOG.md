@@ -61,4 +61,4 @@
 | A2 | pane 通信是共同底线，但 codex 例外 | 矩阵已内建 codex 的 full-access；`harness/codex.md` §6.1 对照表 | **DONE** |
 | A3 | 子代理边界（产物边界 / 加载≠开工） | `harness/COMMON.md` §7 | **DONE** |
 | A4 | 机检须能抓住回退 | `check-dmt.sh` A6b：harness 文件齐备 + 与矩阵 key 一致 + 八技能含第 0 步 + 检测脚本五 harness 自测 + pi-agents 白名单形态 | **DONE** |
-| A5 | `send-msg.sh` 只校验**角色合法**、不校验**方向合法** ⇒ `ops/comms.md` 的「允许方向」表是纯文档，脚本不拦 | `send-msg.sh <to> <from> … --dry-run`：`devl1→devl2`（队长互连）、`director→devl{n}`（越级）、`anam→devl{n}`（跨部门）、`devl{n}→anam` / `devl{n}→director`（越级上报）**全部 exit 2**；合法方向（`devm→devl{n}` / `devl{n}→devm` / `director↔devm` / `director↔anam` / `{角色}-helper→本体`）仍 rc=0 | **OPEN**（2026-11-06 实测：上述五个非法方向当前全部 rc=0 并生成方向码文件） |
+| A5 | `send-msg.sh` 只校验**角色合法**、不校验**方向合法** ⇒ `ops/comms.md` 的「允许方向」表是纯文档，脚本不拦 | `send-msg.sh <to> <from> … --dry-run`：`devl1→devl2`（队长互连）、`director→devl{n}`（越级）、`anam→devl{n}`（跨部门）、`devl{n}→anam` / `devl{n}→director`（越级上报）**全部 exit 2**；合法方向（`devm→devl{n}` / `devl{n}→devm` / `director↔devm` / `director↔anam` / `{角色}-helper→本体`）仍 rc=0 | **DONE**（`dir_ok()` 唯一实现 ＋ `--check-dir`；机检 A6b 16 条方向自测：8 合法 rc=0 / 8 非法 rc=2，全 OK） |

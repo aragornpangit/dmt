@@ -14,6 +14,8 @@
 
 跨部门事项经 director 转派。**队长之间禁止直连**（`devl1` ↮ `devl2`），跨队协调经 `devm`。`dmt-devl` 不设 helper；helper 无自己的 inbox。
 
+**本表由 `send-msg.sh` 强制**：方向不在表内一律 `exit 2`（`bad direction: <from> -> <to>`），**不落盘、不按门铃**。非法方向包括队长互连、越级（`director→devl{n}`、`devl{n}→director`）、跨部门（`devm↔anam`、`devl{n}→anam`）与同角色自投。改本表必须同步改 `send-msg.sh` 的 `dir_ok()`（唯一实现），机检 A6b 有 16 条方向自测守回退。
+
 ## 写消息
 
 路径：项目根 `inbox/<收件角色>/{seq}-{方向}-{slug}-{YYMMDDHHMM}.md`。

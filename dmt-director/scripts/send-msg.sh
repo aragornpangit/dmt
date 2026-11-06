@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # 发收件箱消息 + herdr 门铃（文件名与方向自动生成）
-# 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run]
+# 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run|--check-dir]
 #   from ∈ director|devm|anam|devl{n}|{角色}-helper；to ∈ director|devm|anam|devl{n}（helper 无自己的 inbox、不接受输入框内容）
+#   角色合法之外，方向也必须在白名单内（见 dir_ok）；非法方向 exit 2，不落盘、不按门铃
+#   --check-dir：只跑角色与方向校验，合法即打印 OK 并 rc=0（机检用，无副作用）
 #   helper 发出的单向汇报只写箱、不按门铃（本体扫箱收取）
 # 序号：max(扫描 inbox/<to>/** 含 .doing/ 的现有最大号, inbox/<to>/.seq 高水位) + 1
 set -eu
@@ -10,6 +12,7 @@ FROM="${2:?missing from}"
 SLUG="${3:?missing slug}"
 BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
+CHECK_DIR=0; [ "${5:-}" = "--check-dir" ] && CHECK_DIR=1
 # 发方白名单：director|devm|anam|devl{n}|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
 # helper 是纯分身（用户裁定）：无自己的 inbox、不接受输入框内容 —— 任务随 spawn-helper 一次性下发
 # 角色名归一化：允许 <角色> 或 <角色>-<后缀>（多 harness 同一 workspace，如 director-pi / devm-pi）。
@@ -17,10 +20,38 @@ DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
 role_base() {
   case "${1:-}" in
     director|devm|anam) printf '%s' "$1" ;;
-    devl[0-9]*) printf '%s' "$1" ;;
+    devl[0-9]*) printf '%s' "${1%%-*}" ;;
     director-*|devm-*|anam-*) printf '%s' "${1%%-*}" ;;
     *) printf '' ;;
   esac
+}
+# 方向白名单 —— 与 `ops/comms.md`「允许方向」表一一对应，本函数是该表的唯一实现。
+#   director → devm / anam          devm → director / devl{n}
+#   anam → director                 devl{n} → devm
+#   {角色}-helper → 本体（单向汇报：无门铃、无回程）
+# 拒绝：队长互连（devl1 ↮ devl2）、越级（director→devl{n}、devl{n}→director）、
+#       跨部门（devm↔anam、devl{n}→anam）、同角色自投。
+dir_ok() {
+  local to="$1" from="$2" tb fb
+  tb="$(role_base "$to")"
+  fb="$(role_base "$from")"
+  if [ -z "$tb" ] || [ -z "$fb" ]; then return 1; fi
+  case "$from" in
+    *-helper)
+      if [ "$fb" = "$tb" ]; then return 0; fi
+      return 1 ;;
+  esac
+  case "$fb" in
+    director)
+      case "$tb" in devm|anam) return 0 ;; esac ;;
+    devm)
+      case "$tb" in director|devl[0-9]*) return 0 ;; esac ;;
+    anam)
+      if [ "$tb" = "director" ]; then return 0; fi ;;
+    devl[0-9]*)
+      if [ "$tb" = "devm" ]; then return 0; fi ;;
+  esac
+  return 1
 }
 # 收方：helper 无自己的 inbox，不接受；发方：<角色>-helper 合法。
 case "$TO" in
@@ -32,6 +63,12 @@ case "$FROM" in
   *-helper) ;;
   *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want director|devm|anam|devl{n}|{角色}-helper)" >&2; exit 2; } ;;
 esac
+# 方向：角色合法还不够 —— 队长互连 / 越级 / 跨部门一律拒绝（ops/comms.md 的允许方向表）
+if ! dir_ok "$TO" "$FROM"; then
+  echo "bad direction: ${FROM} -> ${TO}（允许：director→devm|anam；devm→director|devl{n}；anam→director；devl{n}→devm；{角色}-helper→本体）" >&2
+  exit 2
+fi
+if [ "$CHECK_DIR" = 1 ]; then echo "OK"; exit 0; fi
 [ -f "$BODY" ] || { echo "body file not found: $BODY" >&2; exit 2; }
 [ -s "$BODY" ] || { echo "body file is empty: $BODY" >&2; exit 2; }
 

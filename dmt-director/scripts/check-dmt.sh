@@ -237,6 +237,35 @@ if [ -x "$DETECT" ]; then
   unknown_out="$(env -i PATH="$PATH" HOME="${HOME:-/tmp}" DMT_PANE_ARGV="/usr/bin/vim" DMT_DETECT_NO_PARENT=1 bash "$DETECT" 2>/dev/null)"; unknown_rc=$?
   if [ "$unknown_out" = "unknown" ] && [ "$unknown_rc" = 1 ]; then ok "harness-detect: 判不出 ⇒ unknown（rc=1）"; else bad "harness-detect: 判不出时应输出 unknown 且 rc=1（实得 out=$unknown_out rc=$unknown_rc）"; fi
 fi
+# 收件箱方向矩阵自测（BACKLOG A5）：ops/comms.md 的允许方向表必须由 send-msg.sh 强制，
+# 非法方向 rc=2 且不落盘。用 --check-dir，只跑校验、无副作用。
+SEND="$SCRIPT_DIR/send-msg.sh"
+dir_case() {
+  local to="$1" from="$2" want="$3" rc
+  bash "$SEND" "$to" "$from" probe /dev/null --check-dir >/dev/null 2>&1; rc=$?
+  if [ "$rc" = "$want" ]; then ok "send-msg 方向: $from -> $to ⇒ rc=$rc"; else bad "send-msg 方向: $from -> $to ⇒ rc=$rc（期望 $want）"; fi
+  return 0
+}
+if [ -f "$SEND" ]; then
+  dir_case devm       director         0
+  dir_case anam       director         0
+  dir_case director   devm             0
+  dir_case director   anam             0
+  dir_case devl1      devm             0
+  dir_case devm       devl1            0
+  dir_case devm       devm-helper      0
+  dir_case director   director-helper  0
+  dir_case devl2      devl1            2
+  dir_case devl1      director         2
+  dir_case devl1      anam             2
+  dir_case director   devl1            2
+  dir_case anam       devl1            2
+  dir_case anam       devm             2
+  dir_case devm       anam             2
+  dir_case devm       devm             2
+else
+  bad "缺 send-msg.sh，方向矩阵无法自测"
+fi
 
 echo
 echo "== A6c) pi agent 白名单可注入性 =="

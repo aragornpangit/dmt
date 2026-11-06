@@ -1,7 +1,17 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 95 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 96 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第九十三次：`send-msg.sh` 加方向强制，版本 `5.19.3`）**：
+  ① **缺口（BACKLOG A5）**：`send-msg.sh` 只校验**角色合法**、不校验**方向合法** ⇒ `ops/comms.md` 的「允许方向」表是纯文档。实测 `devl1→devl2`（队长互连）、`director→devl{n}`（越级）、`anam→devl{n}`（跨部门）、`devl{n}→anam`、`devl{n}→director` **全部 `rc=0` 并落盘方向码文件**，与契约「队长之间禁止直连 / 不得越级 / 跨部门经 director 转派」直接冲突。
+  ② **实现**：新增 `dir_ok()`（方向白名单唯一实现）—— `director→devm|anam`、`devm→director|devl{n}`、`anam→director`、`devl{n}→devm`、`{角色}-helper→本体`；其余（互连 / 越级 / 跨部门 / 同角色自投）一律 `bad direction: <from> -> <to>` ＋ `exit 2`，**不落盘、不按门铃**。`dir_ok()` 用 `if` 而非 `&&` 短路，避免 `set -e` 下假分支终止脚本（第三十四次踩过同款坑）。
+  ③ **角色归一化补 `devl` 后缀**：`role_base()` 的 `devl[0-9]*` 原样返回，`devl1-pi` 不被识别为 `devl1`；改为 `${1%%-*}`，与 `director-*` / `devm-*` / `anam-*` 一致。实测 `devm-pi → devl1-pi`、`devl1-pi → devm-pi` 均 rc=0。
+  ④ **新增 `--check-dir`**：只跑角色与方向校验，合法打印 `OK` 并 `rc=0`，无任何文件系统副作用（机检用）。
+  ⑤ **机检 A6b 加 16 条方向自测**：8 条合法期望 `rc=0`、8 条非法期望 `rc=2`（含 `devm→devm` 自投、`devm↔anam` 跨部门、`director→devl1` 越级、`devl1→devl2` 互连）；`ops/comms.md` 补「本表由 `send-msg.sh` 强制，改表必须同步改 `dir_ok()`」。
+  **Why**：用户 2026-11-06 要求「加方向强制」——契约写了单线指挥，脚本不拦就等于没写。
+  **实测**：16 条方向自测全 OK；`send-msg.sh devl1 devm … --dry-run` 仍 `rc=0` 正常落盘按门铃；仓内机检 `ALL_PASS`。
+  **版本升 `5.19.3`**（八技能同号）。
 
 - **2026-11-06（用户要求·第九十二次：记两笔缺口 —— `dmt-en` 未同步 ＋ `send-msg.sh` 不校验方向，未升号）**：
   ① **用户指出的缺口定位**：用户报「`send-msg.sh` 收件方白名单只认 `director|devm|anam`，`devl{n}` 不是合法收件方」。**本仓已不是这样** —— `5.19.1` 的 `role_base()` 同时供 `TO` 与 `FROM` 使用，`send-msg.sh devl1 devm … --dry-run` 实测 `rc=0` 并生成 `001-devm2devl1-…md`。**该缺口真实存在的位置是 `dmt-en`**：它停在 `5.18.9`，`send-msg.sh` 第 4/13/19/29 行仍是 `director|devm|anam`，实测 `send-msg.sh devl1 devm … --dry-run` ⇒ `bad role: devl1 (want director|devm|anam，可带 -后缀)`，`rc=2`。
