@@ -1,6 +1,6 @@
 ---
 name: dmt-devl
-version: 5.19.1
+version: 5.19.2
 description: 开发队长（devl{n}），devm 的下级 pane 角色，接票后建 worktree、派 dev-e 实施、按 spec-seq 派 reviewer 独立评审、汇总结果后上报 devm。用于票面拆解、实施调度、代码评审和交付汇总。触发词：dmt、devl、开发队长、队长、ticket、worktree、reviewer、汇总、上报。
 ---
 

@@ -210,6 +210,7 @@ case "$CMD" in
     while [ "$(count_devl)" -lt "$DEVL_MIN" ]; do add_one || exit 1; done
     ;;
   add) add_one ;;
+  rebalance) rebalance_devl_column; echo "rebalanced $(count_devl) devl panes" ;;
   remove) remove_one "$INDEX" ;;
   adopt)
     echo "adopted devl panes in tab $TAB_ID:"

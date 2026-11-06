@@ -1,7 +1,15 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 93 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 94 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（第九十一次：`devl-pane.sh` 新增 `rebalance` 子命令，版本 `5.19.2`）**：
+  ① **缺口**：`rebalance_devl_column` 原先只被 `add` / `remove` 内部调用；队长 pane 若被脚本外的方式关掉（手工 `pane close`、进程退出、用户调布局），重排不会触发，列内行高就此歪掉 —— 线上实测 devl1 剩 9 行、devl2 19 行，9 行低于 `MIN_DEVL_ROWS=14`。
+  ② **修复**：`devl-pane.sh` 新增 `rebalance` 子命令（`case` 一行，直接调 `rebalance_devl_column`）；`dmt-dm/SKILL.md` 第 3 步、`ops/runtime.md` 生命周期表补「重排」行。
+  ③ **文档纠错**：`ops/runtime.md` 原写「对最底部 pane 按 `n/(n+1)` 切，保证等高」—— 与实测不符（`pane split` 不重排祖先比例），改为「`split` 只切最底层，必须 `rebalance_devl_column` 从底往上逐层 resize 到 `1/(n-i)`」。
+  **Why**：线上回收 devl3 时 pane 已被外部关掉，`remove` 的 label 查找直接返回「找不到 devl3」，重排没跑到，暴露了「没有独立重排入口」这个缺口。
+  **实测**：`rebalance` 后 devl1 / devl2 各 14 行（tab 高 32，`cap=2`）。
+  **版本升 `5.19.2`**（八技能同号）。
 
 - **2026-11-06（用户要求·第九十次：opencode 用 `@<skill-id>`、pi pane 用 `/skill:<name>` 的技能加载口径，版本 `5.19.1`）**：
   ① **用户裁定**：opencode v2 的斜杠清单不完整（`/to-spec`、`/to-tickets` 实测不生效），统一改用 **`@<skill-id>`** 显式引用技能。
@@ -9,7 +17,6 @@
   ③ **文档**：`harness/opencode.md` §3/§4/§5、`team/02-runtime.md`、`team/10-pane-role.md`、`team/03-comms.md`、`team/07b-dispatch.md`、`harness/COMMON.md`、`README.md` 同步；子代理派发 prompt 也写 `@<技能名>`，不可用时回退 `skill({id})` 或直读 `SKILL.md`。
   ④ **机检**：`dmt_contract.yaml` 新增 `opencode_mention` 断言（`@<技能名>` ＋ `skill({id})` 回退）。
   ⑤ **pi 口径确认**：pane 角色用 **`/skill:<name>`**（矩阵 `slash_prefix: "/skill:"`，`dmt_skill_cmd pi dmt-dm` ⇒ `/skill:dmt-dm`）；子代理 `delegate` / 自定义 agent **无 Skill 工具**，不能用 `/skill:`，走 `skills:` 白名单注入 ＋ `read SKILL.md`。文档补注，行为不变。
-  **Why**：用户 2026-11-06 明确要求 opencode 用 `@skill` 方式加载。
   ⑥ **消息脚本白名单补 `devl{n}`（线上迁移阻塞项）**：`send-msg.sh` / `msg-take.sh` / `msg-done.sh` 的 `role_base()` 与 `case` 只认 `director|devm|anam|{角色}-helper`，与 `ops/comms.md` 允许的 `devl{n}2devm` 直接冲突 —— 队长上报报 `bad role: devl2`（rc=2）。三处白名单加 `devl[0-9]*`；dry-run 验证 `send-msg.sh devm devl1` 生成 `382-devl12devm-test-*.md`。
   ⑦ **`devl-pane.sh` 扩容等分修复**：`pane split` 只切最底层 pane、不重排祖先比例，第 3 个队长只剩 8 行（`MIN_DEVL_ROWS=14`）。新增 `rebalance_devl_column`：从最底层 split 往上逐个 `pane resize` 到 `1/(n-i)`；`remove` 后 `sleep 1` 等 layout 树收敛再重排（`0.2s` 会按旧比例算）。实测 add 得到 17/17/16，remove 得到 25/25。
   ⑧ **机检 A7 断链误报修复**：行内代码替换成空串会把相邻 token 粘成伪链接（`docs/analyst/025-…md -> text,format`）；改为替换成空格。复跑后仓内与线上均 `ALL_PASS`。

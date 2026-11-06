@@ -31,8 +31,9 @@ bash dmt-director/scripts/setup-team.sh --harness codex
 | 回收 | `n > DEVL_MIN` 且无在办票、工作区干净、空闲 ≥ 10 min | `devl-pane.sh remove <index>` | 双钥匙：队长自报收口 + `git status` 干净、无 running `dev-e` |
 | 拒绝回收 | `n = DEVL_MIN` | 保留 | 不得降到 1 |
 | 恢复 | pane 丢失 / label 漂移 | 按 pane id 改名自愈，或从待办重建 | label 与 pane id 一致 |
+| 重排 | 列内行高不齐（pane 被脚本外的方式关掉，`remove` 的重排没跑到） | `devl-pane.sh rebalance` | 各 `devl` 行数相等，且 ≥ `MIN_DEVL_ROWS` |
 
-**实现要点**：`HERDR_TAB_ID` 是 pane 创建时注入的，`pane move` 后不更新；devm 必须用 `herdr pane get "$HERDR_PANE_ID" | jq -r '.result.pane.tab_id'` 现查当前 tab。分割比例：第 n 个队长加在右槽底部，对最底部 pane 按 `n/(n+1)` 切，保证等高。
+**实现要点**：`HERDR_TAB_ID` 是 pane 创建时注入的，`pane move` 后不更新；devm 必须用 `herdr pane get "$HERDR_PANE_ID" | jq -r '.result.pane.tab_id'` 现查当前 tab。分割比例：`pane split` 只切最底层 pane、**不重排祖先比例**，直接连加会让第 3 个队长只剩 8 行；`add` / `remove` 后由 `rebalance_devl_column` 从最底层 split 往上逐层 `pane resize` 到 `1/(n-i)` 才等高（`remove` 后需 `sleep 1` 等 layout 树收敛）。
 
 ## 手动会话权限
 
