@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.18.3
+version: 5.18.4
 description: 开发工程师（dev-e），devm 的开发子代理，在独立 worktree 内按 SPEC 和 ticket 实施、自审并提交。用于开发工单、TDD、缺陷修复和回归定位。触发词：dmt、dev-e、开发工程师、ticket、TDD、worktree、tdd。
 ---
 

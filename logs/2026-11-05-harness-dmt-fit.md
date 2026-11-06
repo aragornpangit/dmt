@@ -200,3 +200,68 @@ bash dmt-director/scripts/harness-detect.sh --explain
 | 自动档 | `--approve` | `--dangerously-skip-permissions` | `-y`（HIGH/CRITICAL 仍问） | `--auto` |
 | 门铃 `agent prompt` | ✅ | ✅ | ✅ | ✅（首启需复核提交） |
 | 端到端结论 | 可用（降级承载） | 可用 | 可用 | 可用 |
+
+---
+
+# 追加：codex 同构端到端实测（2026-11-06，workspace `w9` / `codex-lab`）
+
+> 同一测试计划（T1–T5），harness = **codex-cli 0.166.0**。三个角色 pane ＋ 5 个诊断 pane，测毕回收。
+
+## 1. 环境
+
+| 项 | 值 |
+|---|---|
+| workspace | `w9`（label `codex-lab`） |
+| 项目 | `/tmp/dmt-codex-lab`，`install-skills.sh --harness codex`（落点 `.agents/skills/`） |
+| pane | `director` / `devm` / `anam`（契约名） |
+| 启动 | `codex -a never`（**Workspace** sandbox，默认） |
+| 安装机检 | 软链调用 `ALL_PASS` |
+| 首启 | 无 trust 提示（`/tmp` 已在 trusted 列表）；技能用 `herdr agent prompt /dmt-<角色>` 注入成功 |
+
+## 2. 结果
+
+| 项 | 结果 |
+|---|---|
+| T1 角色技能装载 | ✅ 三角色按技能自述就绪（director 报「都用 `spawn_agent`，不依赖 herdr」） |
+| T2 `to-spec`＋`to-tickets` | ✅ SPEC **36 行** ＋ 工单 **2 张**（`contract` → `tests` 依赖）——但**由 director 代行 pde 落笔**（见 §3-③） |
+| T3 `implement`→`tdd`→`code-review` | ⚠️ 产物齐全（`mathx.py` ＋ `test_mathx.py`，`pytest` **2 passed**，我复跑一致）；但 `code-review` 步骤 `[INCOMPLETE]`（派出的 2 个子代理「角色漂移、输出作废」） |
+| T4 `research` ＋ 并行子代理 | ⚠️ 落盘 `research-greet.md`（41 行，含收口差异）；`spawn_agent` 起了 2 个但**载荷未送达** |
+| T5 门铃 `send-msg.sh` | ❌ 默认 sandbox 下 **WARN: pane label 'director' not found**（只落文件、不发门铃）；`--sandbox danger-full-access` 下 ✅ **送达并被告认领收口** |
+
+**工具级硬证据**（`~/.codex/sessions/**/rollout-*.jsonl` 的 `function_call` 统计）：
+
+| 角色 | 工具调用 |
+|---|---|
+| director | `exec_command`×35、`apply_patch`×4、`spawn_agent`×1、`wait_agent`×2、`followup_task`×1 |
+| devm | `exec_command`×52、`apply_patch`×2、`spawn_agent`×2、`wait_agent`×4、`followup_task`×2 |
+| anam | `exec_command`×32、`spawn_agent`×2、`wait_agent`×3、`followup_task`×3、`apply_patch`×1 |
+
+⇒ **`spawn_agent` 确实被调用**，但三角色都回报「子代理收不到任务载荷 / 消息队列为空 / 角色漂移」⇒ 该轮记 `[SUBAGENT_UNAVAILABLE]`。
+
+## 3. 三个实测缺陷（与处置）
+
+| # | 缺陷 | 证据 | 处置 |
+|---|---|---|---|
+| ① | **默认 Workspace sandbox 拒连 herdr unix socket** | codex shell 里 `herdr pane list` → `Error: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }`；对照：同一脚本在 `--sandbox danger-full-access` 下门铃成功、director 认领收口 | **矩阵 `start_cmd` 改为 `codex -a never --sandbox danger-full-access`**；`harness/codex.md` §6.1 |
+| ② | **codex 的 shell 复用陈旧常驻 shell 环境** | codex 进程 `/proc/<pid>/environ` 是 `w9`/`bcr-nh`（正确）；但其 `exec_command`（`bash -lc`）里是 `w1`/`bcr-nihui`（已废弃 session）。前置 `env HERDR_…=正确值 codex` **无效** | `lib-dmt.sh` 新增 **`dmt_herdr_env_fix [label]`**（父 shell 修正：扫 `sessions/*/herdr.sock`，按「目标 label ＋ `cwd==$PWD`」唯一命中则 export）；`send-msg.sh` 寻址前调用。**本地模拟 codex 陈旧环境：`rc=0`、无 WARN** |
+| ③ | **`spawn_agent` 载荷投递失败** | 三角色均调用成功但子代理回「消息队列为空」/角色漂移 ⇒ SPEC/工单由 director 代行、code-review 无结论 | 文档定级：codex 上子代理不可靠 ⇒ 按 `harness/codex.md` §4 记 `[SUBAGENT_UNAVAILABLE]`，本 pane 代行 |
+
+**修 ② 过程中另抓到两个自身缺陷（已修）**：
+- `dmt_pane_by_label` 里 `[ "$n" = "1" ] && { … }` 在 `set -e` 下遇假分支会**终止整个脚本**（表现为 `send-msg.sh` 静默 `rc=1`）⇒ 改 `if` 形式。
+- 同函数第三级「查到 pane 并 export」写在**命令替换的子 shell** 里 ⇒ 传不回父进程，出现「查到了 pane、发送却仍走陈旧 socket」⇒ 抽出 `dmt_herdr_env_fix` 在父 shell 先行修正。
+
+## 4. 五 harness 最终对照
+
+| 维度 | pi | claude | cbc | opencode | **codex** |
+|---|---|---|---|---|---|
+| 技能装载 | `/skill:` 或 read | `/dmt-*` ＋ Skill | `/dmt-*` ＋ Skill | `skill` 工具 | `/dmt-<角色>` 注入成功 |
+| Skill 工具 | ❌ | ✅ | ✅ | ✅ | ❌（改用 `exec_command` 读文件 + 插件技能名） |
+| 子代理 | `delegate`（可用，需给路径） | `Agent` ✅ | `Agent` ✅ | `subagent` ✅ | `spawn_agent` **调用成功但载荷未送达** ⚠️ |
+| 自动档 | `--approve` | `--dangerously-skip-permissions` | `-y`（高风险仍问） | `--auto` | `-a never` ＋ **必须** `--sandbox danger-full-access` |
+| 门铃 | ✅ | ✅ | ✅ | ✅ | ⚠️ 仅 full-access 下可用（已进矩阵默认） |
+| pane 身份 | ✅ | ✅ | ✅ | ✅ | ⚠️ shell env 陈旧 ⇒ 需 `dmt_herdr_env_fix`（已修） |
+| **端到端** | 可用（降级） | 可用 | 可用 | 可用 | **可用但需两项前置**：full-access sandbox ＋ env 修正 |
+
+## 5. 一句话结论
+
+codex 是五个 harness 里**唯一需要改沙箱参数才能工作**的：`-a never` 只免审批、不免沙箱；dmt 的 pane 通信依赖 herdr unix socket，而 codex 默认 Workspace 沙箱直接拒绝连接。矩阵默认值已改为 `--sandbox danger-full-access`，并把「陈旧 shell 环境」的兜底做进 `lib-dmt.sh`，两者都不再依赖使用者记得。

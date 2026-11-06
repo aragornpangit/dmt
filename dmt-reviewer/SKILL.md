@@ -1,6 +1,6 @@
 ---
 name: dmt-reviewer
-version: 5.18.3
+version: 5.18.4
 description: 审核工程师（reviewer{n}），独立验收单张 ticket 的代码。主轨归 devm 做代码审核，副轨归 director 做抽查与高风险复验；只认 ticket、SPEC、diff、证据和测试输出。触发词：dmt、reviewer、评审、验收、审核、code-review、抽查、复验。
 ---
 

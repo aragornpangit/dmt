@@ -1,9 +1,10 @@
 # dmt 变更语义摘要（自动生成，勿手改）
 
-> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 85 条。
+> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 86 条。
 
 | 日期 | 条目 | 版本 | 要点 |
 |---|---|---|---|
+| 2026-11-06 | 用户要求·第八十三次：codex 端到端实测 ＋ 两项硬约束修复，版本 `5.18.4` | 5.18.4 | 用户要求「把 codex 跑完」 |
 | 2026-11-06 | 用户要求·第八十二次：pi 能力缺口的两条正解 —— 自定义 agent 注入技能 ＋ 启动参数装载，版本 `5.18.3` | 5.18.3 | 用户指出「pi-coding-agent 不能使用 Skill 工具、不能在子代理中继承技能，有什么解决方案」并要求写进 dmt 的 pi 文件 |
 | 2026-11-05 | 用户要求·第八十一次：harness × dmt 实测缺陷集中修复 ＋ 汇总归档，版本 `5.18.2` | 5.18.2 | 用户要求把 pi 侧与 claude 侧（另一 agent 报告，完整版 /tmp/pi-summary.txt、摘要版 /tmp/pi-msg.txt）的实测 |
 | 2026-11-05 | 用户要求·第八十次：转发式技能在 pi 上的降级 —— `harness/pi.md` §5.1，版本 `5.18.1` | 5.18.1 | 用户要求在 workspace4（w5 / director-pi / devm-pi / anam-pi）用 pi 承载三角色实测「技能能否加载并使用」，实测 |

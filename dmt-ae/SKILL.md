@@ -1,6 +1,6 @@
 ---
 name: dmt-ae
-version: 5.18.3
+version: 5.18.4
 description: 分析工程师（ana-e），anam 的取证子代理，执行单个取证单元，一手来源优先、命令可复现、证据分级。用于市场调研、竞品逆向、技术选型及 APK / AAR / ELF 证据分析。触发词：dmt、ana-e、分析工程师、取证、竞品、逆向、REA、research。
 ---
 

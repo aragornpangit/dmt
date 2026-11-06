@@ -81,17 +81,21 @@ case "$FROM" in
   *-helper) echo "$NAME"; exit 0 ;;
 esac
 
+# 先修正本进程 herdr 环境（父 shell；codex 的 shell 工具会复用陈旧 session 环境）
+dmt_herdr_env_fix "$TO" || true
+
 # 寻址复用 lib-dmt.sh 的 dmt_pane_by_label（精确优先，唯一前缀回退；多命中给空 ⇒ 不猜）
 pane="$(dmt_pane_by_label "$TO")"
 [ -n "$pane" ] || { echo "WARN: pane label '$TO' not found; message written, doorbell skipped" >&2; echo "$NAME"; exit 0; }
 
 MSG="你有新消息 ${NAME}，在 inbox/${TO}/"
-out="$(HERDR_ENV=1 herdr agent prompt "$pane" "$MSG" 2>&1 || true)"
+# 用 dmt_herdr（认 $DMT_HERDR_SOCKET_PATH）—— dmt_pane_by_label 跨 session 命中时已把该变量修正
+out="$(dmt_herdr agent prompt "$pane" "$MSG" 2>&1 || true)"
 case "$out" in
   *agent_prompted*) ;;
   *)
-    HERDR_ENV=1 herdr pane send-text "$pane" "$MSG"
-    HERDR_ENV=1 herdr pane send-keys "$pane" enter
+    dmt_herdr pane send-text "$pane" "$MSG"
+    dmt_herdr pane send-keys "$pane" enter
     ;;
 esac
 echo "$NAME"

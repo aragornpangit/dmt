@@ -30,7 +30,29 @@
 
 `/<name>`；mattpocock 用 `mattpocock-skills:<name>`（如 `mattpocock-skills:code-review`）。
 
-## 6. 特有约束
+## 6. 两条硬约束（2026-11-06 三角色端到端实测，必须遵守）
+
+### 6.1 sandbox 必须 `danger-full-access`，否则 pane 通信全废
+
+- 默认 `codex -a never` 的 sandbox 是 **Workspace**（受限）。实测在 codex 的 shell 里连 herdr 的 unix socket 直接 `Error: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }` ⇒ **`send-msg.sh` 门铃必然跳过**（`WARN: pane label 'director' not found`）、`dmt_pane_by_label` 全空、身份自证与 file-claim 失效。
+- 判据对照（同一脚本、同一 pane，只改 sandbox）：
+
+  | sandbox | `herdr pane list` | 门铃 |
+  |---|---|---|
+  | 默认 `workspace-write` | ❌ PermissionDenied | ❌ WARN，只落文件不发门铃 |
+  | `--sandbox danger-full-access` | ✅ | ✅ director 收到并认领收口 |
+
+- ⇒ **dmt 的角色 pane 必须** `codex -a never --sandbox danger-full-access`（矩阵 `start_cmd` 已改）。安全含义：放开文件系统与网络沙箱；仅在受控开发机/容器内使用（与 `--dangerously-bypass-approvals-and-sandbox` 同级的信任假设）。
+
+### 6.2 codex 的 shell 复用**陈旧常驻 shell 环境**（`HERDR_*` 会指向废弃 session）
+
+- 实测：codex 进程自身 `/proc/<pid>/environ` 的 `HERDR_WORKSPACE_ID=w9`、`HERDR_SESSION=bcr-nh` **正确**；但它的 `exec_command`（`bash -lc`）里却是 `w1` / `bcr-nihui`（早已不存在的 session）⇒ 即使启动时用 `env HERDR_…=正确值 … codex` **也无效**（它复用的是统一执行器的常驻 shell，不读父进程 env）。
+- 现象：`send-msg.sh` 报 `server_not_running .../sessions/bcr-nihui/herdr.sock`；anam 侧同样报 herdr 不可用。
+- **dmt 侧已修（第八十三次）**：`lib-dmt.sh` 新增 `dmt_herdr_env_fix [目标label]` —— 当前 socket 连不上时，扫描 `~/.config/herdr/sessions/*/herdr.sock`，取「含目标 label 且 `cwd==$PWD`」的**唯一**命中并 export 修正（多命中一律不动、不猜）。`send-msg.sh` 在寻址前先调它。
+  - 为什么单独一个函数：`pane="$(dmt_pane_by_label …)"` 是**子 shell**，函数内的 export 传不回父进程 ⇒ 会出现「查到了 pane、发送仍走陈旧 socket」（实测到过这一步）。
+- codex 自己派子代理（`spawn_agent`）另有独立问题：实测**工具被调用**（三角色分别 1/2/2 次）但**任务载荷没送达**（子代理回「消息队列为空」/角色漂移）⇒ 该轮记 `[SUBAGENT_UNAVAILABLE]`，由本 pane 代行。
+
+## 7. 特有约束
 
 - 并发上限读 `[agents] max_concurrent_threads_per_session`（矩阵 `max_subagents_config`），矩阵静态默认 8。
 - 会话树 `tree_mode: herdr`（走 herdr 会话树，不是同进程 fork）。

@@ -64,6 +64,41 @@ dmt_herdr() {
   fi
 }
 
+# 修正本进程的 herdr 环境（2026-11-06 第八十三次，codex 实证）。
+#
+# 为什么必须单独一个函数：`pane="$(dmt_pane_by_label …)"` 是**子 shell**，函数内的 export
+# 传不回父进程 ⇒ 会出现「查到了 pane、发送却仍走陈旧 socket」（实测：codex 第三级查到
+# w9:p1 后，随后 herdr agent prompt 仍报 bcr-nihui server_not_running）。
+# ⇒ 需要修正时，必须在**父 shell**里先调本函数，再调 dmt_pane_by_label。
+#
+# 判据（都不猜）：当前 $HERDR_SOCKET_PATH 连得上且该 workspace 有 pane ⇒ 不动；
+# 否则遍历 $HOME/.config/herdr/sessions/*/herdr.sock，取「含目标 label 且 cwd==$PWD」的唯一命中。
+dmt_herdr_env_fix() {
+  local want="${1:-}" sock sess hit cnt pwd_real
+  if [ -n "${HERDR_SOCKET_PATH:-}" ] && [ -S "${HERDR_SOCKET_PATH:-}" ]; then
+    if dmt_herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null | jq -e '(.result.panes // []) | length > 0' >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+  pwd_real="$(pwd -P 2>/dev/null || pwd)"
+  for sock in "$HOME"/.config/herdr/sessions/*/herdr.sock; do
+    [ -S "$sock" ] || continue
+    sess="$(basename "$(dirname "$sock")")"
+    if [ -n "$want" ]; then
+      hit="$(HERDR_SESSION="$sess" HERDR_SOCKET_PATH="$sock" HERDR_ENV=1 herdr pane list 2>/dev/null \
+        | jq -r --arg l "$want" --arg c "$pwd_real" \
+            '.result.panes[]? | select(.label==$l and ((.cwd // "")|sub("/$";""))==$c) | .pane_id' 2>/dev/null || true)"
+      cnt="$(printf '%s\n' "$hit" | sed '/^$/d' | wc -l | tr -d ' ')"
+      if [ "$cnt" != "1" ]; then continue; fi
+    fi
+    export DMT_HERDR_SOCKET_PATH="$sock"
+    export HERDR_SOCKET_PATH="$sock"
+    export HERDR_SESSION="$sess"
+    return 0
+  done
+  return 1
+}
+
 # pane label -> pane id（不存在给空；herdr 不可用也给空）
 #
 # 匹配顺序（2026-11-05 第八十一次：多 harness 同 workspace 场景）：
@@ -77,7 +112,34 @@ dmt_pane_by_label() {
   [ -n "$id" ] && { printf '%s' "$id"; return 0; }
   hits="$(printf '%s' "$out" | jq -r --arg p "${want}-" '.result.panes[]? | select((.label // "") | startswith($p)) | .pane_id' 2>/dev/null || true)"
   n="$(printf '%s\n' "$hits" | sed '/^$/d' | wc -l | tr -d ' ')"
-  [ "$n" = "1" ] && printf '%s' "$(printf '%s\n' "$hits" | sed '/^$/d' | head -1)"
+  if [ "$n" = "1" ]; then
+    printf '%s' "$(printf '%s\n' "$hits" | sed '/^$/d' | head -1)"
+    return 0
+  fi
+
+  # ③ 跨 session 回退（2026-11-06 第八十三次，codex 实测）：某些 harness（codex）的 shell 工具
+  #    复用**常驻 shell 的旧环境**，$HERDR_SOCKET_PATH / $HERDR_WORKSPACE_ID 指向已废弃的 session
+  #    ⇒ 上面两级必空。此时遍历 $HOME/.config/herdr/sessions/*/herdr.sock，
+  #    按 **当前目录 ＋ 目标 label** 找唯一命中（不猜：多命中一律给空）。
+  local pwd_real sock hit cnt
+  pwd_real="$(pwd -P 2>/dev/null || pwd)"
+  for sock in "$HOME"/.config/herdr/sessions/*/herdr.sock; do
+    [ -S "$sock" ] || continue
+    hit="$(HERDR_SOCKET_PATH="$sock" HERDR_ENV=1 herdr pane list 2>/dev/null \
+      | jq -r --arg l "$want" --arg c "$pwd_real" \
+          '.result.panes[]? | select(.label==$l and ((.cwd // "")|sub("/$";""))==$c) | .pane_id' 2>/dev/null || true)"
+    cnt="$(printf '%s\n' "$hit" | sed '/^$/d' | wc -l | tr -d ' ')"
+    if [ "$cnt" = "1" ]; then
+      local sess; sess="$(basename "$(dirname "$sock")")"
+      # 命中即**修正本进程的 herdr 环境**：否则「查到了 pane、发送却仍走陈旧 socket」
+      # （2026-11-06 实测：codex 里第三级查到 w9:p1 后，herdr agent prompt 仍报 bcr-nihui server_not_running）。
+      export DMT_HERDR_SOCKET_PATH="$sock"
+      export HERDR_SOCKET_PATH="$sock"
+      export HERDR_SESSION="$sess"
+      printf '%s' "$(printf '%s\n' "$hit" | sed '/^$/d' | head -1)"
+      return 0
+    fi
+  done
   return 0
 }
 

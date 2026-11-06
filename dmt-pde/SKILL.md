@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.18.3
+version: 5.18.4
 description: 产品工程师（pde{n}），director 的产品子代理，落笔 PRD / SPEC / 工单并做产品取证、边界枚举和验收标准核对。用于产品文档、需求一致性和既有文档核查。触发词：dmt、pde、产品工程师、PRD、SPEC、工单、用户故事、验收标准。
 ---
 

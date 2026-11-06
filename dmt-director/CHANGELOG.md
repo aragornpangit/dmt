@@ -1,7 +1,17 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 85 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 86 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十三次：codex 端到端实测 ＋ 两项硬约束修复，版本 `5.18.4`）**：
+  用户要求「把 codex 跑完」。在 `w9`（label `codex-lab`，三 pane 契约名，`codex -a never`）跑完 T1–T5。
+  ① **T1 装载 ✅ / T2 `to-spec`＋`to-tickets` ✅**（SPEC 36 行 ＋ 工单 2 张，由 director 代行 pde）**/ T3 ⚠️**（产物齐、`pytest` 2 passed 复跑一致，但 `code-review` 因派出子代理角色漂移而无结论）**/ T4 ⚠️**（落盘 41 行含收口差异，`spawn_agent` 起了 2 个但载荷未送达）**/ T5 ❌→✅**（默认沙箱下门铃跳过；`danger-full-access` 下送达并认领收口）。
+  ② **硬约束一：codex 默认 Workspace 沙箱拒连 herdr unix socket** —— 实测 `herdr pane list` 报 `Error: Os { code: 1, kind: PermissionDenied, message: "Operation not permitted" }` ⇒ `send-msg.sh` 门铃必跳、`dmt_pane_by_label` 全空、身份自证与 file-claim 失效。`harness_matrix.yaml` 的 codex `start_cmd` 改为 **`codex -a never --sandbox danger-full-access`**；`harness/codex.md` 新增 §6.1（含 workspace-write vs danger-full-access 的对照表与安全含义）。
+  ③ **硬约束二：codex 的 shell 复用陈旧常驻 shell 环境** —— codex 进程 `/proc/<pid>/environ` 是 `w9`/`bcr-nh`（正确），但其 `exec_command`（`bash -lc`）里是 `w1`/`bcr-nihui`（已废弃 session）；前置 `env HERDR_…=正确值 codex` **无效**（复用统一执行器的常驻 shell）。⇒ `lib-dmt.sh` 新增 **`dmt_herdr_env_fix [目标label]`**（父 shell 修正：当前 socket 连不上时扫 `~/.config/herdr/sessions/*/herdr.sock`，按「目标 label ＋ `cwd==$PWD`」**唯一**命中则 export 修正，多命中不动），`send-msg.sh` 寻址前调用。**本地模拟 codex 陈旧环境：`rc=0`、无 WARN**。
+  ④ **修 ③ 过程中抓到并修掉自身两个缺陷**：(a) `dmt_pane_by_label` 里 `[ … ] && { … }` 在 `set -e` 下遇假分支**终止整个脚本**（表现为 `send-msg.sh` 静默 `rc=1`）⇒ 改 `if`；(b) 第三级「查到 pane 并 export」写在**命令替换子 shell** 里、传不回父进程 ⇒ 抽出 `dmt_herdr_env_fix` 在父 shell 先行修正。
+  ⑤ **`spawn_agent` 定级** —— 三角色均真实调用（1/2/2 次）但子代理回「消息队列为空」/角色漂移 ⇒ 按 §4 记 `[SUBAGENT_UNAVAILABLE]`，由本 pane 代行；已写入 `harness/codex.md` §6.2。
+  **归档**：[`../logs/2026-11-05-harness-dmt-fit.md`](../logs/2026-11-05-harness-dmt-fit.md) 追加 codex 节 ＋「五 harness 最终对照」表。
+  **版本升 `5.18.4`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十二次：pi 能力缺口的两条正解 —— 自定义 agent 注入技能 ＋ 启动参数装载，版本 `5.18.3`）**：
   用户指出「pi-coding-agent 不能使用 Skill 工具、不能在子代理中继承技能，有什么解决方案」并要求写进 dmt 的 pi 文件。**全部方案经实测（非推演）**，落在 [`harness/pi.md`](../dmt-director/harness/pi.md) §4.1–§4.4 与新增 [`harness/pi-agents/`](../dmt-director/harness/pi-agents/README.md)。
