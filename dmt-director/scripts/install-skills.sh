@@ -55,7 +55,7 @@ for d in $out; do
 done
 [ -n "$DIRS" ] || { echo "no skill dir resolved for --harness '$HARNESS'" >&2; exit 2; }
 
-SKILLS="dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer"
+SKILLS="dmt-director dmt-dm dmt-devl dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer"
 # 历史改名遗留：旧技能名不会自动消失（软链会变断链、副本会变孤儿目录），安装时显式清理。
 # 2026-11-04 第七十一次：dmt-rve → dmt-reviewer；另含更早的队长层 / 产品经理技能名。
 LEGACY_SKILLS="dmt-rve dmt-pm dmt-dtl dmt-atl"

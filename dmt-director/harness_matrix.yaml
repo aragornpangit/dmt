@@ -16,6 +16,7 @@
 #   max_subagents_env        并发上限对应的环境变量（若有）
 #   max_subagents_config     并发上限的运行时配置（codex 读 [agents] 的会话上限）
 #   skill_prefix             技能限定名前缀（Codex 插件技能使用该前缀）
+#   subagent_skill           子代理加载角色技能的方式：invoke=斜杠/skill 工具；read=读 SKILL.md；unknown=待实测
 #   first_prompt             启动命令是否接受首轮 prompt（true 时技能/任务随启动一次下发）
 #   doorbell                 门铃通道（herdr agent 的检测名）
 harnesses:
@@ -30,6 +31,7 @@ harnesses:
     max_subagents_env: CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS
     max_subagents_config: null
     skill_prefix: null
+    subagent_skill: invoke
     first_prompt: false
     tree_mode: full
     doorbell: codebuddy
@@ -43,6 +45,7 @@ harnesses:
     max_subagents_env: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS
     max_subagents_config: null
     skill_prefix: null
+    subagent_skill: unknown
     first_prompt: false
     tree_mode: full
     doorbell: claude
@@ -59,6 +62,7 @@ harnesses:
     max_subagents_env: null
     max_subagents_config: "agents.max_concurrent_threads_per_session"
     skill_prefix: "mattpocock-skills:"
+    subagent_skill: read
     first_prompt: true
     tree_mode: herdr
     doorbell: codex
@@ -74,6 +78,7 @@ harnesses:
     max_subagents_env: null
     max_subagents_config: null
     skill_prefix: null
+    subagent_skill: unknown
     first_prompt: false
     tree_mode: full
     doorbell: opencode
@@ -91,6 +96,7 @@ harnesses:
     max_subagents_env: null
     max_subagents_config: "workflow maxTasks=8 / concurrency=4（pi-subagents 默认，可按调用覆盖）"
     skill_prefix: null
+    subagent_skill: read
     first_prompt: false
     tree_mode: full
     doorbell: pi

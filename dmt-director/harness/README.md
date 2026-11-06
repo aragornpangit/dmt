@@ -5,7 +5,7 @@
 - [`COMMON.md`](COMMON.md) —— 五个 harness（pi / codebuddy / claude / codex / opencode）**共性**。
 - [`pi.md`](pi.md) / [`codebuddy.md`](codebuddy.md) / [`claude.md`](claude.md) / [`codex.md`](codex.md) / [`opencode.md`](opencode.md) —— 各 harness **差异**。
 
-**加载协议**（唯一入口是七份角色 `SKILL.md` 的「## 0. 按 harness 加载」）：
+**加载协议**（唯一入口是八份角色 `SKILL.md` 的「## 0. 按 harness 加载」）：
 
 1. `bash dmt-director/scripts/harness-detect.sh` 判定本会话 harness（`pi|codebuddy|claude|codex|opencode`；`unknown` ⇒ 回报 director，不得默认）。
 2. 读共性与差异：`harness/COMMON.md` + `harness/<harness>.md`。

@@ -1,13 +1,14 @@
 # pane 运行与生命周期
 
-**身份＝pane label，不是位置、不是 tab。** 常驻角色各占一个 pane（`director` / `devm` / `anam`）；`{角色}-helper` 是按需 pane；`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 是子代理，不占 pane。
+**身份＝pane label，不是位置、不是 tab。** 常驻角色各占一个 pane（`director` / `devm` / `anam` / `devl{n}`）；`{角色}-helper` 是按需 pane；`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 是子代理，不占 pane。
 
 ## 布局
 
-- `devm` 在 `director` tab 内、director pane 右侧；`anam` 独立 tab；label 与角色名同名且全 workspace 唯一。
-- 按 `herdr pane list` 的 `label` 识别伙伴；不按 tab 位置、不记 pane id。label 缺失 ⇒ 停下问用户。
-- `devm` 不得用 tab label 认自己（其 tab label 是 `director`）。
-- **禁止 `herdr tab close`**：director tab 会连带 devm，helper tab 需保留复用；只关 pane。
+- `director` tab：左侧 `director`，右侧 `anam`。
+- `dmt-dev` tab：左侧 `devm`，右侧竖排 `devl1…devl{n}`（`n ≥ DEVL_MIN=2`）。
+- label 与角色名同名且全 workspace 唯一；按 `herdr pane list` 的 `label` 识别伙伴；不按 tab 位置、不记 pane id。label 缺失 ⇒ 停下问用户。
+- `devm` 不得用 tab label 认自己（其 tab label 是 `dmt-dev`）。
+- **禁止 `herdr tab close`**：`director` tab 会连带 `anam`，`dmt-dev` tab 会连带 `devm` / `devl{n}`；helper tab 需保留复用；只关 pane。空 tab 且非 `director` / `dmt-dev` / `helper` 才可关。
 
 ## 启动
 
@@ -17,9 +18,21 @@
 bash dmt-director/scripts/setup-team.sh --harness codex
 ```
 
-脚本幂等完成：director 正名 → split `devm` → 建 `anam` tab → 代启动 harness → 输技能命令。Codex 的技能随首轮 prompt 一次下发；启动时出现 trust 界面就先人工确认，再重跑 `setup-team.sh --harness codex --force-start`。技能名 / 落点变更后跑 `setup-team.sh --reload`，Codex 则重开 pane。
+脚本幂等完成：director 正名 → 建 `dmt-dev` tab 并把 `devm` 迁入左侧 → 把 `anam` 移到 director tab 右侧 → 代启动 harness → 输技能命令。`devl` pane 由 `devm` 启动后调 `devl-pane.sh ensure-min` 建立，`setup-team.sh` 不预建。Codex 的技能随首轮 prompt 一次下发；启动时出现 trust 界面就先人工确认，再重跑 `setup-team.sh --harness codex --force-start`。技能名 / 落点变更后跑 `setup-team.sh --reload`，Codex 则重开 pane。
 
 就绪判据＝`herdr pane get <pane>` 的 `agent_status` 非 `unknown`。启动后必须用 `dmt_pane_auto_mode` 回读 argv 复验自动档；角色技能是否正确加载则用该角色实际产物和技能回执核验。见 `WARN` 用 `setup-team.sh --force-start` 重开。事故与逃生舱见 [`permission-notes.md`](permission-notes.md)。
+
+## devl pane 生命周期（devm 负责）
+
+| 阶段 | 触发 | 动作 | 判据 |
+|---|---|---|---|
+| 补位 | `n < DEVL_MIN` | `devl-pane.sh ensure-min` | 至少 2 个 `devl` pane |
+| 扩容 | 待派票 > 空闲 devl 数，且 `n < floor(tab_height / MIN_DEVL_ROWS)` | `devl-pane.sh add` | 新 pane label 连续、`agent_status` 非 `unknown` |
+| 回收 | `n > DEVL_MIN` 且无在办票、工作区干净、空闲 ≥ 10 min | `devl-pane.sh remove <index>` | 双钥匙：队长自报收口 + `git status` 干净、无 running `dev-e` |
+| 拒绝回收 | `n = DEVL_MIN` | 保留 | 不得降到 1 |
+| 恢复 | pane 丢失 / label 漂移 | 按 pane id 改名自愈，或从待办重建 | label 与 pane id 一致 |
+
+**实现要点**：`HERDR_TAB_ID` 是 pane 创建时注入的，`pane move` 后不更新；devm 必须用 `herdr pane get "$HERDR_PANE_ID" | jq -r '.result.pane.tab_id'` 现查当前 tab。分割比例：第 n 个队长加在右槽底部，对最底部 pane 按 `n/(n+1)` 切，保证等高。
 
 ## 手动会话权限
 
@@ -35,4 +48,4 @@ bash dmt-director/scripts/setup-team.sh --harness codex
 
 ## helper 生命周期
 
-helper 的开法、语义和回收统一见 [`helper.md`](helper.md)。
+helper 的开法、语义和回收统一见 [`helper.md`](helper.md)。`dmt-devl` **不设 helper**。

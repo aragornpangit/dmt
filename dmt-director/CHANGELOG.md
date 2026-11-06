@@ -1,7 +1,20 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 91 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 92 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十九次：恢复开发队长层 ＋ 评审下移 ＋ devm 只做集成，版本 `5.19.0`）**：
+  ① **组织改四层**：`director` → `devm` → `devl{n}` → `dev-e`；`devl{n}` 是 pane 角色（`dmt-devl`），`dmt-dev` tab 左侧 `devm`、右侧竖排 `devl1…devl{n}`（`DEVL_MIN=2`，可增；几何上限 `floor(tab_height / 14)`，不设策略上限）；`anam` 移到 `director` tab 右侧。
+  ② **职责重划**：`devm` 落笔 `to-tickets`、派 `devl{n}`、管理 `devl` pane 生命周期、裁决队长疑问、merge / push、向 director 汇报；**不做代码评审、不派 `reviewer{n}`、不直接派 `dev-e`**。`devl{n}` 建 worktree、派 `dev-e` 实施、按 `spec-seq` 派 `reviewer{n}` 独立评审、汇总后上报 `devm`。`reviewer{n}` 主轨从 `devm` 下移到 `devl{n}`，副轨仍归 `director`。
+  ③ **通信硬约束**：队长之间禁止通信；队长只向 `devm` 上报、只向子代理下发；`devm` 只向 `director` 汇报；`devm` 与 `anam` 不直连。
+  ④ **汇总规则**：谁派生谁汇总；`devl{n}` 是 `dev-e` / `reviewer{n}` 的唯一汇总点，`devm` 只收队长交付包，不采信子代理原文。
+  ⑤ **技能层**：新增 `dmt-devl`（八技能同号 `5.19.0`）；`dmt-dm` / `dmt-de` / `dmt-reviewer` / `dmt-director` / `dmt-pde` 同步改上级与流程；`dmt-devl` **不设 helper**。
+  ⑥ **脚本层**：新增 `devl-pane.sh`（`list` / `ensure-min` / `add` / `remove` / `adopt`；几何校验；回收双钥匙＝队长自报收口＋`git status` 干净）；`setup-team.sh` 改双 tab 布局（`director` ＋ `dmt-dev`）；`install-skills.sh` / `check-dmt.sh` / `init-project.sh` 同步八技能与 `inbox/devl{n}/`。
+  ⑦ **子代理技能**：`harness_matrix.yaml` 新增 `subagent_skill`（cbc=`invoke`、codex/pi=`read`、claude/opencode=`unknown` 待实测）；派发 prompt 必须让子代理加载其职责对应技能，不能只贴技能正文代替调用。
+  ⑧ **为什么恢复队长层**：旧裁定（v5.5.0）删除它是因为它是纯转发层、没有独立产物；新队长持有 worktree、票批、一线自检与 `reviewer{n}` 调度，有独立产物和独立上下文，不再是转发层。
+  **Why**：用户 2026-11-06 要求扩大开发部门、把代码评审下移到队长、让 devm 聚焦裁决与集成。
+  **实测**：`DMT_SKILLS_DIR="$PWD" bash dmt-director/scripts/check-dmt.sh "$PWD"` ⇒ `ALL_PASS`；八技能同号 `5.19.0`。
+  **版本升 `5.19.0`**（八技能同号）。
 
 - **2026-11-06（用户要求·第八十八次：herdr 自愈全覆盖 ＋ 审计修复，版本 `5.18.9`）**：
   ① **修复 1（herdr 自愈全覆盖）**：`dmt_herdr` 改为**惰性自愈**（首次调用若当前环境连不上，先修 socket/session）；修正顺序＝`want(label)` → **祖先进程 `/proc/<pid>/environ`**（codex 进程自身 env 正确，只有它复用的常驻 shell 陈旧）→ cwd 唯一命中 → 不猜。`setup-team.sh` / `spawn-helper.sh` / `close-helper.sh` / `harness-detect.sh` 的裸 `herdr` 全部改走 `dmt_herdr`（合计 21 处）。**实测**：模拟 `HERDR_SESSION=bcr-nihui` ＋ 旧 workspace ⇒ 自愈到 `bcr-nh`/`w2`，`dmt_herdr pane list` 成功；正常环境不误伤（session 不变）。

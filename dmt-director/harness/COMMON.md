@@ -1,7 +1,7 @@
 # harness 共性（pi / codebuddy / claude / codex / opencode 通用）
 
 > **这是「技能加载」的公共半部**：本文件 ＋ 一份 harness 差异文件（[`pi.md`](pi.md) / [`codebuddy.md`](codebuddy.md) / [`claude.md`](claude.md) / [`codex.md`](codex.md) / [`opencode.md`](opencode.md)）合起来才是完整规则。
-> **怎么加载**：七份角色 `SKILL.md` 的「## 0. 按 harness 加载」是唯一入口 —— 先跑 `dmt-director/scripts/harness-detect.sh`，再读本文件（共性）＋ `<harness>.md`（差异）。
+> **怎么加载**：八份角色 `SKILL.md` 的「## 0. 按 harness 加载」是唯一入口 —— 先跑 `dmt-director/scripts/harness-detect.sh`，再读本文件（共性）＋ `<harness>.md`（差异）。
 > **找不到 / 判不出**：`unknown` ⇒ 回报 director，**不得默认成某个 harness**。
 
 ## 1. 技能清单与角色对应
@@ -10,6 +10,7 @@
 |---|---|---|
 | `director` | `dmt-director` | pane 常驻 |
 | `devm` | `dmt-dm` | pane 常驻 |
+| `devl{n}` | `dmt-devl` | pane 常驻 |
 | `anam` | `dmt-am` | pane 常驻 |
 | `pde{n}` | `dmt-pde` | 子代理 |
 | `dev-e` | `dmt-de` | 子代理 |
@@ -41,7 +42,7 @@
 
 ## 6. 子代理的共同边界
 
-子代理（`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`）**不占 pane、不进收件箱**，只向派生者回报；技能随派发 prompt 下发（[`../team/07b-dispatch.md`](../team/07b-dispatch.md)）。**怎么把技能交到子代理手里**是各 harness 的差异（见差异文件 §4）。
+子代理（`pde{n}` / `dev-e` / `ana-e` / `reviewer{n}`）**不占 pane、不进收件箱**，只向派生者回报；**每个子代理都必须加载其职责对应的技能**（`dmt-pde` / `dmt-de` / `dmt-ae` / `dmt-reviewer`），不能只贴技能正文代替调用。**怎么把技能交到子代理手里**是各 harness 的差异（见差异文件 §4 与 `harness_matrix.yaml` 的 `subagent_skill`）：能直接调用的走斜杠 / `skill` 工具，不能的读 `SKILL.md` 路径。队长 `devl{n}` 是 pane 角色，自己加载 `/dmt-devl`；它派子代理时按同一规则下发技能（[`../team/07b-dispatch.md`](../team/07b-dispatch.md)）。
 
 ## 7. 两条共同纪律（2026-11-05 pi / claude 双侧实测补）
 

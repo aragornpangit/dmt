@@ -37,6 +37,14 @@ h() { if [ "$DRY" = 1 ]; then echo "+ $*" >&2; else "$@"; fi; }
 pane_by_label() { dmt_pane_by_label "$1"; }
 # agent_status: unknown = 该 pane 没有 agent 在跑；idle/working/blocked = 已在跑
 pane_status() { dmt_pane_status "$1"; }
+tab_id_by_label() {
+  dmt_herdr tab list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
+    | jq -r --arg l "$1" '.result.tabs[]? | select(.label==$l) | .tab_id' 2>/dev/null | head -1 || true
+}
+first_pane_in_tab() {
+  dmt_herdr pane list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
+    | jq -r --arg t "$1" '.result.panes[]? | select(.tab_id==$t) | .pane_id' 2>/dev/null | head -1 || true
+}
 # 就绪判据：轮询 agent_status 不再是 unknown。
 # 不要用 wait-output 匹配屏幕文字 —— 对已在跑的 pane 它会立刻命中历史输出，等于没有判据。
 wait_ready() { dmt_wait_ready "$1" 60 || true; }
@@ -102,38 +110,58 @@ verify_auto_mode() {
 h dmt_herdr tab rename "$HERDR_TAB_ID" director
 h dmt_herdr pane rename "$HERDR_PANE_ID" director
 
-# 2) devm：在 director pane 右侧 split（与 director 同 tab，左 director 右 devm）
+# 2) devm：确保在 dmt-dev tab 左侧
 devm="$(pane_by_label devm || true)"
+devtab="$(tab_id_by_label dmt-dev || true)"
 if [ -z "$devm" ]; then
-  if [ "$DRY" = 1 ]; then
-    echo "+ herdr pane split $HERDR_PANE_ID --direction right --cwd $PWD --no-focus" >&2
-    echo "+ herdr pane rename <devm-pane> devm" >&2
-    devm="<devm-pane>"
+  if [ -z "$devtab" ]; then
+    if [ "$DRY" = 1 ]; then
+      echo "+ herdr tab create --workspace $HERDR_WORKSPACE_ID --cwd $PWD --label dmt-dev" >&2
+      echo "+ herdr pane rename <devm-pane> devm" >&2
+      devm="<devm-pane>"
+    else
+      devm="$(dmt_herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dmt-dev | jq -r '.result.root_pane.pane_id // empty')"
+      [ -n "$devm" ] || { echo "ERROR: tab create 失败（dmt-dev）" >&2; exit 4; }
+      dmt_herdr pane rename "$devm" devm
+    fi
   else
-    devm="$(dmt_herdr pane split "$HERDR_PANE_ID" --direction right --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
-    [ -n "$devm" ] || { echo "ERROR: pane split 失败（devm）" >&2; exit 4; }
-    dmt_herdr pane rename "$devm" devm
+    if [ "$DRY" = 1 ]; then
+      devm="<devm-pane>"
+    else
+      devm="$(first_pane_in_tab "$devtab")"
+      [ -n "$devm" ] || { echo "ERROR: dmt-dev tab 内没有 pane" >&2; exit 4; }
+      dmt_herdr pane rename "$devm" devm
+    fi
+  fi
+else
+  curtab="$(dmt_herdr pane get "$devm" 2>/dev/null | jq -r '.result.pane.tab_id // empty')"
+  if [ -n "$curtab" ] && [ "$curtab" != "$devtab" ]; then
+    if [ -z "$devtab" ]; then
+      h dmt_herdr pane move "$devm" --new-tab --tab-label dmt-dev --no-focus
+    else
+      echo "WARN: devm 已在 $curtab，但 dmt-dev tab 已存在（$devtab）；请手工把 devm 移入或先关空 tab" >&2
+    fi
   fi
 fi
 ensure_started "$devm" dmt-dm devm
 
-# 3) anam：独立建 tab
+# 3) anam：确保在 director tab 右侧
 p="$(pane_by_label anam || true)"
 if [ -z "$p" ]; then
-  # 幂等按 tab label 判：已有 anam tab（pane label 漂移）⇒ 取该 tab 的 pane 改名，不再建第二个 tab
-  tab="$(dmt_herdr tab list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null | jq -r '.result.tabs[]? | select(.label=="anam") | .tab_id' 2>/dev/null | head -1 || true)"
-  if [ -n "$tab" ]; then
-    p="$(dmt_herdr pane list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null | jq -r --arg t "$tab" '.result.panes[]? | select(.tab_id==$t) | .pane_id' 2>/dev/null | head -1 || true)"
-    h dmt_herdr pane rename "$p" anam
-  elif [ "$DRY" = 1 ]; then
-    echo "+ herdr tab create --workspace $HERDR_WORKSPACE_ID --cwd $PWD --label anam" >&2
+  if [ "$DRY" = 1 ]; then
+    echo "+ herdr pane split $HERDR_PANE_ID --direction right --ratio 0.5 --cwd $PWD --no-focus" >&2
     echo "+ herdr pane rename <anam-pane> anam" >&2
     p="<anam-pane>"
   else
-    p="$(dmt_herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label anam | jq -r '.result.root_pane.pane_id // empty')"
-    [ -n "$p" ] || { echo "ERROR: tab create 失败（anam）" >&2; exit 4; }
+    p="$(dmt_herdr pane split "$HERDR_PANE_ID" --direction right --ratio 0.5 --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
+    [ -n "$p" ] || { echo "ERROR: pane split 失败（anam）" >&2; exit 4; }
     dmt_herdr pane rename "$p" anam
+  fi
+else
+  curtab="$(dmt_herdr pane get "$p" 2>/dev/null | jq -r '.result.pane.tab_id // empty')"
+  if [ -n "$curtab" ] && [ "$curtab" != "$HERDR_TAB_ID" ]; then
+    h dmt_herdr pane move "$p" --tab "$HERDR_TAB_ID" --target-pane "$HERDR_PANE_ID" --split right --ratio 0.5 --no-focus
   fi
 fi
 ensure_started "$p" dmt-am anam
-echo "team ready: director / devm（director tab 右侧）/ anam（独立 tab）；产品工作由 director 自派 pde{n} 子代理（/dmt-pde），不占 pane"
+echo "team ready: director / anam（director tab 右侧）/ devm（dmt-dev tab 左侧）；devl 由 devm 调 devl-pane.sh ensure-min 建立（DEVL_MIN=2）"

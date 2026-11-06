@@ -19,6 +19,7 @@
 3. Codex 首次进入项目需人工确认 trust；其技能与 helper 任务必须随首轮 prompt 下发。pi 启动必须带 `--approve`。
 4. 启动后必须用 `dmt_pane_auto_mode` 读 argv 复验自动档；角色技能是否正确加载，用该角色实际产物与回执核验。非自动档用 `setup-team.sh --force-start` 重开。事故细节见 [`dmt-director/ops/permission-notes.md`](../ops/permission-notes.md)。
 5. Codex 的 agent name 不是角色身份；门铃只按 pane label 解析目标，并向 pane 发送 `agent prompt` 或 pane 输入。
+6. pane 角色四类：`director` / `devm` / `anam` / `devl{n}`；子代理 `pde{n}` / `dev-e` / `ana-e` / `reviewer{n}` 的技能由派生者指定，按 harness 能力选择斜杠调用或读 `SKILL.md`（`harness_matrix.yaml` 的 `subagent_skill`）。`dmt-devl` 不设 helper。
 
 **技能加载（按 harness 分文件）**：「技能发现目录 / 启动与权限 / 技能调用行 / 技能如何到达模型 / 子代理承载”的说明在 [`../harness/README.md`](../harness/README.md) —— **共性** [`../harness/COMMON.md`](../harness/COMMON.md) ＋ **每 harness 一份差异**（[`pi.md`](../harness/pi.md) / [`codebuddy.md`](../harness/codebuddy.md) / [`claude.md`](../harness/claude.md) / [`codex.md`](../harness/codex.md) / [`opencode.md`](../harness/opencode.md)）。
 

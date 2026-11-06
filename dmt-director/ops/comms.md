@@ -8,9 +8,11 @@
 |---|---|---|
 | `director` | `devm` / `anam` | `director2devm` / `director2anam` |
 | `devm` / `anam` | `director` | `devm2director` / `anam2director` |
+| `devm` | `devl{n}` | `devm2devl{n}` |
+| `devl{n}` | `devm` | `devl{n}2devm` |
 | `{角色}-helper` | 本体 | `{角色}-helper2{角色}`（单向，无门铃，无回程） |
 
-跨部门事项经 director 转派。helper 无自己的 inbox。
+跨部门事项经 director 转派。**队长之间禁止直连**（`devl1` ↮ `devl2`），跨队协调经 `devm`。`dmt-devl` 不设 helper；helper 无自己的 inbox。
 
 ## 写消息
 
@@ -44,4 +46,4 @@ bash dmt-director/scripts/send-msg.sh <收件角色> <自己> <slug> <正文文�
 
 ## 完成即报
 
-`devm` / `anam` 本批收口或遇到阻塞 / 超时 / 需裁决时立即回报 director；director 对用户同理。收件方不回执，发送方不确定时问用户，不重复投递。
+`devl{n}` 本批收口或遇到阻塞 / 超时 / 需裁决时立即回报 `devm`；`devm` / `anam` 向 director 回报；director 对用户同理。收件方不回执，发送方不确定时问用户，不重复投递。

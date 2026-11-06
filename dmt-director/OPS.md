@@ -4,7 +4,7 @@
 
 | 任务 | 读什么 |
 |---|---|
-| pane / tab / 启动 / 权限 / 技能重载 | [`ops/runtime.md`](ops/runtime.md) |
+| pane / tab / 启动 / 权限 / 技能重载 / `devl` pane 生命周期（`devl-pane.sh`） | [`ops/runtime.md`](ops/runtime.md) |
 | 发消息、认领、收口、完成回报 | [`ops/comms.md`](ops/comms.md) |
 | 编辑前文件占用 | [`ops/file-claim.md`](ops/file-claim.md) |
 | helper 建立、分流、回报、回收 | [`ops/helper.md`](ops/helper.md) |

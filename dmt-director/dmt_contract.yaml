@@ -5,12 +5,13 @@
 # check-dmt-doc-paths.sh（已合并）里的大段中文 grep（改一个字就红、复述就绿的脆断言）。
 # 散文纪律（流程、话术）仍由 team.md 承载，这里只放可机读的结构。
 
-version: 5.18.9
+version: 5.19.0
 date: "2026-11-06"
 
 skills:
   dmt-director: { run_id: director,      kind: pane,  pane: true }
   dmt-dm:       { run_id: devm,          kind: pane,  pane: true }
+  dmt-devl:     { run_id: "devl{n}",     kind: pane,  pane: true }
   dmt-am:       { run_id: anam,          kind: pane,  pane: true }
   dmt-pde:      { run_id: "pde{n}",      kind: agent, pane: false }
   dmt-de:       { run_id: "dev-e",       kind: agent, pane: false }
@@ -21,6 +22,7 @@ version_sources:
   - dmt-director/team.md
   - dmt-director/SKILL.md
   - dmt-dm/SKILL.md
+  - dmt-devl/SKILL.md
   - dmt-am/SKILL.md
   - dmt-pde/SKILL.md
   - dmt-de/SKILL.md
@@ -62,6 +64,7 @@ harness_docs:
 skill_budgets:
   dmt-director: 4500
   dmt-dm: 4000
+  dmt-devl: 4000
   dmt-am: 4000
   dmt-pde: 3000
   dmt-de: 3000
@@ -74,6 +77,7 @@ scripts:
   - launch.sh
   - init-project.sh
   - setup-team.sh
+  - devl-pane.sh
   - spawn-helper.sh
   - helper-report.sh
   - close-helper.sh
@@ -112,7 +116,9 @@ content_assertions:
       "{skills}/dmt-director/SKILL.md":
         require: ["docs/pd/prd/", "docs/pd/spec/", "docs/dev/tickets/", "docs/human/", "team.md", "ops/runtime.md"]
       "{skills}/dmt-dm/SKILL.md":
-        require: ["docs/dev/tickets/", "reviewer{n}", "publish.sh"]
+        require: ["docs/dev/tickets/", "devl{n}", "publish.sh"]
+      "{skills}/dmt-devl/SKILL.md":
+        require: ["docs/dev/tickets/", "reviewer{n}", "worktree", ".worktrees/"]
       "{skills}/dmt-am/SKILL.md":
         require: ["docs/analyst/"]
         forbid: ["docs/pd/prd/", "docs/dev/tickets/"]
@@ -121,9 +127,9 @@ content_assertions:
   organization:
     files:
       "{docs}/team.md":
-        require: ["pde{n}", "reviewer{n}", "devm", "anam"]
+        require: ["pde{n}", "reviewer{n}", "devm", "devl{n}", "anam"]
       "{docs}/team/01-org.md":
-        require: ["pde{n}", "reviewer{n}", "单线指挥"]
+        require: ["pde{n}", "reviewer{n}", "devl{n}", "单线指挥"]
   helper:
     files:
       "{scripts}/spawn-helper.sh":
@@ -168,6 +174,9 @@ content_assertions:
       "{skills}/dmt-dm/SKILL.md":
         require: ["依赖分析", "开满", "完成即报"]
         forbid: ["不强制派满", "不强制并行", "按需并行"]
+      "{skills}/dmt-devl/SKILL.md":
+        require: ["依赖分析", "开满", "完成即报"]
+        forbid: ["不强制派满", "不强制并行", "按需并行"]
       "{skills}/dmt-am/SKILL.md":
         require: ["依赖分析", "开满", "完成即报"]
         forbid: ["不强制派满", "不强制并行", "按需并行"]
@@ -179,7 +188,7 @@ content_assertions:
         require: ["merge 与 push 只归 devm", "只许 `devm` 或 `director` 执行", "至少每完成一个 ticket 推送一次", "至少每小时"]
         forbid: ["只许 `director` 执行", "装机只归 director", "装机归 director", "adb install|bcr_t36_calib|bcr_dump_prefs"]
       "{skills}/dmt-dm/SKILL.md":
-        require: ["reviewer{n}", "publish.sh"]
+        require: ["devl{n}", "publish.sh"]
       "{skills}/dmt-director/SKILL.md":
         require: ["docs/handoff/", "reviewer{n}"]
         forbid: ["git push[^。]{0,20}只由[ ]*director"]
@@ -188,13 +197,15 @@ content_assertions:
       "{docs}/team/07-discipline.md":
         require: ["文档门禁", "代码门禁", "每批至少抽 1 票", "100% 复验"]
       "{docs}/team/01-org.md":
-        require: ["主轨归 devm", "副轨归 director"]
+        require: ["主轨归 devl", "副轨归 director"]
       "{skills}/dmt-director/SKILL.md":
         require: ["文档门禁", "每批至少抽 1 票", "副轨"]
       "{skills}/dmt-dm/SKILL.md":
-        require: ["代码门禁", "reviewer{n}"]
+        require: ["devl{n}", "merge", "push"]
+      "{skills}/dmt-devl/SKILL.md":
+        require: ["reviewer{n}", "代码评审"]
       "{skills}/dmt-reviewer/SKILL.md":
-        require: ["/code-review", "devm"]
+        require: ["/code-review", "devl{n}"]
   skill_links:
     files:
       "{docs}/team/03-comms.md":
@@ -210,6 +221,8 @@ content_assertions:
       "{skills}/dmt-director/SKILL.md":
         require: ["harness-detect.sh", "harness/COMMON.md"]
       "{skills}/dmt-dm/SKILL.md":
+        require: ["harness-detect.sh", "harness/COMMON.md"]
+      "{skills}/dmt-devl/SKILL.md":
         require: ["harness-detect.sh", "harness/COMMON.md"]
       "{skills}/dmt-am/SKILL.md":
         require: ["harness-detect.sh", "harness/COMMON.md"]
@@ -240,6 +253,8 @@ content_assertions:
       "{docs}/team/10-pane-role.md":
         require: ["file-claim"]
       "{skills}/dmt-pde/SKILL.md":
+        require: ["file-claim"]
+      "{skills}/dmt-devl/SKILL.md":
         require: ["file-claim"]
       "{skills}/dmt-de/SKILL.md":
         require: ["file-claim"]

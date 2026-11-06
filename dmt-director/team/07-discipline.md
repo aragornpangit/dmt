@@ -3,7 +3,7 @@
 ### 5.1 Git
 
 1. **禁止 `git add -A` / `git add .`**，提交一律显式列文件路径（优先 `git commit -m "..." -- <path>`，绕过索引），且 `add` 与 `commit` 之间不插入其它动作（避免索引被并发写者扫入）。
-2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**（**收到本部门 `reviewer{n}` 验收通过后**即可推送，不必再等 director 通知）；`director` 保留抽查权（抽查后仍由 devm 推送）；`anam` / 工程师**一律不得 push、不得 merge 主干**。工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
+2. **代码库归 devm 管理：merge 与 push 只归 devm**（**作用域＝目标项目**：本条的 push / merge 归属只约束 dmt 工作流所管理的项目仓库；**维护 `dmt` / `dmt-en` 等技能仓自身时不受此限**，见文件头「作用域（Scope）」）：`git push` 与合并主干（merge）**只有 `devm` 能执行**（**收到队长上报的 `reviewer{n}` PASS 证据后**即可推送，不必再等 director 通知）；`director` 保留抽查权（抽查后仍由 devm 推送）；`anam` / 队长 / 工程师**一律不得 push、不得 merge 主干**。队长（`devl{n}`）与工程师（`dev-e`）只在各自 worktree 内 `git add` + `git commit`，**不得 push**、**不得 merge 主干**。
 3. 提交前先跑 [`/code-review`](https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/code-review/SKILL.md)；提交后 `git diff -- <显式路径>` 复核改动内容（`git commit -m … -- <路径>` 不经索引，故不查 `--cached`）。
 4. **同一 worktree 单一写者（无豁免）**：一个 worktree 从开工到收工，**只有被派到该票的那一个 agent 可以提交**。任何人要提交自己的文档 / 记录，**不得**在工程师正在施工的 worktree 里做——走主工作树或另开 worktree。**并发提交不会报错，只会把别人的改动扫进自己的提交**，事后靠 `git show --stat` 才能发现，而那时已经进了历史。
 
@@ -18,7 +18,7 @@
 ### 5.2 并行子代理
 
 1. 派发前先做**依赖分析**：只有无依赖任务适合并行；共享文件、共享构建目标、有顺序验收关系的任务**必须串行**。
-2. **经理层路径（硬约束）**：`devm` / `anam` **一律直接派工程师子代理** —— `devm` 派 `dev-e`（一票一 worktree）、`anam` 派 `ana-e`，**不开任何中间层 pane**（队长层已取消）。工程师子代理随任务收口回收。
+2. **指挥路径（硬约束）**：`devm` **只**派 `devl{n}`，`devl{n}` **只**派 `dev-e` / `reviewer{n}`，`anam` **只**派 `ana-e`；`devm` **不直接派 `dev-e`**，队长之间**不得通信**。队长 pane 是唯一允许的中间层，由 `devm` 管理生命周期（`DEVL_MIN=2`、`DEVL_MAX=0`、几何上限 `floor(tab_height / 14)`）。子代理随任务收口回收。
 3. **无依赖任务一律开满 subagents 并行（`director` / `devm` / `anam`；2026-11-04 用户裁定，推翻「按需、可少派」）**：任务间**无依赖**（不同文件面 / 共享输入 / 共享构建目标 / 顺序验收以外）⇒ **必须开满并行、到 harness 并发上限**（`harness_matrix.yaml` 的 `max_subagents_conc`，经 `dmt_concurrency_cap` 读：codebuddy 8/env、claude 10、codex 8），**不得自行留一手串行**。串行**仅限**真依赖（共享文件 / 构建目标 / 顺序验收 / 同一设备 / 同一 REA 会话）与第 7 条 worktree 单写者，**且须写明理由**。任务收口后子代理随收口回收。
    - **手段**：cbc 用 **teammate 方式**（`Agent` 带 `name`）；pi 用 dynamic workflow `runs.all`（`agent` 字段填 `delegate`）；Codex 用 `spawn_agent` 并行派发、`wait_agent` 收结果；Codex 在 herdr 会话中若没有这些接口，只做本 pane 角色工作，不自建嵌套 pane。**派发 prompt 模板与各 harness 承载详情见 [`team/07b-dispatch.md`](07b-dispatch.md)**。
    - **废止项**（不回潮）：2026-11-02 的「按需、可少派、任务小就自做」作废；开工先落账、每波按上限拆波、并发位计数、回报首行交账及其理由白名单等饱和机制脚本仍保持删除、不得恢复。
@@ -26,7 +26,7 @@
 5. 每份派发 prompt 必须显式写清：输入（产物路径）、边界、期望产物、回报要求、`timeoutMs`（长链路不短于 45 min）、**文件写入纪律**（改 bash 用单引号 heredoc / Write/Edit；禁把脚本正文放进 JS 模板字符串；Edit 的 `oldString` 必须唯一）。**骨架与 reviewer 变体照 [`team/07b-dispatch.md`](07b-dispatch.md) 填空，不要现编。**
 6. 子代理**派完立即结束本轮**，由完成通知或 harness 的等待原语唤醒再验收；Codex 用 `wait_agent` 在父轮等待，不用 shell 轮询。
 7. 开发工程师**每人一个 git worktree**，只在 worktree 内编辑与提交；主工作树只读。
-8. 所有子代理结果由**派生他的那一级**复核证据后，才能写入权威文档或进入下一步；经理不直接采信工程师的原始回报。
+8. **谁派生谁汇总**：`devl` 汇总 `dev-e` / `reviewer{n}` 的结果后上报 `devm`；`devm` 汇总 `devl` 的交付包后 merge / push 并汇报 `director`；`anam` 汇总 `ana-e`；`director` 汇总 `pde{n}` / 副轨 `reviewer{n}`。上级不直接采信子代理原文，无证据的结论不得上报。
 9. **一子代理一单元队列（2026-10-27 事故后立规，复盘见 `logs/2026-10-27-serial-queue-incident.md`）**：
     - **在途子代理只收同一单元的纠正 / 收窄**；**新单元一律另派子代理**（另开 worktree），**不得**用 `SendMessage` 追加成队列。
     - **追加前先做「文件面矩阵」**：逐条写 `单元 | 触达文件 | 与在途单元是否重叠`。重叠才可排队（须列出具体重叠文件路径）；不重叠 ⇒ **立即另派**。
@@ -40,12 +40,12 @@
 |---|---|---|---|
 | 调研报告 | anam | director | director 认可结论与证据来源；**anam 落盘** `docs/analyst/` |
 | PRD / SPEC / 工单 | `pde{n}`（落笔，director 召唤） | **director（文档门禁自评）**，用户可抽查 | 验收标准逐条可测、`spec-seq` 对齐、切片可独立验证、Files 不重叠、依赖无环；通过后状态行改 `状态：已通过` |
-| 实施初检 | devm（自做，或自派子代理初检后本人复核） | devm | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
+| 实施初检 | `devl{n}`（自做，或自派 `dev-e` 后本人复核） | `devl{n}` | 票面判据逐条有读数、门红已分类、Files 边界未越界 |
 | helper 回收 | `director` / `devm` / `anam`（创建者＝本体） | 创建者本人自检 | 成果已入账、worktree 已 `git worktree remove`、本体收件箱该 helper 方向无未收口；关闭后 `herdr pane list` 无 `{角色}-helper` label |
 | 人类架构 / 人类计划 | director | **director（文档门禁自评）** + 用户 | 结构与真实代码一致、不混写未来态，落盘 `docs/human/human-arch/`、`docs/human/human-plan/` |
-| ticket 代码 | 开发部门（devm 直接派 `dev-e`） | **devm（代码门禁）** | 逐条对照 SPEC 判据通过、diff 与证据核对无误；PASS 后写「实施状态」，**merge 待本部门 `reviewer{n}` 验收通过** |
-| 代码验收（spec-seq 对齐） | `dev-e`（实施）/ `devm`（提交） | **`devm` 派 `reviewer{n}`（独立实例；结论抄送 director）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后由 **devm merge / push**；逐条结论与证据随 devm 回报抄送 director |
-| 代码验收抽查 / 高风险复验 | devm（验收结论与证据） | **director**（**每批至少抽 1 票**；**高风险票 —— 设备 / SHA / 门禁 / 破坏性变更类 —— 100% 复验**）—— director **自派 `reviewer{n}` 副轨**执行抽查 / 复验（与 devm 主轨 `reviewer{n}` 实例独立） | 抽查 / 复验结论与证据**留痕**（`docs/handoff/` 或回报）；发现验收不实 ⇒ 打回 devm 重验 |
+| ticket 代码 | 开发部门（`devl{n}` 派 `dev-e`） | **`devl{n}` 代码门禁：派 `reviewer{n}`（独立实例，每票新实例）** | 逐条对照同 `spec-seq` 的 SPEC / ticket / diff，PASS + 证据；FAIL 打回 `dev-e`；PASS 后由 `devl{n}` 汇总上报 `devm` |
+| 代码验收（spec-seq 对齐） | `dev-e`（实施）/ `devl{n}`（提交上报） | **`devl{n}` 派 `reviewer{n}`（独立实例；结论随交付包上报 devm）** | 与同 spec-seq 的 SPEC 验收标准、ticket 判据逐条对齐（diff 与证据无误）；通过后由 **devm merge / push**；逐条结论与证据随 devm 回报抄送 director |
+| 代码验收抽查 / 高风险复验 | `devl{n}` / `devm`（验收结论与证据） | **director**（**每批至少抽 1 票**；**高风险票 —— 设备 / SHA / 门禁 / 破坏性变更类 —— 100% 复验**）—— director **自派 `reviewer{n}` 副轨**执行抽查 / 复验（与主轨 `reviewer{n}` 实例独立） | 抽查 / 复验结论与证据**留痕**（`docs/handoff/` 或回报）；发现验收不实 ⇒ 打回 `devl{n}` 重验 |
 | 跨部门分歧 | devm / anam | director | director 裁决并回结论 |
 
 ### 5.4 读数纪律（性能窗）

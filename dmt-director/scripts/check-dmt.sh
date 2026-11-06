@@ -213,7 +213,7 @@ import sys,yaml
 print(" ".join(sorted((yaml.safe_load(open(sys.argv[1],encoding="utf-8")).get("harnesses") or {}).keys())))' "$HARNESS_MATRIX")"
 if [ "$declared" = "$from_matrix" ]; then ok "harness 差异文件与矩阵 key 一致（$declared）"; else bad "harness 差异文件与矩阵 key 不一致：契约=[$declared] 矩阵=[$from_matrix]"; fi
 # 技能第 0 步：七份技能都必须指向检测脚本（内容断言另有一组同据）
-for s in dmt-director dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
+for s in dmt-director dmt-dm dmt-devl dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer; do
   f="$SKILLS_DIR/$s/SKILL.md"
   [ -f "$f" ] || continue
   if grep -q 'harness-detect.sh' "$f"; then ok "技能 $s 含第 0 步（harness-detect.sh）"; else bad "技能 $s 缺第 0 步（harness-detect.sh）"; fi

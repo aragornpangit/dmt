@@ -51,6 +51,7 @@
 | O2 | 启动初期输入未就绪（`agent prompt` 只填入不提交） | 文档写明「首次注入后复核 pane 输出，必要时补 `send-keys enter`」 | **DONE** |
 | O3 | 并发上限未声明 | 矩阵 `opencode.max_subagents_conc` 注明「上游未提供入口，按任务规模自判」 | **DONE**（显式声明为不设，而非留空） |
 | O4 | 技能发现目录易踩单复数（`.opencode/skills/` vs `skill/`） | `harness/opencode.md` §1 已写明单数不生效 | **DONE** |
+| O5 | OpenCode v2 支持 `@<skill-id>` 显式引用，但未在本机 2.2.5 实测 | 在 opencode 2.2.5 pane 中 `herdr agent prompt <pane> '@to-spec'` 能让技能正文进入上下文；同名文件存在时选中 skill 而非文件；`skill({id})` 仍可用 | **OPEN** |
 
 ## 跨 harness
 
@@ -59,4 +60,4 @@
 | A1 | 技能"能装载"≠"能工作"（转发式技能） | `harness/COMMON.md` §2 指向 §1.4；`pi.md` §5.1 给降级规则 | **DONE** |
 | A2 | pane 通信是共同底线，但 codex 例外 | 矩阵已内建 codex 的 full-access；`harness/codex.md` §6.1 对照表 | **DONE** |
 | A3 | 子代理边界（产物边界 / 加载≠开工） | `harness/COMMON.md` §7 | **DONE** |
-| A4 | 机检须能抓住回退 | `check-dmt.sh` A6b：harness 文件齐备 + 与矩阵 key 一致 + 七技能含第 0 步 + 检测脚本五 harness 自测 + pi-agents 白名单形态 | **DONE** |
+| A4 | 机检须能抓住回退 | `check-dmt.sh` A6b：harness 文件齐备 + 与矩阵 key 一致 + 八技能含第 0 步 + 检测脚本五 harness 自测 + pi-agents 白名单形态 | **DONE** |
