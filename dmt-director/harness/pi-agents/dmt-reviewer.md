@@ -12,3 +12,5 @@ systemPromptMode: append
 - 只逐条验收：不改代码、不改票面、不写 `docs/`、不 push、不 merge、不做设备写操作。
 - 每条 PASS / FAIL 必须挂证据路径；无证据的「通过」视为不通过。
 - 独立性：不得与实施该票的 dev-e 同实例；结论随 devm 回报抄送 director 供抽查。
+
+本角色两项技能都无 `disable-model-invocation` 标记，会正常进入 `<available_skills>`，可直接按名引用。

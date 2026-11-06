@@ -238,6 +238,63 @@ if [ -x "$DETECT" ]; then
 fi
 
 echo
+echo "== A6c) pi agent 白名单可注入性 =="
+# 判据：pi 的子代理 `skills:` 对 `disable-model-invocation: true` 的技能**静默过滤**
+# （2026-11-06 实测：声明 5 个只注入 4 个，to-spec/to-tickets 双双丢失且无告警）。
+# ⇒ 白名单只许写「无该标记」的技能；被过滤的技能改由 agent prompt 给 SKILL.md 路径。
+# 找不到技能目录时只 WARN（第三方技能可能未装在当前环境），不误报失败。
+A6C_OUT="$(python3 - "$REPO" "$ROOT" <<'PYSK'
+import os, re, sys, glob
+repo, root = sys.argv[1], sys.argv[2]
+home = os.path.expanduser("~")
+roots = [
+    os.path.join(root, ".agents", "skills"),
+    os.path.join(repo, ""),
+    os.path.join(home, ".agents", "skills"),
+    os.path.join(home, ".pi", "agent", "skills"),
+]
+mm = os.path.join(home, ".pi", "agent", "git", "github.com", "mattpocock", "skills", "skills")
+if os.path.isdir(mm):
+    roots += [d for d in glob.glob(os.path.join(mm, "*")) if os.path.isdir(d)]
+
+def find(name):
+    for r in roots:
+        p = os.path.join(r, name, "SKILL.md")
+        if os.path.isfile(p):
+            return p
+    p = os.path.join(repo, name, "SKILL.md")
+    return p if os.path.isfile(p) else None
+
+for f in sorted(glob.glob(os.path.join(repo, "dmt-director", "harness", "pi-agents", "dmt-*.md"))):
+    txt = open(f, encoding="utf-8").read()
+    m = re.search(r"^skills:\s*(.+)$", txt, re.M)
+    base = os.path.basename(f)
+    if not m:
+        print("WARN\t%s\t(no skills field)" % base)
+        continue
+    for n in [x.strip() for x in m.group(1).split(",") if x.strip()]:
+        p = find(n)
+        if not p:
+            print("WARN\t%s\t%s\tnot installed in this environment" % (base, n))
+            continue
+        head = open(p, encoding="utf-8").read()[:1200]
+        if re.search(r"^disable-model-invocation:\s*true", head, re.M):
+            print("FAIL\t%s\t%s\tfiltered by disable-model-invocation (move to prompt path)" % (base, n))
+        else:
+            print("OK\t%s\t%s" % (base, n))
+PYSK
+)"
+a6c_fail=0
+while IFS=$'\t' read -r st who what extra; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK)   ok "pi agent $who: $what 可注入" ;;
+    WARN) ok "pi agent $who: $what 跳过（$extra）" ;;
+    FAIL) bad "pi agent $who: $what —— $extra"; a6c_fail=1 ;;
+  esac
+done <<< "$A6C_OUT"
+[ "$a6c_fail" = 0 ] || fail=1
+
 echo "== A7) 文档相对链接可达 =="
 REPO_REAL="$(readlink -f "$REPO")"
 SKILLS_REAL="$(readlink -f "$SKILLS_DIR")"

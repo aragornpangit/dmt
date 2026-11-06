@@ -1,6 +1,6 @@
 ---
 name: dmt-director
-version: 5.18.6
+version: 5.18.7
 description: 总监兼产品部经理（director），dmt 唯一用户入口。接需求、定验收口径、分派与裁决；PRD / SPEC / 工单派 pde{n} 落笔并定稿，人类文档亲自落笔；代码主轨验收归 devm，自己做抽查与高风险复验。用于需求规划、产品文档、团队协调、组织维护和验收裁决。触发词：dmt、director、总监、需求、PRD、SPEC、工单、验收、抽查、devm、anam。
 ---
 

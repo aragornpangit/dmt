@@ -9,7 +9,7 @@
 
 | # | 项 | 判据 | 状态 |
 |---|---|---|---|
-| P1 | 子代理无技能清单（`delegate` `inheritSkills: false`） | 自定义 agent `inheritSkills: false + skills:[…]` 的子代理 `<available_skills>` **只含列出的技能** | **DONE**（`harness/pi-agents/`，实测只见 `dmt-de/tdd/code-review/diagnosing-bugs`） |
+| P1 | 子代理无技能清单（`delegate` `inheritSkills: false`） | 自定义 agent `inheritSkills: false + skills:[…]` 的子代理 `<available_skills>` **只含列出的技能，且实际注入必须与声明逐条相等**（`disable-model-invocation: true` 会被静默过滤 ⇒ 该类技能不写进 `skills:`，改由 prompt 给路径） | **DONE**（`harness/pi-agents/`；2026-11-06 实测：`dmt-dev-e` 4 项、`dmt-pde` 3 项、`dmt-ana-e` 3 项，与整形后的声明一致；机检 A6c 静态守护） |
 | P2 | 无 Skill 工具（转发式技能静默失效） | `harness/pi.md` §5.1 列出 `grill-with-docs`/`grill-me`/`implement`/`tdd` 的降级读法 | **DONE** |
 | P3 | 并发上限未声明（矩阵 `null`） | `harness_matrix.yaml` 的 `pi.max_subagents_conc` 有值，与 pi-subagents 默认一致（`maxTasks=8` / `concurrency=4`） | **DONE**（填 8 ＋ 配置键说明） |
 | P4 | 同名技能重复注册（`tdd`/`code-review` 各两份） | `harness/pi.md` §4.4 写明成因与规避（用 `skills:` 点名；只保留一份） | **DONE** |

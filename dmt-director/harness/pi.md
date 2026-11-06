@@ -56,6 +56,16 @@ pi-subagents 允许自定义 agent（`~/.pi/agent/agents/**/*.md` 用户级、`<
 | 输入框 `/skill:dmt-<角色>` | ✅ | 写 `/dmt-<角色>` 不报错但**静默变普通提问** |
 | 用户级 `~/.agents/skills/`、`~/.pi/agent/skills/` | ✅ | 无需 approve |
 
+**实测补充（2026-11-06，三个真实子代理回抄 `<available_skills>`）**：
+
+| agent 定义 | `skills:` 声明 | 实际注入 | 被过滤 |
+|---|---|---|---|
+| `dmt-dev-e` | `dmt-de, tdd, implement, code-review, diagnosing-bugs` | `dmt-de, tdd, code-review, diagnosing-bugs` | `implement` |
+| `dmt-pde` | `dmt-pde, grilling, research, to-spec, to-tickets` | `dmt-pde, grilling, research` | `to-spec`、`to-tickets` |
+| `dmt-ana-e` | `dmt-ae, research, grilling, grill-me, grill-with-docs` | `dmt-ae, research, grilling` | `grill-me`、`grill-with-docs` |
+
+⇒ 被过滤的一律是 `disable-model-invocation: true`。**静默丢弃、无告警**，所以「声明了就等于有了」是错的，必须实测。
+
 ### 4.3 兜底（现状保留）
 
 都不适用时（例如不允许改 agent 定义）：派发 prompt 里给**绝对路径** `read <技能目录>/dmt-<角色>/SKILL.md`，并按 `§5.1` 处理转发式技能。这条永远有效，但依赖模型照 prompt 执行、且每个下游技能都要逐条给路径。
@@ -65,7 +75,7 @@ pi-subagents 允许自定义 agent（`~/.pi/agent/agents/**/*.md` 用户级、`<
 - **同名技能重复注册**：实测子代理清单里 `tdd` / `code-review` 各出现两次（`~/.agents/skills/mattpocock-skills/...` 与 pi git 包各一份）⇒ 用 `skills:` 显式点名可避开歧义；两个都装时优先保留一份。
 - **`delegate` 的 tools 白名单不含 `subagent`**（其定义 `tools: read, grep, find, ls, bash, edit, write, contact_supervisor`）⇒ 子代理不能再派子代理；需要嵌套时在自定义 agent 里加 `allowNestedSubagents: true` 或 `tools: subagent`。
 - **项目级 agent 定义同样受 trust 约束**：Pi 未批准项目 trust 时忽略项目 agent（`agentScope` 回退为 user）。
-- `disable-model-invocation: true` 的技能（`to-spec` / `to-tickets` / `implement` / `grill-me` / `grill-with-docs` 等）**不出现在模型可见清单**，但 `/skill:<name>` 仍可显式调起；写进自定义 agent 的 `skills:` 也不受该标记阻挡（它只影响「模型自动选择」）。
+- `disable-model-invocation: true` 的技能（`to-spec` / `to-tickets` / `implement` / `grill-me` / `grill-with-docs` 等）**不出现在模型可见清单**，`/skill:<name>` 可显式调起；但 **写进自定义 agent 的 `skills:` 同样会被过滤**（2026-11-06 实测证伪了此前「不受该标记阻挡」的记载）：声明 5 个只注入 4 个、`to-spec`/`to-tickets` 双双静默丢弃，且**不报错**。⇒ `skills:` 只写「无该标记」的技能；被过滤的技能改由 agent prompt 给 `SKILL.md` 路径、让子代理 `read`（`pi-agents/` 四份已按此整形）。
 
 ## 5. 强制技能（mattpocock）在 pi 上的取法
 

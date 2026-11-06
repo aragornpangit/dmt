@@ -1,7 +1,17 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 88 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 89 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-06（用户要求·第八十六次：pi 子代理白名单实证整形 ＋ 机检 A6c，版本 `5.18.7`）**：
+  用户追问「pi 调用的 subagents 用的是什么 skills」，实测发现**白名单宣称与实况不符**。
+  ① **实证**（装到临时项目，派真实子代理回抄 `<available_skills>`）：`dmt-dev-e` 声明 5 项实际 4 项（丢 `implement`）、`dmt-pde` 声明 5 项实际 3 项（丢 `to-spec`/`to-tickets`）、`dmt-ana-e` 声明 5 项实际 3 项（丢 `grill-me`/`grill-with-docs`）。丢失项**全部**是 `disable-model-invocation: true`，且**静默无告警**。
+  ② **证伪既有文档**：`harness/pi.md` §4.4 原写「写进自定义 agent 的 `skills:` 也不受该标记阻挡」——**实测为假**；已改为事实并补三条 agent 的对照表。
+  ③ **整形（方案 A）**：四份 `harness/pi-agents/*.md` 的 `skills:` 只保留**真能注入**的技能；被过滤者改为 prompt 里逐条给 `SKILL.md` 路径（`~/.pi/agent/git/github.com/mattpocock/skills/skills/{engineering,productivity}/<name>/SKILL.md`），由子代理 `read` 打开。`dmt-dev-e`→4 项、`dmt-pde`→3 项、`dmt-ana-e`→3 项、`dmt-reviewer`→2 项（均无 flag）。
+  ④ **机检 A6c（新增）**：解析 `pi-agents/*.md` 的 `skills:`，逐个在技能发现目录定位 `SKILL.md`，**凡带 `disable-model-invocation: true` ⇒ FAIL**（「声明了就会被过滤」）；找不到目录只 `WARN`（第三方技能可能未装，不误报）。**已验证能抓错**：把 `implement` 塞回白名单 ⇒ `FAIL pi agent dmt-dev-e.md: implement —— filtered by disable-model-invocation`。
+  ⑤ **整形后实测**：`dmt-dev-e` 注入 `dmt-de/tdd/code-review/diagnosing-bugs`、`dmt-pde` 注入 `dmt-pde/grilling/research`；两角色均能用 prompt 给的路径 `read` 到 `implement` / `to-spec` / `to-tickets` 正文（回抄 `name:` 与首句一致）。
+  ⑥ `harness/BACKLOG.md` P1 判据补「实际注入必须与声明逐条相等，带 flag 者不写进 `skills:`」。
+  **版本升 `5.18.7`**（七技能同号）。
 
 - **2026-11-06（用户要求·第八十五次：机检自身假 PASS 修复 ＋ 5 条真实缺口，版本 `5.18.6`）**：
   英文化 `dmt-en` 时发现 `check-dmt.sh` 的**内容断言存在假 PASS**。
