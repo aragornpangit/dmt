@@ -3,6 +3,25 @@
 > 从 CHANGELOG.md 归档（整条原样搬移，不改写、不重编号）。2026-11-07 起 CHANGELOG.md 只留版本指针，全部明细归入本文件。
 
 
+## 2026-11-07 补录（归档后新增，非原样搬移）
+
+> CHANGELOG.md 压缩为版本指针后，`5.19.6` 与 `5.19.7` 未进入归档。此处按提交记录与当期评审补录，沿用时间倒序；原「101 条，原样」章节保持不动、不重编号。
+
+- **2026-11-07（评审修复·版本 `5.19.7`）**：
+  ① **并行判据统一**：`team.md:10`、`dmt-dm/SKILL.md:14` 由「按容量/收益决定、有收益才并行」改为「无依赖即并行，容量与收益只决定并发度」，与 `07-discipline.md:15`、`02-runtime.md:9`、`dmt-dl/SKILL.md:15` 对齐。
+  ② **merge/push 绝对化**：`dmt-de/SKILL.md:23`、`dmt-dl/SKILL.md:23` 改为「不执行合并或推送（该权只属 `dmt-dm`）；共享设备写操作须经授权并记录」，消除与 `07-discipline.md:7-9` 及 `dmt-de/SKILL.md:16` 的矛盾。
+  ③ **拓扑无关通信禁令**：`team.md:14` 原则 7 增写「角色间互连、越级与跨部门直连一律禁止，与拓扑、角色组合和是否启用收件箱无关」；`ops/comms.md:17` 明确裁剪拓扑不豁免该禁令。
+  ④ **回写**：`harness/pi-agents/dmt-de.md:14` 同步 ② 的措辞（该副本镜像 `dmt-de` 边界，不同步会制造新的不一致）。
+  ⑤ **升号**：`bump-version.sh 5.19.7 --date 2026-11-07` 同步 9 处版本源 + `CHANGELOG.md:3` 指针；`check-dmt.sh` 与 `bump-version.sh --check` 均 ALL_PASS，unittest 7/7 OK。
+  **Why**：评审发现并行纪律顶层契约与执行层判据互斥、de/dl 同一文件内 merge/push 措辞自相矛盾、方向白名单仅在完整团队生效形成权责真空，三者同属「局部修订未回写引用点」。
+
+- **2026-11-07（据 `c9346c0` 补录·版本 `5.19.6`）**：
+  ① **全量统一**：`dmt-director`→`dmt-dir`、`dmt-devl`→`dmt-dl`、`dmt-ana-e`→`dmt-ae`，删除 `dmt-reviewer`（独立评审改由 `dmt-dl` 派临时子代理）；run_id / pane label / tab label / inbox / 方向白名单 / 文档 / 测试统一为 `dmt-*` 名。
+  ② **SPEC 驱动工作流**：`dmt-dir` 只安排 `dmt-pde` 定稿 SPEC，不向 `dmt-dm` 派单；`dmt-dm` 依 SPEC 用 `to-tickets` 拆单向 `dmt-dl` 派单。
+  ③ **适配器与运行时**：新增 `ops/optional-skills.md` 轻量点名表（不绑定供应商）；`dl-pane.sh` 取代 `devl-pane.sh`；codebuddy/cbc pane 门铃改走 `herdr pane send-text + send-keys enter`。
+  ④ **维护**：`CHANGELOG.md` 压缩为版本指针，101 条历史整条归档至 `changelog/archive.md`。同版本内另有 `bd7fcd7` 补充开发线三级 Git 权限、开发线内部自治、无依赖单元并行与恢复 `dmt-dir → dmt-dm` 派单（未升号）。
+  **Why**：据 `c9346c0` 提交说明补录；该版本升号后未写入归档，此处补齐 5.19.5 → 5.19.7 的时间线。
+
 ## 2026-11-07 由 CHANGELOG.md 归档（101 条，原样）
 
 - **2026-11-07（用户裁定·第九十八次：运行 id 全量改名 + tab 布局改为每 tab 两个队长，版本 `5.19.5`）**：
