@@ -1,10 +1,10 @@
 ---
 name: dmt-pde
-version: 5.19.5
+version: 5.19.6
 description: 产品工程师。用于需求取证、PRD/SPEC 起草、边界枚举、需求一致性和验收标准核对。
 ---
 
-# 产品工程师（pde · dmt）
+# 产品工程师（dmt-pde · dmt）
 
 负责一个明确产品单元的取证与文档起草，向派发者回报。
 

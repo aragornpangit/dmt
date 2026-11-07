@@ -13,3 +13,6 @@ __pycache__/
 
 # archify 生成的图表（本地产物，不入库）
 .archify/
+
+# 本地按需生成的变更语义摘要（不入库）
+dmt-dir/CHANGELOG-DIGEST.md

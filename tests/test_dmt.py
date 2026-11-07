@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-CHECK = REPO / "dmt-director/scripts/check-dmt.sh"
-INSTALL = REPO / "dmt-director/scripts/install-skills.sh"
-SEND = REPO / "dmt-director/scripts/send-msg.sh"
+CHECK = REPO / "dmt-dir/scripts/check-dmt.sh"
+INSTALL = REPO / "dmt-dir/scripts/install-skills.sh"
+SEND = REPO / "dmt-dir/scripts/send-msg.sh"
 
 
 def run(*args, cwd=REPO, env=None):
@@ -41,7 +41,7 @@ class DmtRegressionTests(unittest.TestCase):
     def installed_check(self, target, skills):
         return run(
             "bash",
-            target / "dmt-director/scripts/check-dmt.sh",
+            target / "dmt-dir/scripts/check-dmt.sh",
             target,
             env={"DMT_SKILLS_DIR": str(skills)},
         )
@@ -62,9 +62,9 @@ class DmtRegressionTests(unittest.TestCase):
 
     def test_skill_entries_are_small_and_have_no_forced_startup(self):
         entries = sorted(REPO.glob("dmt-*/SKILL.md"))
-        self.assertEqual(len(entries), 8)
+        self.assertEqual(len(entries), 7)
         self.assertLessEqual(sum(len(p.read_text().splitlines()) for p in entries), 220)
-        self.assertLessEqual(len((REPO / "dmt-director/SKILL.md").read_text().splitlines()), 25)
+        self.assertLessEqual(len((REPO / "dmt-dir/SKILL.md").read_text().splitlines()), 25)
         for path in entries:
             text = path.read_text()
             self.assertNotIn("每次加载先做", text)
@@ -77,8 +77,8 @@ class DmtRegressionTests(unittest.TestCase):
             skills = self.install(target)
             self.assertFalse((target / "docs/pd").exists())
             self.assertFalse((target / "inbox").exists())
-            self.assertFalse((target / "dmt-director/CHANGELOG.md").exists())
-            self.assertFalse((skills / "dmt-director/CHANGELOG.md").exists())
+            self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
+            self.assertFalse((skills / "dmt-dir/CHANGELOG.md").exists())
             result = self.installed_check(target, skills)
             self.assert_pass(result)
             self.assertEqual(result.stdout.strip(), "ALL_PASS")
@@ -87,7 +87,7 @@ class DmtRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "copy-project"
             skills = self.install(target, copy=True)
-            self.assertFalse((target / "dmt-director/CHANGELOG.md").exists())
+            self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
             result = self.installed_check(target, skills)
             self.assert_pass(result)
             self.assertEqual(result.stdout.strip(), "ALL_PASS")
@@ -111,7 +111,7 @@ class DmtRegressionTests(unittest.TestCase):
             root = Path(tmp)
             body = root / "body.md"
             body.write_text("test\n", encoding="utf-8")
-            box = root / "inbox/director"
+            box = root / "inbox/dmt-dir"
             box.mkdir(parents=True)
             for current, expected in ((9, "010"), (99, "100"), (999, "1000")):
                 with self.subTest(current=current):
@@ -119,8 +119,8 @@ class DmtRegressionTests(unittest.TestCase):
                     result = run(
                         "bash",
                         SEND,
-                        "director",
-                        "director-helper",
+                        "dmt-dir",
+                        "dmt-dir-helper",
                         "sequence-test",
                         body,
                         cwd=root,

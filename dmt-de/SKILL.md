@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.19.5
+version: 5.19.6
 description: 开发工程师。用于在指定工作区按需求与工单实施、测试、自审并提交变更。
 ---
 
