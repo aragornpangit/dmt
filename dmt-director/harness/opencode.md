@@ -1,43 +1,10 @@
 # harness 差异：opencode
 
-> 共性见 [`COMMON.md`](COMMON.md)；机器可读事实单一来源 [`../harness_matrix.yaml`](../../dmt-director/harness_matrix.yaml)。
+共性见 [`COMMON.md`](COMMON.md)，机器事实见 [`../harness_matrix.yaml`](../harness_matrix.yaml)。
 
-## 1. 技能发现目录
-
-| 级别 | 目录 |
-|---|---|
-| 项目级 | `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`（**复数**） |
-| 用户级 | `~/.agents/skills/`、`~/.claude/skills/` |
-
-- **单数 `.opencode/skill/` 在项目级不生效**（实测；本机旧安装目录里两份并存，易误判）。
-- 读 `.claude/skills/` ⇒ 与 claude 共用一份落点。
-
-## 2. 启动与权限
-
-`opencode --auto`；自动档判据 argv 含 `--auto`（另有 `--dangerously-skip-permissions`）。
-
-## 3. 技能调用行
-
-**`@<技能名>`**，例如 `@dmt-dm`、`@code-review`。
-
-**2026-11-06 用户裁定（覆盖此前的斜杠写法）**：opencode v2 用 **`@<skill-id>`** 显式引用技能；`@` 是 mention 语法，不是斜杠前缀。`dmt_skill_cmd` 对 opencode 生成 `@<技能名>`。
-
-**2026-11-05 实测补充（仍然有效）**：
-
-- **斜杠命令清单不完整**：`/to-spec`、`/to-tickets` 实测**未进** opencode 的斜杠清单，敲了不生效 ⇒ 这就是改用 `@<skill-id>` 的原因。
-- **`skill` 工具可按 id 加载**（`implement` / `tdd` / `code-review` / `research` 实测均成功，含带 `disable-model-invocation: true` 者）。`@<skill-id>` 不可用时回退 `skill({id})`，再不可用按 §4 直读 `SKILL.md`。
-- **门铃（`herdr agent prompt`）可用**：实测 `send-msg.sh` 发 `director` 成功（无 WARN，收件方认领并收口）。但**首次启动后的最初几十秒**输入可能未就绪 ⇒ 首次注入技能后需复核 pane 输出是否真的开始工作（必要时补 `send-keys enter`）。
-
-## 4. 技能如何到达模型
-
-- pane 角色：启动后用 `@<技能名>` 加载（如 `@dmt-dm`）。
-- 子代理：在派发 prompt 里写 `@<技能名>`（如 `@dmt-de`、`@dmt-reviewer`），并写明“必须加载该技能后再开工”；`@` 不可用时回退 `skill({id})` 或直读 `SKILL.md`。模板见 [`../team/07b-dispatch.md`](../team/07b-dispatch.md)。
-
-## 5. 强制技能
-
-`@<name>`，例如 `@code-review`、`@tdd`。
-
-## 6. 特有约束
-
-- **并发上限**：上游 opencode 2.2.5 **未提供并发入口**，矩阵显式记为 `null`（不是漏填）⇒ 派发前按任务规模自判，不设硬上限。
-- `cbc-herdr` **不需要**（herdr 原生识别 opencode）。
+- 项目技能目录可用 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`；使用复数目录名。
+- 技能显式引用为 `@<技能名>`；不可用时尝试平台 `skill({id})`，再不可用时读取 `SKILL.md`。
+- 子代理 prompt 中显式给出技能引用或路径，以及输入、边界、产物和判据。
+- 权限模式由用户和项目安全策略决定，不默认跳过审批。
+- 并发入口和启动行为以当前版本与矩阵为准；未声明上限时按任务和容量自判。
+- herdr 门铃发送后需确认输入已被接受，不能只凭写入终端判断送达。

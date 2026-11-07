@@ -1,7 +1,13 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 100 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 101 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-07（用户裁定·第九十八次：运行 id 全量改名 + tab 布局改为每 tab 两个队长，版本 `5.19.5`）**：
+  ① **改名（全量替换 run_id）**：`devl{n}` → `dmt-devl{n}`、`dev-e` → `dmt-de{n}`、`reviewer{n}` → `dmt-reviewer{n}`、`ana-e` → `ana-e{n}`；契约 `run_id`、pane label、inbox 目录、`send-msg.sh` / `msg-take.sh` / `msg-done.sh` 白名单、机检方向自测、pi agent 定义（`dmt-dev-e.md` → `dmt-de.md`）同步。
+  ② **tab 布局**：`devm` 从 `dmt-dev` tab 移出，独占 `dmt-devm` tab；`dmt-dev{n}` 每 tab 放两个 `dmt-devl` pane，左右水平各 50%，装不下由 `devl-pane.sh add` 自动开新 tab。常量 `MIN_DEVL_ROWS` / `DEVM_WIDTH_RATIO` 废止，新增 `DEVL_PER_TAB=2`。
+  ③ **机检**：新增 `pane_layout` 断言组（`ops/runtime.md` 必须含 `dmt-devm` / `dmt-dev{n}` / `DEVL_PER_TAB` / `水平`，且不得再出现 `DEVM_WIDTH_RATIO`）。
+  **Why**：用户明确要求队长按 `dmt-devl{n}` 命名、每个 tab 两个队长水平排列，并让 devm 单独成 tab；旧的「devm 40% + 右列竖排队长」不再成立。
 
 - **2026-11-07（用户要求·第九十七次：仓库补 MIT 许可证，版本 `5.19.4`）**：
   ① 新增根 `LICENSE`（MIT，2026）；② `README.md` 末尾加「许可证」段。此前仓库无许可证文件，第三方引用 / 再分发无法可依。

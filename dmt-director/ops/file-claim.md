@@ -1,13 +1,14 @@
-# 文件占用
+# 可选：多写者文件占用
 
-任何角色编辑（写入 / 追加 / 删除）任何文件前，必须先检查占用；到手才能改，改完立即释放。
+只有多个角色必须共享同一文件且无法拆分时才启用；单写者工作区不需要锁仪式。
 
 ```bash
 bash dmt-director/scripts/file-claim.sh check|claim|release <path> <owner>
 bash dmt-director/scripts/file-claim.sh list
 ```
 
-- 记录落主工作树根 `locks/`；worktree 里也写回主树。`<owner>` 用「角色:实例」，如 `devm-helper`。
-- `rc=3` ⇒ 停手：等释放、换文件或回报上级；不得绕过、不得删别人的锁。
-- TTL 30 分钟。过期锁可接管，但回报要写明「接管过期锁 `<path>`（原持有者 `<owner>`）」；长任务收工前重新 `claim` 续期。
-- `inbox/` 与 `locks/` 自身不登记；worktree 不豁免。
+- 锁记录位于主工作区 `locks/`，可用 `DMT_LOCKS_DIR` 覆盖；owner 应唯一标识持有实例。
+- `rc=3` 表示被他人占用，应等待、换路径或回报派发者，不能删除他人的活跃锁。
+- 锁有效期由 `DMT_CLAIM_TTL`（秒）配置；长任务按该策略续期。
+- 接管过期锁需记录原持有者；确认对方仍在写时不能仅因过期就抢占。
+- `inbox/` 与 `locks/` 自身不登记，正式产物仍须遵守单写者边界。

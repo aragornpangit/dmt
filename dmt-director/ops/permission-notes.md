@@ -1,19 +1,10 @@
-# 权限档位与 auto 复核：事故实证与逃生舱
+# 权限与自动复核排查
 
-## 档位复验（第六十三次）
+本页是权限适配器的故障排查参考，不要求角色采用自动批准模式。
 
-`agent_status` 就绪 ≠ 自动档。2026-11-03 bcr-nh 实测三个常驻 pane 全落 `default` 档，当日 33 次工具栏 `ASK`；表象却是「脚本超时 / 命令失败」（另一 pane 标题写着 `file-claim.sh 审批超时`），而脚本本体 57ms 正常 —— **根因在权限层，现象在命令层**。
-
-- **判据读 argv，不读屏幕**：`dmt_pane_auto_mode <pane>` 逐 token 判（`--permission-mode auto` / `--dangerously-skip-permissions` / `--yolo` / `--approve` / `--auto` / `-a never` / `--ask-for-approval never`）；**子串匹配会把 `--autocompact auto` 误判**，故逐 token。rc=0 自动 / 1 非自动 / 2 拿不到 argv。
-- **接线**：`setup-team.sh` / `spawn-helper.sh` 在「就绪 + 输技能」后调 `verify_auto_mode`；rc=1 打 `WARN` + 打印 argv，rc=2 只 `INFO`。
-
-**Codex 备选 harness**：技能与 helper 任务随 `codex -a never '<角色技能 prompt>'` 的首轮 prompt 下发。首次 trust 只允许人工确认一次；确认前不粘贴技能文本，确认后重跑 `setup-team.sh --harness codex --force-start`。pane label 是角色身份，agent name 只用于 herdr 展示；权限档仍按 `-a never` / `--ask-for-approval never` 等 argv 复验，不以 `agent_status` 代替。
-- **修正**：非自动档 ⇒ `setup-team.sh --force-start`（或重开 pane）。
-
-## auto 复核（`autoModeClassifier`）已知坑与现行配置
-
-auto 模式下每个**需审批**的工具调用过一次自动复核（prompt 为整段会话上下文，默认 **90s 硬上限**）；企业网关抖动 / 限流时以 `no verdict ... failure=timeout` 收场、命令被判失败，表象像「脚本坏了」（2026-11-03 实测一次 `file-claim.sh check`，脚本本体 57ms 正常）。
-
-现行加固四条（第六十 / 六十一次）：① `lib-dmt.sh` 的 `dmt_harness_cmd()` 为 codebuddy 前置 `CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000`（用户级 `~/.codebuddy/settings.json` 的 `env` 块同键兜底，覆盖手动启动会话）；② 复核器优先走本地模型（端点见 `.env` 的 `DMT_LOCAL_MODEL_HOST` / `DMT_LOCAL_MODEL_PORT`，模型 id `DMT_AUTO_REVIEW_LOCAL_MODEL`）；③ **健康门 `auto-review-model.sh`**（随 harness 启动自动跑）：探活本地端点，可达 ⇒ 钉本地、不可达 ⇒ 摘钉回退 cbc 内置链路 —— **钉了模型就禁用内置 fallback，故这道门不能省**；`DMT_AUTO_REVIEW_GATE=off` 整门关闭；④ 用户级 `permissions.allow` 覆盖 `dmt-director/scripts/` 下全部脚本（规则只认 `Bash(<前缀>:*)`；**含 `*` 通配的规则在 auto 模式下被判危险而整条忽略**；含重定向的命令不套规则）。
-
-**健康门只在启动时跑**：端点会话中途挂掉，现役会话需重开 pane。
+- `agent_status` 就绪不代表权限可用。命令反复失败或等待审批时，检查实际进程参数和平台配置。
+- `dmt_pane_auto_mode <pane>` 可辅助识别已知参数；rc=0 自动、rc=1 非自动、rc=2 无法判断。argv 不能覆盖用户配置时应以实际配置为准。
+- 自动复核服务可能超时或限流，表面上是脚本失败。应区分脚本退出码、审批结果和服务错误，保留原始输出。
+- `auto-review-model.sh` 是可选健康检查；本地或自定义复核端点通过项目环境配置，不硬编码到角色技能。
+- 权限不足时报告具体能力缺口，由用户选择调整环境或授权。不能为绕过审批默认开启跳过权限、危险沙箱或全量网络/文件访问。
+- 修改权限后重跑失败的最小命令，再恢复任务；不要用重复发送或嵌套代理掩盖问题。

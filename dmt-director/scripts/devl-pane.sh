@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# devm 用：管理 dmt-dev tab 内 devl pane 的生命周期（补位 / 扩容 / 回收 / 收养）
-# 用法：bash devl-pane.sh <list|ensure-min|add|remove|adopt> [--index N] [--force]
+# 可选 herdr 适配器：按需管理 dmt-devl pane 生命周期。
+# 布局与容量由环境变量配置；默认不强制常驻队长。
+# 用法：bash devl-pane.sh <list|ensure-min|add|remove|rebalance|adopt> [--index N] [--force]
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_WORKSPACE_ID（在 devm pane 内执行）
-#   常量：DEVL_MIN（默认 2）、DEVL_MAX（默认 0=不设策略上限）、MIN_DEVL_ROWS（默认 14）、DEVM_WIDTH_RATIO（默认 0.4）
+#   常量：DEVL_MIN（默认 0）、DEVL_MAX（默认 0=不设策略上限）、DEVL_PER_TAB（默认 2）
 set -eu
 
 CMD="${1:-list}"; shift || true
@@ -24,136 +25,90 @@ missing=""
 
 . "$(cd -P "$(dirname "$0")" && pwd -P)/lib-dmt.sh"
 
-DEVL_MIN="${DEVL_MIN:-2}"
+DEVL_MIN="${DEVL_MIN:-0}"
 DEVL_MAX="${DEVL_MAX:-0}"
-MIN_DEVL_ROWS="${MIN_DEVL_ROWS:-14}"
-DEVM_WIDTH_RATIO="${DEVM_WIDTH_RATIO:-0.4}"
+DEVL_PER_TAB="${DEVL_PER_TAB:-2}"
 HARNESS="$(dmt_harness_name "${DMT_HARNESS:-}")" || exit 2
 
-tab_id() { dmt_herdr pane get "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.pane.tab_id // empty'; }
-TAB_ID="$(tab_id)"
-[ -n "$TAB_ID" ] || { echo "ERROR: 拿不到 devm 当前 tab_id" >&2; exit 4; }
-
+# 本 workspace 全部 dmt-devl{n} pane（跨所有 dmt-dev{n} tab）
 list_devl() {
   dmt_herdr pane list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
-    | jq -r --arg t "$TAB_ID" '.result.panes[]? | select(.tab_id==$t) | select((.label // "") | test("^devl[0-9]+$")) | [.label, .pane_id, (.agent_status // "unknown")] | @tsv' \
+    | jq -r '.result.panes[]? | select((.label // "") | test("^dmt-devl[0-9]+$")) | [.label, .pane_id, .tab_id, (.agent_status // "unknown")] | @tsv' \
     | sort -t$'\t' -k1,1V
 }
 count_devl() { list_devl | sed '/^$/d' | wc -l | tr -d ' '; }
 next_index() {
   local used i
-  used="$(list_devl | cut -f1 | sed 's/^devl//' | sort -n)"
+  used="$(list_devl | cut -f1 | sed 's/^dmt-devl//' | sort -n)"
   i=1
   while printf '%s\n' "$used" | grep -qx "$i"; do i=$((i+1)); done
   printf '%s' "$i"
 }
-tab_height() {
-  dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.layout.area.height // 0'
+pane_tab() { dmt_herdr pane get "$1" 2>/dev/null | jq -r '.result.pane.tab_id // empty'; }
+tab_label() {
+  dmt_herdr tab list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
+    | jq -r --arg t "$1" '.result.tabs[]? | select(.tab_id==$t) | .label // empty' | head -1
 }
-geom_cap() {
-  local h; h="$(tab_height)"
-  case "$h" in ''|*[!0-9]*) echo 99; return ;; esac
-  [ "$h" -gt 0 ] || { echo 99; return; }
-  echo $((h / MIN_DEVL_ROWS))
+# 现有 dmt-dev{n} tab，按 n 升序
+devl_tabs() {
+  dmt_herdr tab list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
+    | jq -r '.result.tabs[]? | select((.label // "") | test("^dmt-dev[0-9]+$")) | [.label, .tab_id] | @tsv' \
+    | sort -t$'\t' -k1,1V
 }
-bottom_devl_pane() {
-  local y id best="" besty=-1 ids
-  ids="$(list_devl | cut -f2)"
-  [ -n "$ids" ] || { printf ''; return; }
-  while IFS=$'\t' read -r y id; do
-    [ -n "$id" ] || continue
-    printf '%s\n' "$ids" | grep -qx "$id" || continue
-    if [ "$y" -gt "$besty" ] 2>/dev/null; then besty="$y"; best="$id"; fi
-  done < <(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.layout.panes[]? | [.rect.y, .pane_id] | @tsv')
-  printf '%s' "$best"
+count_in_tab() {
+  list_devl | awk -F'\t' -v t="$1" '$3==t' | wc -l | tr -d ' '
 }
-# 把 devm 宽度固定为 tab 的 DEVM_WIDTH_RATIO（默认 0.4），给 devl 列留 60%。
-set_devm_width() {
-  local json cmds
-  json="$(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null)" || return 0
-  [ -n "$json" ] || return 0
-  cmds="$(printf '%s' "$json" | python3 -c "$(cat <<'PY'
+next_tab_no() {
+  local n=0 i
+  while IFS=$'\t' read -r lab _; do
+    [ -n "$lab" ] || continue
+    i="${lab#dmt-dev}"
+    [ "$i" -gt "$n" ] 2>/dev/null && n="$i"
+  done < <(devl_tabs)
+  printf '%s' "$((n+1))"
+}
+# 找第一个未满的 dmt-dev{n} tab；都满则返回空
+tab_with_room() {
+  local lab tid
+  while IFS=$'\t' read -r lab tid; do
+    [ -n "$tid" ] || continue
+    if [ "$(count_in_tab "$tid")" -lt "$DEVL_PER_TAB" ]; then printf '%s' "$tid"; return; fi
+  done < <(devl_tabs)
+  printf ''
+}
+# 把每个 dmt-dev{n} tab 内的水平分栏调成 50/50
+rebalance_tabs() {
+  local tid json
+  while IFS=$'\t' read -r _ tid; do
+    [ -n "$tid" ] || continue
+    json="$(dmt_herdr pane layout --pane "$(list_devl | awk -F'\t' -v t="$tid" '$3==t{print $2; exit}')" 2>/dev/null)" || continue
+    [ -n "$json" ] || continue
+    printf '%s' "$json" | python3 -c "$(cat <<'PY'
 import json, sys
 try:
     layout = json.load(sys.stdin)["result"]["layout"]
 except Exception:
     sys.exit(0)
-devm_id = sys.argv[1]
-target = float(sys.argv[2])
-panes = layout.get("panes") or []
+panes = [p for p in (layout.get("panes") or []) if (p.get("label") or "").startswith("dmt-devl")]
 area = layout.get("area") or {}
-devm = next((p for p in panes if p.get("pane_id") == devm_id), None)
-if not devm or not area.get("width"):
+if len(panes) != 2 or not area.get("width"):
     sys.exit(0)
-cur = devm["rect"]["width"] / area["width"]
-delta = target - cur
+left = min(panes, key=lambda p: p["rect"]["x"])
+right = max(panes, key=lambda p: p["rect"]["x"])
+cur = left["rect"]["width"] / area["width"]
+delta = 0.5 - cur
 if abs(delta) < 0.01:
     sys.exit(0)
 if delta > 0:
-    print(f'{devm_id}\tright\t{delta:.3f}')
+    print(f'{left["pane_id"]}\tright\t{delta:.3f}')
 else:
-    dx = devm["rect"]["x"] + devm["rect"]["width"]
-    col = [p for p in panes if p.get("pane_id") != devm_id and p["rect"]["x"] >= dx]
-    col.sort(key=lambda p: p["rect"]["y"])
-    if col:
-        print(f'{col[0]["pane_id"]}\tleft\t{-delta:.3f}')
+    print(f'{right["pane_id"]}\tleft\t{-delta:.3f}')
 PY
-)" "$HERDR_PANE_ID" "$DEVM_WIDTH_RATIO")"
-  [ -n "$cmds" ] || return 0
-  while IFS=$'\t' read -r p dir amt; do
-    [ -n "$p" ] || continue
-    dmt_herdr pane resize --pane "$p" --direction "$dir" --amount "$amt" >/dev/null 2>&1 || true
-  done <<< "$cmds"
-}
-# 把右槽所有 devl pane 调成等高：从最底层 split 往上，逐个把 ratio 设成 1/(n-i)。
-# 背景：split 只切「当前 pane」，不重排祖先；不加这一步，第 3 个队长会只剩 6~8 行。
-rebalance_devl_column() {
-  local json cmds p dir amt
-  set_devm_width
-  json="$(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null)" || return 0
-  [ -n "$json" ] || return 0
-  cmds="$(printf '%s' "$json" | python3 -c "$(cat <<'PY'
-import json, sys
-try:
-    layout = json.load(sys.stdin)["result"]["layout"]
-except Exception:
-    sys.exit(0)
-devm_id = sys.argv[1]
-panes = layout.get("panes") or []
-splits = layout.get("splits") or []
-devm = next((p for p in panes if p.get("pane_id") == devm_id), None)
-if not devm:
-    sys.exit(0)
-dx = devm["rect"]["x"] + devm["rect"]["width"]
-col = [p for p in panes if p.get("pane_id") != devm_id and p["rect"]["x"] >= dx]
-col.sort(key=lambda p: p["rect"]["y"])
-n = len(col)
-if n < 2:
-    sys.exit(0)
-vs = [s for s in splits if s.get("direction") == "down" and s["rect"]["x"] >= dx]
-vs.sort(key=lambda s: s["rect"]["y"])
-for i in range(len(vs) - 1, -1, -1):
-    s = vs[i]
-    target = 1.0 / (n - i)
-    delta = target - s.get("ratio", 0)
-    if abs(delta) < 0.01:
-        continue
-    top = min(col, key=lambda p: abs(p["rect"]["y"] - s["rect"]["y"]))
-    lower = [p for p in col if p["rect"]["y"] > top["rect"]["y"]]
-    if not lower:
-        continue
-    nxt = min(lower, key=lambda p: p["rect"]["y"])
-    if delta > 0:
-        print(f'{top["pane_id"]}\tdown\t{delta:.3f}')
-    else:
-        print(f'{nxt["pane_id"]}\tup\t{-delta:.3f}')
-PY
-)" "$HERDR_PANE_ID")"
-  [ -n "$cmds" ] || return 0
-  while IFS=$'\t' read -r p dir amt; do
-    [ -n "$p" ] || continue
-    dmt_herdr pane resize --pane "$p" --direction "$dir" --amount "$amt" >/dev/null 2>&1 || true
-  done <<< "$cmds"
+)" 2>/dev/null | while IFS=$'\t' read -r p dir amt; do
+      [ -n "${p:-}" ] || continue
+      dmt_herdr pane resize --pane "$p" --direction "$dir" --amount "$amt" >/dev/null 2>&1 || true
+    done
+  done < <(devl_tabs)
 }
 verify_auto_mode() {
   local pane="$1" rc=0
@@ -190,34 +145,37 @@ start_devl() {
   verify_auto_mode "$pane"
 }
 add_one() {
-  local cur cap n target dir ratio pane
+  local cur n tid lab pane
   cur="$(count_devl)"
-  cap="$(geom_cap)"
   if [ "$DEVL_MAX" -gt 0 ] 2>/dev/null && [ "$cur" -ge "$DEVL_MAX" ]; then
     echo "已达 DEVL_MAX=$DEVL_MAX" >&2; return 1
   fi
-  if [ "$cur" -ge "$cap" ]; then
-    echo "已达几何上限 floor(H/$MIN_DEVL_ROWS)=$cap（H=$(tab_height)）；请开 dmt-dev2 tab（由 director 建）" >&2; return 1
-  fi
   n="$(next_index)"
-  if [ "$cur" -eq 0 ]; then
-    target="$HERDR_PANE_ID"; dir="right"; ratio="$DEVM_WIDTH_RATIO"
+  tid="$(tab_with_room)"
+  if [ -z "$tid" ]; then
+    lab="dmt-dev$(next_tab_no)"
+    pane="$(dmt_herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "$lab" | jq -r '.result.root_pane.pane_id // empty')"
+    [ -n "$pane" ] || { echo "ERROR: tab create 失败（$lab）" >&2; return 1; }
+    echo "created tab $lab"
+  elif [ "$(count_in_tab "$tid")" -eq 0 ]; then
+    pane="$(dmt_herdr pane list --workspace "$HERDR_WORKSPACE_ID" 2>/dev/null \
+      | jq -r --arg t "$tid" '.result.panes[]? | select(.tab_id==$t) | .pane_id' | head -1)"
+    [ -n "$pane" ] || { echo "ERROR: $tid 内没有 pane" >&2; return 1; }
   else
-    target="$(bottom_devl_pane)"; dir="down"; ratio="0.5"
+    pane="$(dmt_herdr pane split "$(list_devl | awk -F'\t' -v t="$tid" '$3==t{print $2; exit}')" \
+      --direction right --ratio 0.5 --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
+    [ -n "$pane" ] || { echo "ERROR: pane split 失败（$tid）" >&2; return 1; }
   fi
-  [ -n "$target" ] || { echo "ERROR: 找不到 split 目标" >&2; return 1; }
-  pane="$(dmt_herdr pane split "$target" --direction "$dir" --ratio "$ratio" --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
-  [ -n "$pane" ] || { echo "ERROR: pane split 失败（devl$n）" >&2; return 1; }
-  dmt_herdr pane rename "$pane" "devl$n" >/dev/null
-  mkdir -p "$PWD/inbox/devl$n"
-  start_devl "$pane" "devl$n"
-  rebalance_devl_column
-  echo "added devl$n ($pane)"
+  dmt_herdr pane rename "$pane" "dmt-devl$n" >/dev/null
+  mkdir -p "$PWD/inbox/dmt-devl$n"
+  start_devl "$pane" "dmt-devl$n"
+  rebalance_tabs
+  echo "added dmt-devl$n ($pane)"
 }
 remove_one() {
-  local idx="$1" label pane st wt dirty
+  local idx="$1" label pane st dirty
   [ -n "$idx" ] || { echo "用法: devl-pane.sh remove --index N" >&2; return 2; }
-  label="devl$idx"
+  label="dmt-devl$idx"
   pane="$(dmt_pane_by_label "$label" || true)"
   [ -n "$pane" ] || { echo "找不到 $label" >&2; return 1; }
   [ "$(count_devl)" -gt "$DEVL_MIN" ] || { echo "拒绝：n=$DEVL_MIN 是下限，不得再减" >&2; return 1; }
@@ -235,25 +193,25 @@ remove_one() {
     done < <(git -C "$PWD" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}')
   fi
   dmt_herdr pane close "$pane" >/dev/null
-  sleep 1   # 等 layout 树收敛后再重排，否则会按旧的三 pane 比例算
-  rebalance_devl_column
-  echo "closed $label ($pane)；inbox/devl$idx/ 保留，收口后手工清理"
+  sleep 1   # 等 layout 树收敛后再重排
+  rebalance_tabs
+  echo "closed $label ($pane)；inbox/$label/ 保留，收口后手工清理"
 }
 
 case "$CMD" in
   list)
-    printf 'label\tpane\tstatus\n'
+    printf 'label\tpane\ttab\tstatus\n'
     list_devl
-    echo "count=$(count_devl) min=$DEVL_MIN max=$DEVL_MAX cap=$(geom_cap) height=$(tab_height)"
+    echo "count=$(count_devl) min=$DEVL_MIN max=$DEVL_MAX per_tab=$DEVL_PER_TAB"
     ;;
   ensure-min)
     while [ "$(count_devl)" -lt "$DEVL_MIN" ]; do add_one || exit 1; done
     ;;
   add) add_one ;;
-  rebalance) rebalance_devl_column; echo "rebalanced $(count_devl) devl panes" ;;
+  rebalance) rebalance_tabs; echo "rebalanced $(count_devl) devl panes" ;;
   remove) remove_one "$INDEX" ;;
   adopt)
-    echo "adopted devl panes in tab $TAB_ID:"
+    echo "adopted devl panes:"
     list_devl
     ;;
   *) echo "unknown command: $CMD" >&2; exit 2 ;;

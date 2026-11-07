@@ -110,18 +110,18 @@ verify_auto_mode() {
 h dmt_herdr tab rename "$HERDR_TAB_ID" director
 h dmt_herdr pane rename "$HERDR_PANE_ID" director
 
-# 2) devm：确保在 dmt-dev tab 左侧
+# 2) devm：独占 dmt-devm tab（dmt-dev{n} 只放 dmt-devl，每 tab 两个）
 devm="$(pane_by_label devm || true)"
-devtab="$(tab_id_by_label dmt-dev || true)"
+devtab="$(tab_id_by_label dmt-devm || true)"
 if [ -z "$devm" ]; then
   if [ -z "$devtab" ]; then
     if [ "$DRY" = 1 ]; then
-      echo "+ herdr tab create --workspace $HERDR_WORKSPACE_ID --cwd $PWD --label dmt-dev" >&2
+      echo "+ herdr tab create --workspace $HERDR_WORKSPACE_ID --cwd $PWD --label dmt-devm" >&2
       echo "+ herdr pane rename <devm-pane> devm" >&2
       devm="<devm-pane>"
     else
-      devm="$(dmt_herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dmt-dev | jq -r '.result.root_pane.pane_id // empty')"
-      [ -n "$devm" ] || { echo "ERROR: tab create 失败（dmt-dev）" >&2; exit 4; }
+      devm="$(dmt_herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label dmt-devm | jq -r '.result.root_pane.pane_id // empty')"
+      [ -n "$devm" ] || { echo "ERROR: tab create 失败（dmt-devm）" >&2; exit 4; }
       dmt_herdr pane rename "$devm" devm
     fi
   else
@@ -129,7 +129,7 @@ if [ -z "$devm" ]; then
       devm="<devm-pane>"
     else
       devm="$(first_pane_in_tab "$devtab")"
-      [ -n "$devm" ] || { echo "ERROR: dmt-dev tab 内没有 pane" >&2; exit 4; }
+      [ -n "$devm" ] || { echo "ERROR: dmt-devm tab 内没有 pane" >&2; exit 4; }
       dmt_herdr pane rename "$devm" devm
     fi
   fi
@@ -137,9 +137,9 @@ else
   curtab="$(dmt_herdr pane get "$devm" 2>/dev/null | jq -r '.result.pane.tab_id // empty')"
   if [ -n "$curtab" ] && [ "$curtab" != "$devtab" ]; then
     if [ -z "$devtab" ]; then
-      h dmt_herdr pane move "$devm" --new-tab --tab-label dmt-dev --no-focus
+      h dmt_herdr pane move "$devm" --new-tab --tab-label dmt-devm --no-focus
     else
-      echo "WARN: devm 已在 $curtab，但 dmt-dev tab 已存在（$devtab）；请手工把 devm 移入或先关空 tab" >&2
+      echo "WARN: devm 已在 $curtab，但 dmt-devm tab 已存在（$devtab）；请手工把 devm 移入或先关空 tab" >&2
     fi
   fi
 fi
@@ -164,4 +164,4 @@ else
   fi
 fi
 ensure_started "$p" dmt-am anam
-echo "team ready: director / anam（director tab 右侧）/ devm（dmt-dev tab 左侧）；devl 由 devm 调 devl-pane.sh ensure-min 建立（DEVL_MIN=2）"
+echo "team ready: director / anam / devm；dmt-devl 由 devm 按需通过 devl-pane.sh 管理（DEVL_MIN 默认 0）"

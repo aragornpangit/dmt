@@ -1,9 +1,10 @@
 # dmt 变更语义摘要（自动生成，勿手改）
 
-> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 100 条。
+> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 101 条。
 
 | 日期 | 条目 | 版本 | 要点 |
 |---|---|---|---|
+| 2026-11-07 | 用户裁定·第九十八次：运行 id 全量改名 + tab 布局改为每 tab 两个队长，版本 `5.19.5` | 5.19.5 | ① 改名（全量替换 run_id）：devl{n} → dmt-devl{n}、dev-e → dmt-de{n}、reviewer{n} → dmt-revi |
 | 2026-11-07 | 用户要求·第九十七次：仓库补 MIT 许可证，版本 `5.19.4` | 5.19.4 | ① 新增根 LICENSE（MIT，2026） |
 | 2026-11-07 | 用户要求·第九十六次：契约拆分 —— 内容断言独立成 `dmt_assertions.yaml`，版本 `5.19.4` | 5.19.4 | ① 拆分：dmt_contract.yaml 只留结构事实（技能 / 版本源 / 目录 / 操作手册 / 脚本 / 技能预算，270 → 99 行） |
 | 2026-11-07 | 用户要求·第九十五次：`dmt-dev` tab 的 `devm` 固定占 40%，版本 `5.19.4` | 5.19.4 | ① devl-pane.sh 新增 DEVM_WIDTH_RATIO（默认 0.4）与 set_devm_width()：读 pane layout 算当前占比 |

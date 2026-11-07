@@ -1,22 +1,20 @@
-## 7. 机检
+# 结构检查
 
-**单一入口**（P5：结构 + 内容两组合并，一处运行）：
+单一入口：
 
 ```bash
 bash dmt-director/scripts/check-dmt.sh <项目根>
+bash dmt-director/scripts/check-dmt.sh --verbose <项目根>  # 显示每个 OK 项
 ```
 
-维护 dmt 仓自身时，技能正本位于仓根而非 `.agents/skills`：
+维护本仓时：
 
 ```bash
 DMT_SKILLS_DIR="$PWD" bash dmt-director/scripts/check-dmt.sh "$PWD"
 ```
 
-两组断言，事实都来自**单一来源**（P1：不再散落中文 grep）：
+检查内容由 `dmt_contract.yaml` 与 `harness_matrix.yaml` 驱动，包括 frontmatter、版本、声明文件、脚本、技能预算、harness 键集合和严格相对链接。通用项目不强制 DMT 专属目录；显式声明的目录或适配器才检查。
 
-- **A. 结构断言** —— 读 `dmt-director/dmt_contract.yaml`（技能清单 / 版本源 / 产物目录 / 组织 / 脚本清单 / 已废止脚本）与 `dmt-director/harness_matrix.yaml`（五 harness 矩阵）。校验：A1 版本同号、A2 八技能就位、A3 产物 / 运行时目录、A4 脚本齐备 + 已废止脚本不回潮、A5 矩阵完整、A6 单一来源纪律（每份技能指针到 team.md）、A6b 按 harness 加载（`harness/` 文件齐备 ＋ 与矩阵 key 一致 ＋ 八技能含第 0 步 ＋ `harness-detect.sh` 五 harness 自测与 unknown rc=1）、**A6c** pi agent 白名单可注入性（`skills:` 里出现带 `disable-model-invocation` 的技能即 FAIL）、**A6d** 仓级脚本登记（`repo_scripts` 与仓根 `scripts/` 双向一致）、**A7** 文档相对链接可达（严格按文件所在目录解析，不回退仓根）。
-- **B. 内容断言** —— 读 `dmt-director/dmt_assertions.yaml` 的 `content_assertions` 表（`组 → 文件 → require / forbid`）。优先用结构断言，只在无法结构化时才用短字符串。
+默认只输出失败与最终摘要，避免把机检结果大量注入模型上下文。相对链接必须从源文件目录解析，不通过删除 `../` 或猜测其他根目录兜底。
 
-**改以下任一项后必须重跑**：路径规范、pane 生命周期、并行口径、角色层级、写权限、强制技能、文件占用、评审门禁、通用技能、技能链接、收件箱三态、派发 prompt 文件写入纪律、pi agent 名承载、脚本接口、**harness 差异 / 技能加载入口（`harness/` ＋ `harness-detect.sh`）**。
-
-**维护**：技能、组织、脚本改 `dmt_contract.yaml`；内容断言改 `dmt_assertions.yaml`；纪律改对应 `team/*.md`，只在必要时同步短断言。
+修改公开技能、脚本接口、契约、平台矩阵或文档链接后运行检查。内容是否正确由评审和测试验证，不用固定中文句子代替行为断言。

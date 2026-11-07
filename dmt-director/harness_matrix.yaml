@@ -43,9 +43,8 @@ harnesses:
       dir_user: .agents/skills
       dir_project_extra: null
     slash_prefix: "/"
-    # danger-full-access 是 dmt 的硬需求：默认 workspace-write 沙箱会拒连 herdr unix socket
-    # ⇒ 门铃 / 身份自证 / file-claim 全废（2026-11-06 实测，见 harness/codex.md §6.1）
-    start_cmd: "codex -a never --sandbox danger-full-access"
+    # 默认保持受限沙箱；跨沙箱访问 herdr 需要用户显式授权，见 harness/codex.md。
+    start_cmd: "codex -a never"
     max_subagents_conc: 8
     max_subagents_env: null
     max_subagents_config: "agents.max_concurrent_threads_per_session"

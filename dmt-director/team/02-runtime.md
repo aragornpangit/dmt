@@ -1,13 +1,11 @@
-### 1.2 运行环境与 pane 生命周期
+# 可选：运行环境与平台适配
 
-**操作细节见 [`ops/runtime.md`](../ops/runtime.md)** —— pane/tab、启动、权限、`devl` pane 生命周期。
+角色技能不绑定运行平台。只有任务需要平台特定的技能调用、子代理或多 pane 编排时，才加载对应适配器。
 
-**harness 机器事实**（发现目录 / 启动命令 / 调用前缀 / 并发）只在 [`harness_matrix.yaml`](../harness_matrix.yaml)；加载规则见 [`harness/README.md`](../harness/README.md)（共性 + 每 harness 差异）。要点：Codex 插件技能用 `mattpocock-skills:<name>`，技能随首轮 prompt 下发；门铃按 pane label 解析；pi 启动带 `--approve`。
+1. 用 `dmt-director/scripts/harness-detect.sh` 识别当前平台；无法识别时报告派发者，不猜默认值。
+2. 读取 [`../harness/COMMON.md`](../harness/COMMON.md) 和当前平台的一份差异文档。
+3. 启动命令、技能目录、调用前缀和并发能力以 [`../harness_matrix.yaml`](../harness_matrix.yaml) 为准。
+4. 子代理的命名、技能注入和等待方式使用平台原生能力；不可用时明确降级，不伪造多代理。
+5. 并发数量按任务和实际容量决定，配置值只是上限，不是必须开满的目标。
 
-**约束**：
-
-1. 技能调用统一经 `lib-dmt.sh: dmt_skill_cmd`（opencode `@<name>`，如 `@dmt-dm`；pi `/skill:<name>`；其余 `/<name>`）。
-2. 启动后必须用 `dmt_pane_auto_mode` 读 argv 复验自动档；非自动档用 `setup-team.sh --force-start` 重开。
-3. pane 角色四类（`director` / `devm` / `anam` / `devl{n}`）；子代理技能由派生者按 `subagent_skill` 指定。`dmt-devl` 不设 helper。
-
-八份角色 `SKILL.md` 的「## 0. 按 harness 加载」是唯一入口：先 `harness-detect.sh` 判定，再读共性 + 差异。
+herdr pane 生命周期见 [`../ops/runtime.md`](../ops/runtime.md)。单纯加载角色技能不执行以上步骤。

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# devm 用（merge 与 push 归 devm）：显式路径提交并推送到 GitLab + GitHub（每 ticket 一推 / 每小时巡检）
-# 用法：bash publish.sh -m <message> [--auto] [--no-push] [--remotes "gitlab origin"] -- <paths...>
+# 显式路径提交，并按项目授权推送；默认只推 origin。
+# 用法：bash publish.sh -m <message> [--auto] [--no-push] [--remotes "origin"] -- <paths...>
 #   --auto 由 git status 枚举改动路径（仍是显式路径，不用 git add -A）
 set -eu
-# 载入 .env（DMT_GITLAB_SERVER / DMT_GITLAB_PORT / DMT_GITLAB_REPO；已导出的环境变量优先）
+# 可选项目配置；已导出的环境变量优先。
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 . "$DIR/lib-dmt.sh"
 dmt_load_env
-MSG=""; AUTO=0; PUSH=1; REMOTES="gitlab origin"
+MSG=""; AUTO=0; PUSH=1; REMOTES="${DMT_PUSH_REMOTES:-origin}"
 PATHS=()
 while [ $# -gt 0 ]; do
   case "$1" in

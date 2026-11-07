@@ -9,9 +9,8 @@
 # 默认 --harness all ⇒ 上面三处全装（五个 harness 全覆盖）；也可只装指定 harness 的落点。
 # 不必另装 codex / pi 的私有目录（.codex/skills、.pi/skills）—— 它们已经读 .agents/skills/。
 #
-# 契约：<target>/docs/team.md、<target>/docs/OPS.md 与 <target>/docs/ops/
-# （link 模式＝软链、copy 模式＝复制，机检按同目录查找）
-# 脚本与契约正本落到 <target>/dmt-director/（team.md 里的命令一律写 dmt-director/scripts/…）
+# 契约与脚本只落在 <target>/dmt-director/，不再生成 docs/ 第二副本。
+# link 模式软链、copy 模式复制；两种布局使用相同的相对链接。
 set -eu
 
 TARGET=""
@@ -55,6 +54,7 @@ for d in $out; do
 done
 [ -n "$DIRS" ] || { echo "no skill dir resolved for --harness '$HARNESS'" >&2; exit 2; }
 
+CORE_ITEMS="SKILL.md team.md OPS.md dmt_contract.yaml harness_matrix.yaml team ops harness scripts hooks"
 SKILLS="dmt-director dmt-dm dmt-devl dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer"
 # 历史改名遗留：旧技能名不会自动消失（软链会变断链、副本会变孤儿目录），安装时显式清理。
 # 2026-11-04 第七十一次：dmt-rve → dmt-reviewer；另含更早的队长层 / 产品经理技能名。
@@ -65,7 +65,17 @@ for rel in $DIRS; do
   for s in $SKILLS; do
     # 目标已存在且是实体目录（旧版复制/旧落点）时必须先删，否则 ln -sfn 会把软链建到目录里面
     rm -rf "$TARGET/$rel/$s"
-    if [ "$MODE" = "copy" ]; then
+    if [ "$s" = "dmt-director" ]; then
+      mkdir -p "$TARGET/$rel/$s"
+      for item in $CORE_ITEMS; do
+        [ -e "$REPO/$s/$item" ] || continue
+        if [ "$MODE" = "copy" ]; then
+          cp -r "$REPO/$s/$item" "$TARGET/$rel/$s/$item"
+        else
+          ln -sfn "$REPO/$s/$item" "$TARGET/$rel/$s/$item"
+        fi
+      done
+    elif [ "$MODE" = "copy" ]; then
       cp -r "$REPO/$s" "$TARGET/$rel/$s"
     else
       ln -sfn "$REPO/$s" "$TARGET/$rel/$s"
@@ -74,50 +84,29 @@ for rel in $DIRS; do
   echo "skills -> $TARGET/$rel ($MODE)"
 done
 
-# 脚本目录固定为 <target>/dmt-director/scripts/ —— 与契约里所有命令写法一致。
-# 旧版曾复制到 <target>/scripts/，从项目根执行 $TARGET/scripts/… 会 rc=127（已废弃）。
-if [ "$MODE" = "copy" ]; then
-  rm -rf "$TARGET/dmt-director"
-  cp -r "$REPO/dmt-director" "$TARGET/dmt-director"
-elif [ -e "$TARGET/dmt-director" ] && [ ! -L "$TARGET/dmt-director" ]; then
+# 只分发运行所需文件；CHANGELOG、维护日志与仓级事故记录不进入目标项目。
+# 脚本目录固定为 <target>/dmt-director/scripts/，与契约命令一致。
+if [ "$MODE" = "link" ] && [ -e "$TARGET/dmt-director" ] && [ ! -L "$TARGET/dmt-director" ]; then
   echo "WARN: $TARGET/dmt-director 已存在且不是软链，沿用现有目录" >&2
 else
-  ln -sfn "$REPO/dmt-director" "$TARGET/dmt-director"
+  rm -rf "$TARGET/dmt-director"
+  mkdir -p "$TARGET/dmt-director"
+  for item in $CORE_ITEMS; do
+    [ -e "$REPO/dmt-director/$item" ] || continue
+    if [ "$MODE" = "copy" ]; then
+      cp -r "$REPO/dmt-director/$item" "$TARGET/dmt-director/$item"
+    else
+      ln -sfn "$REPO/dmt-director/$item" "$TARGET/dmt-director/$item"
+    fi
+  done
 fi
 chmod +x "$TARGET/dmt-director/scripts/"*.sh 2>/dev/null || true
 
-mkdir -p "$TARGET/docs"
-# 契约落到 docs/team.md（OPS 同理落到 docs/OPS.md，机检按同目录查找）：
-#   · link 模式（默认）＝**软链** → 跟随 <target>/dmt-director/ 下的正本，正本变更自动生效；
-#   · copy 模式＝**复制** → 目标项目不跟随本仓（正本变更后需重跑本脚本，见 README「维护」）。
-rm -f "$TARGET/docs/team.md" "$TARGET/docs/OPS.md"
-if [ "$MODE" = "copy" ]; then
-  # 只替换 DMT 拥有的入口；目标项目自己的 docs 子目录保留。
-  rm -rf "$TARGET/docs/ops" "$TARGET/docs/team" "$TARGET/docs/changelog" "$TARGET/docs/harness"
-  rm -f "$TARGET/docs/CHANGELOG.md" "$TARGET/docs/CHANGELOG-DIGEST.md"
-  mkdir -p "$TARGET/docs/ops"
-  cp "$TARGET/dmt-director/team.md" "$TARGET/docs/team.md"
-  cp "$TARGET/dmt-director/OPS.md"  "$TARGET/docs/OPS.md"
-  cp "$TARGET/dmt-director/ops/"*.md "$TARGET/docs/ops/"
-  cp -r "$TARGET/dmt-director/team" "$TARGET/docs/team"
-  cp -r "$TARGET/dmt-director/harness" "$TARGET/docs/harness"
-  cp "$TARGET/dmt-director/CHANGELOG.md" "$TARGET/dmt-director/CHANGELOG-DIGEST.md" "$TARGET/docs/"
-  cp -r "$TARGET/dmt-director/changelog" "$TARGET/docs/changelog"
-else
-  # 软链模式可能从旧的穿插安装切换而来；先移除文档入口，再补建 ops/ 与 harness/。
-  rm -rf "$TARGET/docs/ops" "$TARGET/docs/harness"
-  mkdir -p "$TARGET/docs/ops"
-  ln -sfn ../dmt-director/harness "$TARGET/docs/harness"
-  ln -sfn ../dmt-director/team.md "$TARGET/docs/team.md"
-  ln -sfn ../dmt-director/OPS.md  "$TARGET/docs/OPS.md"
-  for f in "$TARGET/dmt-director/ops/"*.md; do
-    ln -sfn "../../dmt-director/ops/$(basename "$f")" "$TARGET/docs/ops/$(basename "$f")"
-  done
-  ln -sfn ../dmt-director/team "$TARGET/docs/team"
-  ln -sfn ../dmt-director/CHANGELOG.md "$TARGET/docs/CHANGELOG.md"
-  ln -sfn ../dmt-director/CHANGELOG-DIGEST.md "$TARGET/docs/CHANGELOG-DIGEST.md"
-  ln -sfn ../dmt-director/changelog "$TARGET/docs/changelog"
-fi
+# 清理旧版 DMT 文档镜像；项目自己的其他 docs 内容不动。
+# 唯一入口为 <target>/dmt-director/team.md 与 OPS.md，避免双源和重复上下文。
+rm -f "$TARGET/docs/team.md" "$TARGET/docs/OPS.md" \
+      "$TARGET/docs/CHANGELOG.md" "$TARGET/docs/CHANGELOG-DIGEST.md"
+rm -rf "$TARGET/docs/ops" "$TARGET/docs/team" "$TARGET/docs/changelog" "$TARGET/docs/harness"
 
 # pi 子代理 agent 定义（.pi/agents/）：只装给 pi（或 all）。
 # 为什么单列：pi 的 delegate 默认 inheritSkills: false ⇒ 子代理无技能清单；
@@ -135,8 +124,8 @@ case " $HARNESS " in
     ;;
 esac
 
-# 初始化 + 机检。DMT_SKILLS_DIR 指向本次实际装的第一个落点（--harness claude 之类不含 .agents 时，
-# 机检默认的 <target>/.agents/skills 并不存在，会把技能断言全部误报红）。
+# 安装只分发并检查技能；目录与收件箱由用户显式运行 init-project.sh 建立。
+# DMT_SKILLS_DIR 指向本次实际装的第一个落点，避免平台目录不同时误判。
 FIRST_DIR="$(printf '%s' "$DIRS" | awk '{print $1}')"
-DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-director/scripts/init-project.sh" "$TARGET"
+DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-director/scripts/check-dmt.sh" "$TARGET"
 echo "installed ($MODE, --harness $HARNESS) into $TARGET"

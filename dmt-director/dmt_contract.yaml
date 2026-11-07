@@ -1,20 +1,19 @@
 # dmt 结构契约（单一来源，机器可读）。
-# 只放「会漂移的结构性事实」：技能清单、版本源、产物目录、操作手册、脚本清单、技能预算。
-# 散文纪律由 team.md 承载；内容断言（require / forbid 短句）见 dmt_assertions.yaml。
-# 由 dmt-director/scripts/check-dmt.sh 校验。加改结构只改本文件，不改脚本。
+# 只放会漂移的结构性事实：技能、版本源、可选目录、操作手册、脚本和预算。
+# 通用协作原则见 team.md；不使用固定措辞作为内容正确性的断言。
 
-version: 5.19.4
+version: 5.19.5
 date: "2026-11-07"
 
 skills:
   dmt-director: { run_id: director,      kind: pane,  pane: true }
   dmt-dm:       { run_id: devm,          kind: pane,  pane: true }
-  dmt-devl:     { run_id: "devl{n}",     kind: pane,  pane: true }
+  dmt-devl:     { run_id: "dmt-devl{n}",     kind: pane,  pane: true }
   dmt-am:       { run_id: anam,          kind: pane,  pane: true }
   dmt-pde:      { run_id: "pde{n}",      kind: agent, pane: false }
-  dmt-de:       { run_id: "dev-e",       kind: agent, pane: false }
-  dmt-ae:       { run_id: "ana-e",       kind: agent, pane: false }
-  dmt-reviewer: { run_id: "reviewer{n}", kind: agent, pane: false }
+  dmt-de:       { run_id: "dmt-de{n}",       kind: agent, pane: false }
+  dmt-ae:       { run_id: "ana-e{n}",       kind: agent, pane: false }
+  dmt-reviewer: { run_id: "dmt-reviewer{n}", kind: agent, pane: false }
 
 version_sources:
   - dmt-director/team.md
@@ -27,15 +26,9 @@ version_sources:
   - dmt-ae/SKILL.md
   - dmt-reviewer/SKILL.md
 
-artifact_dirs:
-  - docs/pd/prd
-  - docs/pd/spec
-  - docs/dev/tickets
-  - docs/analyst
-  - docs/human/human-arch
-  - docs/human/human-plan
-
-runtime_dirs: [inbox]
+# 可选 DMT 目录不由通用安装强制。项目显式声明后，机检才验证其存在。
+# artifact_dirs: []
+# runtime_dirs: []
 
 ops_docs:
   - runtime.md

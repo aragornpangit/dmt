@@ -10,3 +10,6 @@ __pycache__/
 # 内网端点配置：.env 含环境私有信息，只提交 .env.example 模板
 .env
 .env.local
+
+# archify 生成的图表（本地产物，不入库）
+.archify/

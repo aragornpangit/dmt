@@ -1,15 +1,19 @@
-### 1.1 组织与成员
+# 可选：完整 DMT 团队拓扑
 
-**层级**：`director` → `devm` → `devl{n}` → `dev-e`；`director` → `anam` → `ana-e`；`pde{n}` 直属 director。**reviewer 双轨**：主轨归 devl、副轨归 director；主轨按 `spec-seq` 代码审核，副轨做抽查 / 高风险复验。产品部并入 director，不设产品经理 pane。
+只有显式采用完整团队模式时才使用本映射；项目可裁剪角色、数量和协作方向。
 
-**pane 与子代理**：占 pane 的只有 `director`、`anam`、`devm`、`devl{n}`（label 同名；`devl{n}` 由 devm 起，下限 2）。`pde{n}` / `reviewer{n}` / `dev-e` / `ana-e` 都是子代理，不占 pane、不走跨 pane 通信。角色职责与技能见 [`team.md`](../team.md)、[`03-comms.md`](03-comms.md) §1.4。
+```text
+director → devm → dmt-devl → dmt-de
+director → anam → ana-e
+director → pde
+dmt-devl → dmt-reviewer（须独立于实现者）
+```
 
-**单线指挥（硬约束，任何角色不得越级或横向直连）：**
+- `director` 负责需求与跨域裁决，`devm` 负责工单与整合，`anam` 负责调研收口。
+- `dmt-devl` 协调实施和独立评审；`dmt-de` 是所分配工作区的唯一实现写者与提交者。
+- 代码验收只在开发线内完成；director 核对需求、文档与调研结论，不抽检开发团队的代码。
+- `pde`、`dmt-de`、`ana-e`、`dmt-reviewer` 通常作为子代理，只向派发者回报。
+- 跨组共享资源由共同协调者串行化；评审者不能与被审实现者相同。
+- 用户可直接调用任意角色。独立使用时服从任务指定的派发关系，不补建其余角色。
 
-1. `director` 只直接指挥 `devm`、`anam`，并可自派 `pde{n}` 与副轨 `reviewer{n}`；不得越级给 `devl{n}` / 工程师派活或收活。
-2. `devm` 只直接指挥 `devl{n}`，不直接派 `dev-e`、不派 `reviewer{n}`；`anam` 只直接派 `ana-e`。
-3. `devl{n}` 只直接指挥 `dev-e` 与主轨 `reviewer{n}`；队长之间不得通信，跨队协调经 `devm`。
-4. `devm` 与 `anam` 之间不直连，跨部门经 `director` 转派。
-5. 子代理只向派生他的那一级汇报，用各自技能（`dmt-de` / `dmt-ae` / `dmt-pde` / `dmt-reviewer`），由派生者按 harness 能力选择斜杠调用或读 `SKILL.md`。
-
-**用户直连经理 + 经理自主开工**：用户可直接向 `devm` / `anam` 派活；`devm` 的直接干活限于工单 / merge / push / pane / 运维（**不含代码实施与代码评审**），`anam` 限于调研取证；开工时知会 director。director 默认放行，只有认为不合适时才叫停；不得以未获回复为由拖延。
+多 pane 部署、收件箱和 helper 都是运行适配器，见 [`02-runtime.md`](02-runtime.md) 与 [`../OPS.md`](../OPS.md)。

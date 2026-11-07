@@ -1,50 +1,34 @@
-# dmt 团队契约
+# dmt 协作契约
 
-> **版本 5.19.4 · 2026-11-07** —— 与八份 `SKILL.md` 的 `version:` 同号；不同号即装错。
-> **作用域**：本契约全部纪律（权限 / 写操作归属 / 门禁 / pane / 收件箱）**只作用于 dmt 管理的「目标项目」**（`init-project.sh` 初始化的 root）；**维护 `dmt` / `dmt-en` 等技能仓自身时不适用**（维护者可直接 commit / push，无需 director 授权、无需 devm 代推）。
-> **路由**：本文件定义常量；任务细节按其分节读取，操作方法按 [`OPS.md`](OPS.md) 路由。冲突以本文件为准。
+> **版本 5.19.5 · 2026-11-07** —— 与各角色 `SKILL.md` 同号。
+> **作用域**：核心原则适用于使用 dmt 的任务；维护技能仓自身时不触发团队派单、收件箱或发布授权流程。
 
-**路由**：§1 组织 / 运行 / 通信 → [`01-org`](team/01-org.md) / [`02-runtime`](team/02-runtime.md) / [`03-comms`](team/03-comms.md)；§2 命名 → [`04`](team/04-naming.md)；§3 目录 → [`05`](team/05-dirs.md)；§4 工作流 → [`06`](team/06-workflow.md)；§5 纪律 → [`07`](team/07-discipline.md) + [`07b`](team/07b-dispatch.md)；§6/§7/§10 → [`08`](team/08-expression.md) / [`09`](team/09-check.md) / [`10`](team/10-pane-role.md)。操作层见 [`OPS.md`](OPS.md)。
+## 核心原则
 
-## 组织与指挥
+1. **明确输入**：目标、范围、产物和验收判据不清楚时先澄清；已有项目约定优先。
+2. **按需协作**：角色可独立使用或任意组合，不要求固定人数、层级、pane 或工具。
+3. **合理并行**：按依赖、容量和收益决定串并行；共享文件、构建目标和设备须协调写者。
+4. **最小写权**：实现者只改分配范围；每个共享工作区只有一个实现写者，发布由获授权者执行。
+5. **独立验收**：实现与评审分离；PASS 必须能追溯到判据和证据，验收范围以判据为准。
+6. **证据分级**：事实优先使用一手来源，记录可复现步骤，并区分 `[OBS]` / `[INF]` / `[UNK]`。
+7. **单线回报**：子代理只向派发者回报结果、证据和未决项；跨域问题由共同协调者收口。
+8. **按需加载**：加载角色技能本身不初始化项目、不扫描仓库、不读取适配器或自动开工。
 
-| 角色 | 技能 | 运行 id | 上级 | 下级 |
-|---|---|---|---|---|
-| 总监兼产品部经理 | `dmt-director` | `director` | 用户 | `devm`、`anam`（+ 自派 `pde{n}` / `reviewer{n}` 副轨） |
-| 开发经理 | `dmt-dm` | `devm` | `director` | `devl{n}` |
-| 开发队长 | `dmt-devl` | `devl{n}` | `devm` | `dev-e`、`reviewer{n}`（主轨） |
-| 分析经理 | `dmt-am` | `anam` | `director` | `ana-e` |
-| 产品工程师 | `dmt-pde` | `pde{n}` | `director` | — |
-| 开发工程师 | `dmt-de` | `dev-e` | `devl{n}` | — |
-| 分析工程师 | `dmt-ae` | `ana-e` | `anam` | — |
-| 审核工程师 | `dmt-reviewer` | `reviewer{n}` | 主轨 `devl{n}` / 副轨 `director` | — |
+## 角色与模式
 
-**指挥线**：director → devm → devl{n} → dev-e；director → anam → ana-e；pde 直属 director；reviewer 主轨归 devl、副轨归 director。队长之间不通信；devm 与 anam 不直连；跨部门经 director。
+`director`、`devm`、`dmt-devl`、`dmt-de`、`dmt-am`、`dmt-ae`、`dmt-pde`、`dmt-reviewer` 是可复用能力，不是必须同时启用的组织编制。完整 DMT 团队模式见 [`team/01-org.md`](team/01-org.md)。
 
-**写操作**：merge / push 只归 devm；队长只 commit，不 push / 不 merge；硬件设备写操作 devm 与 director 均可，同一设备单写者。
+## 按需参考
 
-**并行**：无依赖任务开满 subagents；共享文件、构建目标、设备或验收顺序必须串行。
+| 任务 | 文档 |
+|---|---|
+| 完整团队拓扑 | [`team/01-org.md`](team/01-org.md) |
+| 平台与多 pane 适配 | [`team/02-runtime.md`](team/02-runtime.md) |
+| 通信与工具选择 | [`team/03-comms.md`](team/03-comms.md) |
+| 项目命名与目录 | [`team/04-naming.md`](team/04-naming.md) · [`team/05-dirs.md`](team/05-dirs.md) |
+| 工作流与派发 | [`team/06-workflow.md`](team/06-workflow.md) · [`team/07b-dispatch.md`](team/07b-dispatch.md) |
+| 工程纪律 | [`team/07-discipline.md`](team/07-discipline.md) |
+| 结构检查 | [`team/09-check.md`](team/09-check.md) |
+| herdr / inbox / helper | [`OPS.md`](OPS.md) |
 
-**worktree**：统一建在主仓 `.worktrees/{ticket-id}`，分支 `feat/{ticket-id}`；队长持有，`dev-e` 是唯一写者。
-
-**常量**：
-
-| 常量 | 值 | 含义 |
-|---|---|---|
-| `DEVL_MIN` | `2` | 队长常驻下限，任何时刻不少于 2 个 |
-| `DEVL_MAX` | `0` | 不设策略上限，由 pane 高度与 harness 并发决定 |
-| `MIN_DEVL_ROWS` | `14` | 单个队长 pane 高度下限；几何上限 `floor(tab_height / 14)` |
-
-**强制技能**：每角色按 [`team/03-comms.md`](team/03-comms.md) §1.4 调用；子代理由派生者按 harness 能力选择斜杠调用或读 `SKILL.md`；不可用先安装，仍不可用标注 `[SKILL_UNAVAILABLE]`。
-
-**helper**：`dmt-devl` **不设 helper**；`director` / `devm` / `anam` 的 helper 规则不变。
-
-**机检**：
-
-```bash
-bash dmt-director/scripts/check-dmt.sh <项目根>
-```
-
-## 变更记录
-
-全量变更史见 [`CHANGELOG.md`](CHANGELOG.md)（单一来源，本文件不留副本）。
+历史与维护记录见 `CHANGELOG.md` 和 `logs/`，不进入任务加载路径。
