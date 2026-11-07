@@ -2,7 +2,7 @@
 # devm 用：管理 dmt-dev tab 内 devl pane 的生命周期（补位 / 扩容 / 回收 / 收养）
 # 用法：bash devl-pane.sh <list|ensure-min|add|remove|adopt> [--index N] [--force]
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_WORKSPACE_ID（在 devm pane 内执行）
-#   常量：DEVL_MIN（默认 2）、DEVL_MAX（默认 0=不设策略上限）、MIN_DEVL_ROWS（默认 14）
+#   常量：DEVL_MIN（默认 2）、DEVL_MAX（默认 0=不设策略上限）、MIN_DEVL_ROWS（默认 14）、DEVM_WIDTH_RATIO（默认 0.4）
 set -eu
 
 CMD="${1:-list}"; shift || true
@@ -27,6 +27,7 @@ missing=""
 DEVL_MIN="${DEVL_MIN:-2}"
 DEVL_MAX="${DEVL_MAX:-0}"
 MIN_DEVL_ROWS="${MIN_DEVL_ROWS:-14}"
+DEVM_WIDTH_RATIO="${DEVM_WIDTH_RATIO:-0.4}"
 HARNESS="$(dmt_harness_name "${DMT_HARNESS:-}")" || exit 2
 
 tab_id() { dmt_herdr pane get "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.pane.tab_id // empty'; }
@@ -66,10 +67,49 @@ bottom_devl_pane() {
   done < <(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.layout.panes[]? | [.rect.y, .pane_id] | @tsv')
   printf '%s' "$best"
 }
+# 把 devm 宽度固定为 tab 的 DEVM_WIDTH_RATIO（默认 0.4），给 devl 列留 60%。
+set_devm_width() {
+  local json cmds
+  json="$(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null)" || return 0
+  [ -n "$json" ] || return 0
+  cmds="$(printf '%s' "$json" | python3 -c "$(cat <<'PY'
+import json, sys
+try:
+    layout = json.load(sys.stdin)["result"]["layout"]
+except Exception:
+    sys.exit(0)
+devm_id = sys.argv[1]
+target = float(sys.argv[2])
+panes = layout.get("panes") or []
+area = layout.get("area") or {}
+devm = next((p for p in panes if p.get("pane_id") == devm_id), None)
+if not devm or not area.get("width"):
+    sys.exit(0)
+cur = devm["rect"]["width"] / area["width"]
+delta = target - cur
+if abs(delta) < 0.01:
+    sys.exit(0)
+if delta > 0:
+    print(f'{devm_id}\tright\t{delta:.3f}')
+else:
+    dx = devm["rect"]["x"] + devm["rect"]["width"]
+    col = [p for p in panes if p.get("pane_id") != devm_id and p["rect"]["x"] >= dx]
+    col.sort(key=lambda p: p["rect"]["y"])
+    if col:
+        print(f'{col[0]["pane_id"]}\tleft\t{-delta:.3f}')
+PY
+)" "$HERDR_PANE_ID" "$DEVM_WIDTH_RATIO")"
+  [ -n "$cmds" ] || return 0
+  while IFS=$'\t' read -r p dir amt; do
+    [ -n "$p" ] || continue
+    dmt_herdr pane resize --pane "$p" --direction "$dir" --amount "$amt" >/dev/null 2>&1 || true
+  done <<< "$cmds"
+}
 # 把右槽所有 devl pane 调成等高：从最底层 split 往上，逐个把 ratio 设成 1/(n-i)。
 # 背景：split 只切「当前 pane」，不重排祖先；不加这一步，第 3 个队长会只剩 6~8 行。
 rebalance_devl_column() {
   local json cmds p dir amt
+  set_devm_width
   json="$(dmt_herdr pane layout --pane "$HERDR_PANE_ID" 2>/dev/null)" || return 0
   [ -n "$json" ] || return 0
   cmds="$(printf '%s' "$json" | python3 -c "$(cat <<'PY'
@@ -161,7 +201,7 @@ add_one() {
   fi
   n="$(next_index)"
   if [ "$cur" -eq 0 ]; then
-    target="$HERDR_PANE_ID"; dir="right"; ratio="0.5"
+    target="$HERDR_PANE_ID"; dir="right"; ratio="$DEVM_WIDTH_RATIO"
   else
     target="$(bottom_devl_pane)"; dir="down"; ratio="0.5"
   fi

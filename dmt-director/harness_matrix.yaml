@@ -1,24 +1,12 @@
-# dmt harness 兼容矩阵：单一来源（spec 层）。
+# dmt harness 兼容矩阵：单一来源。由 harness-matrix.sh 读取，供 lib-dmt.sh、
+# setup-team.sh、spawn-helper.sh、install-skills.sh 与机检共用。改这里即改全部落点，
+# 不要在脚本或文档里再写死某个 harness 的前缀 / 目录 / 启动参数。
 #
-# 这是「每个 harness 的技能发现目录 / 技能调用行 / 启动命令 / 并发上限」的唯一权威，
-# 由 dmt-director/scripts/harness-matrix.sh 读取，供 lib-dmt.sh、setup-team.sh、
-# spawn-helper.sh、install-skills.sh 与机检共用。改这里即改全部落点，不要在脚本或
-# 文档里再写死某个 harness 的前缀 / 目录 / 启动参数。
-#
-# 字段说明：
-#   skills.dir_project       项目级技能发现目录（相对项目根）
-#   skills.dir_user          用户级技能发现目录（相对 $HOME）
-#   skills.dir_project_extra 项目级额外目录（opencode 兼容 .claude/skills）
-#   slash_prefix             技能斜杠命令前缀；pi 为 "/skill:"，其余为 "/"
-#   start_cmd                代启动命令（免逐条审批档位）
-#   start_needs_trust        首次进入项目目录需人工确认 trust（一次性）
-#   max_subagents_conc       静态默认并发上限（null = 需运行时探测/不设）
-#   max_subagents_env        并发上限对应的环境变量（若有）
-#   max_subagents_config     并发上限的运行时配置（codex 读 [agents] 的会话上限）
-#   skill_prefix             技能限定名前缀（Codex 插件技能使用该前缀）
-#   subagent_skill           子代理加载角色技能的方式：invoke=斜杠/skill 工具；read=读 SKILL.md；unknown=待实测
-#   first_prompt             启动命令是否接受首轮 prompt（true 时技能/任务随启动一次下发）
-#   doorbell                 门铃通道（herdr agent 的检测名）
+# 字段：dir_project / dir_user / dir_project_extra 技能发现目录；slash_prefix 斜杠前缀；
+# start_cmd 代启动命令；start_needs_trust 首次需人工 trust；max_subagents_conc 静态并发上限
+# （null = 不设或运行时探测）；max_subagents_env / max_subagents_config 对应环境变量与配置键；
+# skill_prefix 技能限定名前缀；subagent_skill 子代理加载角色技能方式（invoke / read / unknown）；
+# first_prompt 启动是否接受首轮 prompt；tree_mode 会话树；doorbell 门铃检测名。
 harnesses:
   codebuddy:
     skills:

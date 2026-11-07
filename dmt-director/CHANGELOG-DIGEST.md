@@ -1,9 +1,13 @@
 # dmt 变更语义摘要（自动生成，勿手改）
 
-> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 96 条。
+> 由 `digest-changelog.sh` 从 [`CHANGELOG.md`](CHANGELOG.md) 及其归档（`changelog/`）生成；每条约一行语义摘要，全文以 CHANGELOG.md + 归档为准。共 100 条。
 
 | 日期 | 条目 | 版本 | 要点 |
 |---|---|---|---|
+| 2026-11-07 | 用户要求·第九十七次：仓库补 MIT 许可证，版本 `5.19.4` | 5.19.4 | ① 新增根 LICENSE（MIT，2026） |
+| 2026-11-07 | 用户要求·第九十六次：契约拆分 —— 内容断言独立成 `dmt_assertions.yaml`，版本 `5.19.4` | 5.19.4 | ① 拆分：dmt_contract.yaml 只留结构事实（技能 / 版本源 / 目录 / 操作手册 / 脚本 / 技能预算，270 → 99 行） |
+| 2026-11-07 | 用户要求·第九十五次：`dmt-dev` tab 的 `devm` 固定占 40%，版本 `5.19.4` | 5.19.4 | ① devl-pane.sh 新增 DEVM_WIDTH_RATIO（默认 0.4）与 set_devm_width()：读 pane layout 算当前占比 |
+| 2026-11-07 | 用户要求·第九十四次：技能库精简 —— 去重复 / 去啰嗦，版本 `5.19.4` | 5.19.4 | ① 删重复：README 的两段字面重复（harness 落点、Codex 启动）与 5 条 raw URL |
 | 2026-11-06 | 用户要求·第九十三次：`send-msg.sh` 加方向强制，版本 `5.19.3` | 5.19.3 | ① 缺口（BACKLOG A5）：send-msg.sh 只校验角色合法、不校验方向合法 ⇒ ops/comms.md 的「允许方向」表是纯文档 |
 | 2026-11-06 | 用户要求·第九十二次：记两笔缺口 —— `dmt-en` 未同步 ＋ `send-msg.sh` 不校验方向，未升号 | — | ① 用户指出的缺口定位：用户报「send-msg.sh 收件方白名单只认 director|devm|anam，devl{n} 不是合法收件方」 |
 | 2026-11-06 | 第九十一次：`devl-pane.sh` 新增 `rebalance` 子命令，版本 `5.19.2` | 5.19.2 | ① 缺口：rebalance_devl_column 原先只被 add / remove 内部调用 |

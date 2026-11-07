@@ -1,7 +1,23 @@
 # dmt 团队契约 · 变更记录（历史明细）
 
-> dmt 变更全量记录（共 96 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
+> dmt 变更全量记录（共 100 条）。按时间倒序；每条为当时事实 —— 不改写、不重编号（旧名 / 旧口径照原样保留）。
 > 语义摘要见 [`CHANGELOG-DIGEST.md`](CHANGELOG-DIGEST.md)；更早条目已归档到 [`changelog/archive.md`](changelog/archive.md)。
+
+- **2026-11-07（用户要求·第九十七次：仓库补 MIT 许可证，版本 `5.19.4`）**：
+  ① 新增根 `LICENSE`（MIT，2026）；② `README.md` 末尾加「许可证」段。此前仓库无许可证文件，第三方引用 / 再分发无法可依。
+  **Why**：用户要求把本仓 license 定为 MIT。
+
+- **2026-11-07（用户要求·第九十六次：契约拆分 —— 内容断言独立成 `dmt_assertions.yaml`，版本 `5.19.4`）**：
+  ① **拆分**：`dmt_contract.yaml` 只留结构事实（技能 / 版本源 / 目录 / 操作手册 / 脚本 / 技能预算，270 → 99 行）；断言表独立成 `dmt-director/dmt_assertions.yaml`，`content_assertions` 结构与语义不变（逐键比对：结构键全同，17 组断言仅条目数 96 → 100 的变化）。② **机检**：`check-dmt.sh` 新增 `DMT_ASSERTIONS_YAML`（默认 `<repo>/dmt-director/dmt_assertions.yaml`），B 段改读该文件，缺文件 `exit 2`；新增 `split_guard` 组（`repo_only`）——契约必须含 `dmt_assertions.yaml` 且不得再出现 `content_assertions:`。③ **文档**：`README.md`、`team/09-check.md` 的单一来源表述同步。
+  **Why**：单文件 270 行已超自定的 100 行上限，且结构事实与内容断言变更节奏不同（结构随组织变、断言随纪律变）。
+
+- **2026-11-07（用户要求·第九十五次：`dmt-dev` tab 的 `devm` 固定占 40%，版本 `5.19.4`）**：
+  ① `devl-pane.sh` 新增 `DEVM_WIDTH_RATIO`（默认 0.4）与 `set_devm_width()`：读 `pane layout` 算当前占比，差值 > 0.01 才 `pane resize`（偏窄缩 devl 列首 pane、偏宽缩 devm 右侧），`rebalance_devl_column` 与首次 `add` 的 split 均走它。② `ops/runtime.md` 布局行改为「`devm` 占 40% / `devl` 列 60%」。③ `pane split --ratio` 语义经 `layout.rs` 核实：ratio 是**先存在的 pane**（即 devm）的份额，故 0.4 即 40%。
+  **Why**：用户要求给 devl 队长留更宽的列。
+
+- **2026-11-07（用户要求·第九十四次：技能库精简 —— 去重复 / 去啰嗦，版本 `5.19.4`）**：
+  ① **删重复**：`README` 的两段字面重复（harness 落点、Codex 启动）与 5 条 raw URL；`01-org` 的 20 行 ASCII 组织图（与层级行、`team.md` 角色表三重重复）；`03-comms` 的 11 条内联 raw URL 改一条路径模式；`06-workflow` 的 3 条重复 URL。② **删啰嗦**：`07-discipline` 的两条 "How to apply"（复述规则）与门禁表长单元格；`07b-dispatch` 的整段失控模板改字段清单 + 代码块；`BACKLOG` 只留 `WATCH` / `OPEN`（15 条 `DONE` 是历史）；`pi.md` / `codex.md` 的实测流水压成结论 + 判据。③ **实测**：12 个关键文档 64.9KB → 42.5KB（−35%），全仓 diff −681/+364；启动集 token 最差 4218（pi × devl），五 harness 全部 < 5k。
+  **Why**：用户「这个技能库太罗嗦，要精简」，参考 `mattpocock/skills` 的写法（一个技能一件事、短句、指针代替复述）。
 
 - **2026-11-06（用户要求·第九十三次：`send-msg.sh` 加方向强制，版本 `5.19.3`）**：
   ① **缺口（BACKLOG A5）**：`send-msg.sh` 只校验**角色合法**、不校验**方向合法** ⇒ `ops/comms.md` 的「允许方向」表是纯文档。实测 `devl1→devl2`（队长互连）、`director→devl{n}`（越级）、`anam→devl{n}`（跨部门）、`devl{n}→anam`、`devl{n}→director` **全部 `rc=0` 并落盘方向码文件**，与契约「队长之间禁止直连 / 不得越级 / 跨部门经 director 转派」直接冲突。

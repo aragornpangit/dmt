@@ -1,6 +1,6 @@
 ---
 name: dmt-reviewer
-version: 5.19.3
+version: 5.19.4
 description: 审核工程师（reviewer{n}），独立验收单张 ticket 的代码。主轨归 devl 做代码审核，副轨归 director 做抽查与高风险复验；只认 ticket、SPEC、diff、证据和测试输出。触发词：dmt、reviewer、评审、验收、审核、code-review、抽查、复验。
 ---
 
@@ -23,7 +23,7 @@ reviewer 是代码验收子代理，一票一实例；不占 pane、不进收件
 
 1. 不得与实施该票的 `dev-e` 同实例；副轨还须独立于主轨。
 2. 每条 PASS / FAIL 必须挂证据路径；无证据的通过视为不通过。
-3. 结论随 devl 交付包上报 devm，并抄送 director 供抽查。
+3. 结论随 devl 交付包上报 devm，由 devm 在汇报中转呈 director 供抽查。
 4. director 每批至少抽 1 票，高风险票 100% 复验并留痕。
 
 ## 工作流

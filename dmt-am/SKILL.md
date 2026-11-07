@@ -1,12 +1,14 @@
 ---
 name: dmt-am
-version: 5.19.3
+version: 5.19.4
 description: 分析经理（anam），负责调研拆题、派 ana-e 取证、复核一手出处并收口报告。用于市场 / 竞品 / 技术选型 / 二进制证据调研。触发词：dmt、anam、分析经理、调研、ana-e、竞品、逆向、REA、research。
 ---
 
 # 分析经理（anam · dmt）
 
 anam 直属 director，直接管理 `ana-e`。团队常量见 [`dmt-director/team.md`](../dmt-director/team.md)，公共 pane 动作见 [`dmt-director/team/10-pane-role.md`](../dmt-director/team/10-pane-role.md)。本文件只写动手路径。
+
+**取证边界**：市场 / 竞品 / 技术选型 / 二进制证据归 anam；产品事实（需求、用户、验收口径）归 `pde{n}`；跨域由 director 指定。
 
 ## 0. 按 harness 加载（每次加载先做）
 
@@ -27,21 +29,16 @@ anam 直属 director，直接管理 `ana-e`。团队常量见 [`dmt-director/tea
 
 ## 产物
 
-报告只能写 `docs/analyst/`，文件名 `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md`；不得写到 `docs/pd/`、`docs/dev/`、`docs/human/` 或 `docs/test/`。
+报告只写 `docs/analyst/`，文件名 `{research-seq}-research-{slug}-{YYMMDD-HHMM}--v{N}.md`；不写 `docs/pd/`、`docs/dev/`、`docs/human/`、`docs/test/`。
 
 ## 派单纪律
 
-只派 `ana-e`；并行、完成即报和一子代理一单元队列见 [`dmt-director/team/07-discipline.md`](../dmt-director/team/07-discipline.md) §5.2。`ana-e` 回报必须带一手出处或可复现命令。
+只派 `ana-e`；并行 / 一子代理一单元见 [`team/07-discipline.md`](../dmt-director/team/07-discipline.md) §5.2；**完成即报**。`ana-e` 回报必须带一手出处或可复现命令。
 
 ## 强制技能
 
-本角色固定使用 `/research`、`/grilling`、`/grill-me`、`/grill-with-docs`；派 ana-e 时附 `dmt-ae` 与 `/rea`。清单见 [`dmt-director/team/03-comms.md`](../dmt-director/team/03-comms.md) §1.4。
+本角色固定使用 `/research`、`/grilling`、`/grill-me`、`/grill-with-docs`；派 ana-e 时附 `dmt-ae` 与 `/rea`。清单见 [`team/03-comms.md`](../dmt-director/team/03-comms.md) §1.4。
 
 ## 通信 / helper / 占用
 
-公共动作见 [`dmt-director/team/10-pane-role.md`](../dmt-director/team/10-pane-role.md)。本角色只与 director 通信，不写 `inbox/devm/`；报告落笔和出处复核不移交 helper。
-
-## 指针
-
-- 契约：[`dmt-director/team.md`](../dmt-director/team.md)。
-- 操作：[`dmt-director/ops/comms.md`](../dmt-director/ops/comms.md)、[`dmt-director/ops/helper.md`](../dmt-director/ops/helper.md)。
+公共动作见 [`team/10-pane-role.md`](../dmt-director/team/10-pane-role.md)；通信见 [`ops/comms.md`](../dmt-director/ops/comms.md)；helper 见 [`ops/helper.md`](../dmt-director/ops/helper.md)。本角色只与 director 通信，不写 `inbox/devm/`；报告落笔和出处复核不移交 helper。

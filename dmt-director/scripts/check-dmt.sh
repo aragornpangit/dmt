@@ -2,7 +2,8 @@
 # check-dmt.sh —— dmt 合并机检入口（P5：结构断言 + 内容断言，一处运行）
 #
 # 数据来源（单一来源）：
-#   · dmt-director/dmt_contract.yaml  —— 结构事实 + content_assertions（内容断言表）
+#   · dmt-director/dmt_contract.yaml   —— 结构事实（技能 / 版本源 / 目录 / 脚本 / 预算）
+#   · dmt-director/dmt_assertions.yaml —— 内容断言表（content_assertions）
 #   · dmt-director/harness_matrix.yaml —— harness 矩阵
 #   · team.md / team/*.md / OPS.md / ops/*.md / 各 SKILL.md —— 被检查对象
 #
@@ -10,6 +11,7 @@
 #   环境变量：DMT_SKILLS_DIR（技能目录；默认 <root>/.agents/skills，
 #             维护本仓时默认 <repo>，因为技能正本在各角色目录）
 #             DMT_CONTRACT_YAML（结构契约）
+#             DMT_ASSERTIONS_YAML（内容断言表）
 #
 # 退出码：0=ALL_PASS；1=HAS_FAIL；2=用法错；3=缺依赖。
 set -u
@@ -25,7 +27,9 @@ else
   SKILLS_DIR="$ROOT/.agents/skills"
 fi
 CONTRACT_YAML="${DMT_CONTRACT_YAML:-$REPO/dmt-director/dmt_contract.yaml}"
+ASSERTIONS_YAML="${DMT_ASSERTIONS_YAML:-$REPO/dmt-director/dmt_assertions.yaml}"
 export DMT_CONTRACT_YAML="$CONTRACT_YAML"
+export DMT_ASSERTIONS_YAML="$ASSERTIONS_YAML"
 export DMT_IS_REPO=0
 [ "$ROOT" = "$REPO" ] && export DMT_IS_REPO=1
 
@@ -33,6 +37,7 @@ if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import yaml' >/dev/null
   echo "FAIL 需要 python3 + PyYAML"; exit 3
 fi
 [ -f "$CONTRACT_YAML" ] || { echo "FAIL 结构契约不存在：$CONTRACT_YAML"; exit 2; }
+[ -f "$ASSERTIONS_YAML" ] || { echo "FAIL 内容断言表不存在：$ASSERTIONS_YAML"; exit 2; }
 
 fail=0
 ok()  { echo "OK   $*"; }
@@ -51,6 +56,7 @@ echo "项目根：    $ROOT"
 echo "技能目录：  $SKILLS_DIR"
 echo "docs 目录： $DOCS_DIR"
 echo "结构契约：  $CONTRACT_YAML"
+echo "内容断言：  $ASSERTIONS_YAML"
 echo
 
 # ---------- A. 结构断言（原 check-dmt-structure.sh） ----------
@@ -431,11 +437,11 @@ PY
 
 # ---------- B. 内容断言（原 check-dmt-doc-paths.sh 的散文 grep，收口到 YAML） ----------
 echo
-echo "===== B. 内容断言（dmt_contract.yaml: content_assertions） ====="
+echo "===== B. 内容断言（dmt_assertions.yaml: content_assertions） ====="
 # 把 YAML 断言表展开成 TAB 分隔行：path<TAB>require<TAB>forbid<TAB>who
 ASSERT_TSV="$(DMT_IS_REPO="$DMT_IS_REPO" python3 - <<'PY'
 import os, yaml
-m = yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"], encoding="utf-8"))
+m = yaml.safe_load(open(os.environ["DMT_ASSERTIONS_YAML"], encoding="utf-8"))
 for group, spec in (m.get("content_assertions") or {}).items():
     if spec.get("repo_only") and os.environ.get("DMT_IS_REPO") != "1":
         continue

@@ -1,6 +1,6 @@
 ---
 name: dmt-devl
-version: 5.19.3
+version: 5.19.4
 description: 开发队长（devl{n}），devm 的下级 pane 角色，接票后建 worktree、派 dev-e 实施、按 spec-seq 派 reviewer 独立评审、汇总结果后上报 devm。用于票面拆解、实施调度、代码评审和交付汇总。触发词：dmt、devl、开发队长、队长、ticket、worktree、reviewer、汇总、上报。
 ---
 
@@ -17,9 +17,7 @@ devl 直属 devm，管理 `dev-e` 与主轨 `reviewer{n}`；自己是一个 pane
 ## 边界
 
 - 只在 `.worktrees/{ticket-id}`、分支 `feat/{ticket-id}` 内工作；worktree 由本队长建，`dev-e` 是唯一写者。
-- 不 push、不 merge、不做设备写操作、不改 SPEC 或票面判据 / 编号 / Files 边界。
-- 不跨队长通信；跨队协调经 devm。
-- 不直接向 director 汇报；缺口回报 devm，不自行补全。
+- 不 push、不 merge、不做设备写操作、不改 SPEC 或票面判据 / 编号 / Files 边界；不跨队长通信，不直接向 director 汇报；缺口回报 devm。
 
 ## 工作流
 
@@ -30,8 +28,8 @@ devl 直属 devm，管理 `dev-e` 与主轨 `reviewer{n}`；自己是一个 pane
 3. **派 dev-e**：一票一 worktree、一票一 dev-e；prompt 用 [`dmt-director/team/07b-dispatch.md`](../dmt-director/team/07b-dispatch.md) 骨架；派完立即结束本轮。
 4. **实施跟进**：`dev-e` 在 worktree 内 `add` + `commit`；队长不另开写者。
 5. **派 reviewer**：按 `spec-seq` 派 `reviewer{n}` 独立实例；只给 ticket、SPEC、diff、证据，不给实施理由。
-6. **汇总**：对账 → 验证据 → 闭环 → 收口；FAIL 打回 `dev-e`，PASS 后上报 devm。
-7. **收口**：票面追加「实施状态」；不 push、不 merge。
+6. **汇总**：对账 → 验证据 → 闭环；FAIL 打回 `dev-e`，PASS 后上报 devm。本步是 triage，不替代 `reviewer{n}` 的 PASS 判定。
+7. **收口**：票面追加「实施状态」；收到 devm 合并通知后删 `.worktrees/{ticket-id}` 与本地 `feat/{ticket-id}` 分支；票面终态由 devm 更新。不 push、不 merge。
 
 ## 汇总与上报
 
@@ -50,9 +48,4 @@ devl 直属 devm，管理 `dev-e` 与主轨 `reviewer{n}`；自己是一个 pane
 
 ## 通信 / helper / 占用
 
-公共动作见 [`dmt-director/team/10-pane-role.md`](../dmt-director/team/10-pane-role.md)。本角色只与 devm 通信，不写 `inbox/anam/` 或其它队长的收件箱；回报必带票号、commit、证据、reviewer 结论和风险。**完成即报**；**不设 helper**。文件占用见 [`dmt-director/ops/file-claim.md`](../dmt-director/ops/file-claim.md)，`rc=3` 时停手并回报 devm。
-
-## 指针
-
-- 契约：[`dmt-director/team.md`](../dmt-director/team.md)。
-- 操作：worktree / 发布见 [`dmt-director/team/07-discipline.md`](../dmt-director/team/07-discipline.md)，通信见 [`dmt-director/ops/comms.md`](../dmt-director/ops/comms.md)。
+公共动作见 [`dmt-director/team/10-pane-role.md`](../dmt-director/team/10-pane-role.md)；worktree / 发布纪律见 [`dmt-director/team/07-discipline.md`](../dmt-director/team/07-discipline.md)。本角色只与 devm 通信；回报必带票号、commit、证据、reviewer 结论和风险；**完成即报**。文件占用见 [`dmt-director/ops/file-claim.md`](../dmt-director/ops/file-claim.md)，`rc=3` 时停手并回报 devm。
