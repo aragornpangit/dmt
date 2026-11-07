@@ -9,12 +9,12 @@
 - `dmt-dir`：需求入口、任务协调与跨域裁决。
 - `dmt-dm`：工单拆分、开发安排与授权整合。
 - `dmt-dl`：实施协调、派未参与实现的临时子代理验收、交付汇总。
-- `dmt-de`：指定工作区内的实现、测试与提交。
+- `dmt-de`：指定 worktree 功能分支内的实现、测试与 commit（不 merge / push）。
 - `dmt-am`：调研拆分、取证复核与报告汇总。
 - `dmt-ae`：单个取证单元的一手来源与可复现结论。
 - `dmt-pde`：需求取证与 PRD/SPEC 起草。
 
-角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。
+角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
 
 ## 安装
 

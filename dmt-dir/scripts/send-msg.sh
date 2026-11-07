@@ -23,11 +23,11 @@ role_base() {
   fi
 }
 # 方向白名单 —— 与 `ops/comms.md`「允许方向」表一一对应，本函数是该表的唯一实现。
-#   dmt-dir → dmt-am                 dmt-dm → dmt-dir / dmt-dl{n}
+#   dmt-dir → dmt-dm / dmt-am          dmt-dm → dmt-dir / dmt-dl{n}
 #   dmt-am → dmt-dir                 dmt-dl{n} → dmt-dm
 #   {角色}-helper → 本体（单向汇报：无门铃、无回程）
-# 拒绝：总监向开发线派单（dmt-dir→dmt-dm，开发线由 SPEC 驱动）、队长互连（dmt-dl1 ↮ dmt-dl2）、
-#       越级（dmt-dir→dmt-dl{n}、dmt-dl{n}→dmt-dir）、跨部门（dmt-dm↔dmt-am、dmt-dl{n}→dmt-am）、同角色自投。
+# 拒绝：队长互连（dmt-dl1 ↮ dmt-dl2）、越级（dmt-dir→dmt-dl{n}、dmt-dl{n}→dmt-dir）、
+#       跨部门（dmt-dm↔dmt-am、dmt-dl{n}→dmt-am）、同角色自投。
 dir_ok() {
   local to="$1" from="$2" tb fb
   tb="$(role_base "$to")"
@@ -40,7 +40,7 @@ dir_ok() {
   esac
   case "$fb" in
     dmt-dir)
-      if [ "$tb" = "dmt-am" ]; then return 0; fi ;;
+      case "$tb" in dmt-dm|dmt-am) return 0 ;; esac ;;
     dmt-dm)
       case "$tb" in dmt-dir|dmt-dl[0-9]*) return 0 ;; esac ;;
     dmt-am)
@@ -62,7 +62,7 @@ case "$FROM" in
 esac
 # 方向：角色合法还不够 —— 队长互连 / 越级 / 跨部门一律拒绝（ops/comms.md 的允许方向表）
 if ! dir_ok "$TO" "$FROM"; then
-  echo "bad direction: ${FROM} -> ${TO}（允许：dmt-dir→dmt-am；dmt-dm→dmt-dir|dmt-dl{n}；dmt-am→dmt-dir；dmt-dl{n}→dmt-dm；{角色}-helper→本体。dmt-dir 不向 dmt-dm 派单，开发线由 SPEC 驱动）" >&2
+  echo "bad direction: ${FROM} -> ${TO}（允许：dmt-dir→dmt-dm|dmt-am；dmt-dm→dmt-dir|dmt-dl{n}；dmt-am→dmt-dir；dmt-dl{n}→dmt-dm；{角色}-helper→本体）" >&2
   exit 2
 fi
 if [ "$CHECK_DIR" = 1 ]; then echo "OK"; exit 0; fi

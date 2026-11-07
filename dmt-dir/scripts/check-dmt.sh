@@ -272,8 +272,8 @@ dir_case() {
   return 0
 }
 if [ -f "$SEND" ]; then
-  # 用户裁定：dmt-dir 只安排 pde 定稿 SPEC，不向 dmt-dm 派单；开发线由 SPEC 驱动。
-  dir_case dmt-dm       dmt-dir         2
+  # 用户裁定：开发线默认由 SPEC 启动，但 dmt-dir 仍可向 dmt-dm 派单（方向合法）。
+  dir_case dmt-dm       dmt-dir         0
   dir_case dmt-am       dmt-dir         0
   dir_case dmt-dir   dmt-dm             0
   dir_case dmt-dir   dmt-am             0
