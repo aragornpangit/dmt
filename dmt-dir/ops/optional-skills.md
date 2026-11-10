@@ -7,7 +7,7 @@
 | `dmt-dir` | `grill-me`、`grill-with-docs` | 需求问穿、方案与文档交叉拷问 |
 | `dmt-pde` | `to-spec` | SPEC 落笔 |
 | `dmt-de` | `tdd`、`implement`、`code-review` | TDD 实施、按 SPEC 落地、提交前自审 |
-| `dmt-dm` | `to-tickets` | 依定稿 SPEC 拆工单并向 `dmt-dl` 派单 |
+| `dmt-dm` | `to-tickets` | 依定稿 SPEC 拆工单并直接向 `dmt-de` 派单 |
 | `dmt-ae` | `research`、`rea`（REA MCP） | 一手取证、竞品逆向 |
 
 其余角色不预设点名项。技能名与上游 mattpocock/skills 目录名一致；`rea` 是 REA MCP，不在该仓；上游无 `to-prd`，PRD 按项目模板落笔。

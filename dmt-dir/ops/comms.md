@@ -12,7 +12,7 @@
 | `dmt-dl{n}` | `dmt-dm` |
 | `{角色}-helper` | 本体（单向，无门铃） |
 
-`dmt-dir` 安排 `dmt-pde` 定稿 SPEC，开发线默认由 SPEC 产物启动、`dmt-dm` 用 `to-tickets` 拆单向 `dmt-dl{n}` 派单（见 [`../team/01-org.md`](../team/01-org.md)）；但 `dmt-dir → dmt-dm` 仍是允许方向，需要时总监可向开发经理派单。
+`dmt-dir` 安排 `dmt-pde` 定稿 SPEC；开发线默认由 SPEC 产物启动，`dmt-dm` 用 `to-tickets` 拆单后**直接派 `dmt-de`**（子代理走平台原生返回通道，不进收件箱）。上表含 `dmt-dl{n}` 的方向**仅适用于显式启用可选协调者的完整团队模式**（见 [`../team/01-org.md`](../team/01-org.md)）；`dmt-dir → dmt-dm` 仍是允许方向，需要时总监可向开发经理派单。
 
 `send-msg.sh` 是该可选拓扑的方向白名单实现；非法方向返回 2 且不写消息。独立角色或裁剪后的拓扑由项目消息机制定义，不套用此表；但 `team.md` 原则 7 的互连、越级、跨部门直连禁令始终生效，不因拓扑裁剪而豁免。
 

@@ -8,13 +8,13 @@
 
 - `dmt-dir`：需求入口、任务协调与跨域裁决。
 - `dmt-dm`：工单拆分、开发安排与授权整合。
-- `dmt-dl`：实施协调、派未参与实现的临时子代理验收、交付汇总。
+- `dmt-dl`（可选）：票批需独立上下文时的实施协调者，非默认层级；完成即回收。
 - `dmt-de`：指定 worktree 功能分支内的实现、测试与 commit（不 merge / push）。
 - `dmt-am`：调研拆分、取证复核与报告汇总。
 - `dmt-ae`：单个取证单元的一手来源与可复现结论。
 - `dmt-pde`：需求取证与 PRD/SPEC 起草。
 
-角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
+角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；**默认开发线为两级（`dmt-dm` 直接派 `dmt-de` ＋ 另派独立评审子代理）**，`dmt-dl` 只在票批需要独立上下文隔离时按需派生。启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
 
 ## 安装
 

@@ -3,6 +3,15 @@
 > 从 CHANGELOG.md 归档（整条原样搬移，不改写、不重编号）。2026-11-07 起 CHANGELOG.md 只留版本指针，全部明细归入本文件。
 
 
+## 2026-11-10（默认两级开发线·版本 `5.19.9`）
+
+- **2026-11-10（用户裁定·开发线默认两级化）**：
+  ① **拓扑**：默认开发线由 `dmt-dm → dmt-dl → dmt-de` 三级改为 **`dmt-dm` 直接派 `dmt-de`** 两级；独立评审改由 `dmt-dm` 另派未参与实现的临时子代理（评审者 ≠ 实现者）。`dmt-dl` 保留为**可选协调者**，仅在票批大到需独立上下文隔离时按需派生、完成即回收，不常驻、不设必经中间层。回写点：`team/01-org.md`、`02-runtime.md`、`07-discipline.md`（「三级分权」→「两级 ＋ 评审 gate」）、`07b-dispatch.md`、`10-pane-role.md`、`ops/comms.md`、`ops/runtime.md`、`ops/optional-skills.md`、`README.md`，以及 `dmt-dm/SKILL.md`、`dmt-dl/SKILL.md`。
+  ② **机制不动**：worktree 独立 index、功能分支 commit、`merge/push` 只归 `dmt-dm`、实现与评审分离等工程机制原样保留；运行适配器（`setup-team.sh`／`dl-pane.sh`／方向白名单／pane 布局）与机检断言不改动——它们仅服务于显式启用的可选完整团队模式，且当前有在跑的 `dmt-dl1/dmt-dl2` pane 与 inbox，拆除属破坏性操作。
+  ③ **配套**：两级下 `dmt-dm` 直接收 `dmt-de` 回报，`01-org.md` 增「回报含一手证据路径，汇总不得只留摘要而丢证据」；`02-runtime.md` 增「全局并发单一水位，不按层各自占满」。
+  ④ **升号**：`bump-version.sh 5.19.9 --date 2026-11-10` 同步 9 处版本源 ＋ `CHANGELOG.md:3` 指针；`check-dmt.sh` ALL_PASS。
+  **Why**：AI 编程视角评估——层级是人类管理幅度隐喻，LLM 编排器可一次派满 N 个单元，第三级只增加 2 跳下发／2 次汇总而不增加并行度；且「devm 只收队长交付包、不采信子代理原文」与「每条判据须有一手证据」冲突，多一级把跨角色转述失真放大一倍。英文镜像 `dmt-en` 本就为两级（`01-org.md` 明载 team-lead layer has been removed），本轮无需结构改动。
+
 ## 2026-11-10（命名规则订正·版本 `5.19.8`）
 
 - **2026-11-10（用户裁定·SPEC／工单编号两级化）**：
