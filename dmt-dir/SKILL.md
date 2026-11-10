@@ -1,6 +1,6 @@
 ---
 name: dmt-dir
-version: 5.19.7
+version: 5.19.8
 description: 多角色协作的需求入口与总协调者。用于需求澄清、PRD/SPEC 定稿、任务分派与跨域裁决；可独立使用，也可协调开发、分析与审核角色。
 ---
 

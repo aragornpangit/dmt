@@ -1,6 +1,6 @@
 ---
 name: dmt-am
-version: 5.19.7
+version: 5.19.8
 description: 分析经理。用于拆分调研问题、派发取证、复核一手来源，并汇总带证据分级的报告。
 ---
 

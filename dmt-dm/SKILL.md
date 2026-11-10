@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.19.7
+version: 5.19.8
 description: 开发经理。用于把定稿需求拆成可验收工单、安排开发负责人、整合交付，以及按项目授权执行 merge 与 push。
 ---
 

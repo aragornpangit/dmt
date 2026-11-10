@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.19.7
+version: 5.19.8
 description: 开发工程师。用于在指定 worktree 功能分支按需求与工单实施、测试、自审并 commit。
 ---
 

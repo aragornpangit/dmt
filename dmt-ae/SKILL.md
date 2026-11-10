@@ -1,6 +1,6 @@
 ---
 name: dmt-ae
-version: 5.19.7
+version: 5.19.8
 description: 分析工程师。用于执行单个调研取证单元，提供可复现来源、命令和证据分级结论。
 ---
 
