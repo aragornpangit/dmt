@@ -2,27 +2,27 @@
 # 只放会漂移的结构性事实：技能、版本源、可选目录、操作手册、脚本和预算。
 # 通用协作原则见 team.md；不使用固定措辞作为内容正确性的断言。
 
-version: 5.19.9
+version: 5.19.11
 date: "2026-11-10"
 
 skills:
   dmt-dir: { run_id: dmt-dir,      kind: pane,  pane: true }
   dmt-dm:  { run_id: dmt-dm,       kind: pane,  pane: true }
-  dmt-dl:  { run_id: "dmt-dl{n}",  kind: pane,  pane: true }
   dmt-am:  { run_id: dmt-am,         kind: pane,  pane: true }
   dmt-pde: { run_id: "dmt-pde{n}", kind: agent, pane: false }
   dmt-de:  { run_id: "dmt-de{n}",  kind: agent, pane: false }
   dmt-ae:  { run_id: "dmt-ae{n}",  kind: agent, pane: false }
+  dmt-reviewer: { run_id: "dmt-reviewer{n}", kind: agent, pane: false }
 
 version_sources:
   - dmt-dir/team.md
   - dmt-dir/SKILL.md
   - dmt-dm/SKILL.md
-  - dmt-dl/SKILL.md
   - dmt-am/SKILL.md
   - dmt-pde/SKILL.md
   - dmt-de/SKILL.md
   - dmt-ae/SKILL.md
+  - dmt-reviewer/SKILL.md
 
 # 可选 DMT 目录不由通用安装强制。项目显式声明后，机检才验证其存在。
 # artifact_dirs: []
@@ -37,7 +37,8 @@ ops_docs:
   - optional-skills.md
 
 # 按 harness 加载的说明文件（一份共性 + 每 harness 一份差异）。
-# 目录固定 dmt-dir/harness/；per_harness 的 harness 名集合必须与 harness_matrix.yaml 的 key 一致。
+# 目录固定 dmt-dir/harness/；per_harness 的 harness 名集合必须与 harness_matrix.yaml 的 harnesses: key 一致。
+# harness 运行平台的适配文档不是 harness，另登记在 platform_docs，不进 per_harness。
 harness_docs:
   common: COMMON.md
   backlog: BACKLOG.md
@@ -51,14 +52,31 @@ harness_docs:
     - codex.md
     - opencode.md
 
+# harness 运行平台适配文档（都不是 harness；机检 A5b 单独校验，不参与 A6b 的一一对应）。
+# herdr（矩阵 runtimes:）的适配文档在 ops/runtime.md，归 ops_docs；此处只登记 harness/ 下的 ADE 适配器。
+platform_docs:
+  - orca.md
+
 skill_budgets:
   dmt-dir: 4500
   dmt-dm: 4000
-  dmt-dl: 4000
   dmt-am: 4000
   dmt-pde: 3000
   dmt-de: 3000
   dmt-ae: 3000
+  dmt-reviewer: 3000
+
+# 可选第三方技能点名表（见 ops/optional-skills.md）。落点由 harness_matrix.yaml
+# 的 skills.dir_user 推导，由 install-third-party-skills.sh 铺设。
+# explicit_only 的 5 个带 allow_implicit_invocation: false，必须指向已解锁副本。
+third_party_skills:
+  names: [grill-me, grill-with-docs, to-spec, tdd, implement, code-review, to-tickets, research]
+  explicit_only: [grill-me, grill-with-docs, to-spec, implement, to-tickets]
+  # 8 个技能的上游来源登记：内网地址不入库（工程卫生 §6），这里只登记 .env 变量名。
+  # 派发者用 dmt_load_env（lib-dmt.sh）展开 $DMT_MATTPOCOCK_SOURCE_URL 后随 prompt 带入
+  # 上下文；仅作来源说明，运行时落点仍是 install-third-party-skills.sh 铺设的已解锁副本，
+  # 此 URL 不作为 fetch / 加载地址，也不替代 [SKILL_UNAVAILABLE] 降级。
+  source_url: "${DMT_MATTPOCOCK_SOURCE_URL}"
 
 scripts:
   - lib-dmt.sh
@@ -78,13 +96,12 @@ scripts:
   - install-skills.sh
   - check-dmt.sh
   - bump-version.sh
-  - archive-changelog.sh
-  - digest-changelog.sh
   - install-git-hooks.sh
   - auto-review-model.sh
   - harness-detect.sh
+  - runtime-detect.sh
 
 # 仓级辅助脚本（不随安装分发；只存在于本仓库，供维护 / 一次性工具使用）
-repo_scripts: [scripts/sync-mattpocock-codex-compat.sh]
+repo_scripts: [scripts/sync-mattpocock-codex-compat.sh, scripts/install-third-party-skills.sh]
 
 forbidden_scripts: [probe-cap.sh, dispatch-ledger.sh, fanout.sh, install-hooks.sh]

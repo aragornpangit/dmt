@@ -90,6 +90,55 @@ harnesses:
     tree_mode: full
     doorbell: pi
 
+# harness 运行平台（harness-runtime-platform）：都不是 harness，是承载 harness 运行的环境；其中运行的仍是上面 harnesses 里的某个 agent CLI。
+# 按职责分两段，成员各带 kind 标明所属层（供机检与脚本消费，不靠段名猜）：
+#   runtimes: pane / 终端复用衬底        → kind: pane-runtime
+#   ades:     编排层 / 控制面（ADE）      → kind: ade
+# 两段都不进入 harnesses，也不参与 harness_docs.per_harness 的一一对应检查（check-dmt.sh A5/A6b）。
+# 来源：herdr 本机在用；Orca 1.4.237 实测 2026-11-09；t3code 本机未实测，只登记定位、不编造命令。
+runtimes:
+  herdr:
+    kind: pane-runtime
+    status: in-use
+    comms: "herdr CLI + unix socket；dmt_herdr_* 经 HERDR_SOCKET_PATH / HERDR_ENV 自愈"
+    doorbell: "herdr agent prompt（cbc/codebuddy pane 改走 pane send-text + send-keys enter）"
+    scripts_bound: "send-msg.sh / msg-done.sh / setup-team.sh / dl-pane.sh / lib-dmt.sh dmt_herdr_*"
+
+ades:
+  orca:
+    kind: ade
+    version_floor: "1.4.237"
+    runtime_start_headless: "orca serve --no-pairing --json"
+    runtime_start_desktop: "orca open --json"
+    runtime_status: "orca status --json"
+    unreachable_state: stale_bootstrap
+    skills_discover: "orca skills installed --json"
+    skills_bundled_guides: "orca skills list --json"
+    skills_bundled_get: "orca skills get <topic>"
+    skills_share: "orca skills share --skill <selector> --bundle-name <name>"
+    skills_install: "install-skills.sh <worktree> --copy --harness all"
+    repo_add: "orca repo add --path <path>"
+    worktree_create: "orca worktree create --repo path:<path> --name <name> --setup skip --json"
+    agent_launch: "orca agent launch --agent <id> --worktree path:<path> --surface terminal --json"
+    first_prompt: false
+    terminal_send: "orca terminal send --terminal <handle> --text <text> --enter --wait-submit 8"
+    terminal_wait: "orca terminal wait --for tui-idle --timeout-ms <ms>"
+    terminal_read: "orca terminal read --screen --terminal <handle>"
+    terminal_close: "orca terminal close --terminal <handle>"
+    orchestration_dispatch: "orca orchestration task-create|task-update|dispatch|worker-start"
+    orchestration_report: "orca orchestration send|reply|inbox|ask"
+    orchestration_wait: "orca orchestration worker-read|worker-stop|gate-*"
+    orchestration_sender: "--from <own terminal handle> 或 ORCA_TERMINAL_HANDLE"
+    doorbell: "orca terminal send + orchestration inbox"
+    herdr_scripts: unavailable
+    # 并发取 harnesses 上限与 Orca 当前容量的交集，不另设 ADE 独立上限
+    max_subagents_conc: null
+  t3code:
+    kind: ade
+    status: unverified
+    # 本机 ~/pxy/tools/t3cmd/ 为空目录，未实测；命令、端口与配对方式待取证后登记，不编造
+    note: "仅登记分层定位，不作为脚本派发依据"
+
 # install-skills.sh --harness all 时铺设的落点（去重后的项目级目录）。
 # 覆盖五个 harness：.agents/skills（codex/opencode/pi）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）。
 # codex 同时发现 .codex/skills，但安装只用 .agents/skills，避免同一技能登记两次。

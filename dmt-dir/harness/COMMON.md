@@ -1,6 +1,8 @@
 # harness 共性适配规则
 
-只有任务需要平台特定能力时才读取本文件和当前平台的一份差异文档；角色加载本身不执行检测。
+只适用于矩阵 `harnesses:` 段的 5 个 agent CLI；herdr / Orca / T3 Code 属 harness 运行平台，不是 harness，见 [`README.md`](README.md) 的术语小节。
+
+只有任务需要平台特定能力时才读取本文件和当前平台的一份差异文档；加载技能后按 [`../team/02-runtime.md`](../team/02-runtime.md) 第 1 步完成两轴环境探测。
 
 - 技能到达模型、子代理命名和完成通知优先使用平台原生能力，机器事实以 `harness_matrix.yaml` 为准。
 - 子代理只向派发者回报；是否占 pane、是否使用收件箱由部署方式决定。

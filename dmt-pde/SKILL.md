@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.19.9
+version: 5.19.11
 description: 产品工程师。用于需求取证、PRD/SPEC 起草、边界枚举、需求一致性和验收标准核对。
 ---
 
@@ -18,6 +18,7 @@ description: 产品工程师。用于需求取证、PRD/SPEC 起草、边界枚�
 
 ## 边界
 
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 只写任务指定的文档或证据产物，路径和命名遵循项目约定。
 - 不修改业务实现，不替派发者批准需求，不执行未经授权的发布。
 - 需要市场或技术取证时请求协调，不假设固定分析角色必须存在。

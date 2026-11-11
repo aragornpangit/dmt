@@ -2,16 +2,19 @@
 # harness-matrix.sh —— 读取 dmt-dir/harness_matrix.yaml（单一来源）
 #
 # 用法：
-#   harness-matrix.sh list                        # 列出全部 harness 名（每行一个）
-#   harness-matrix.sh get <harness> <field>       # 取某字段（点路径，如 skills.dir_project / slash_prefix / start_cmd / max_subagents_conc）
-#   harness-matrix.sh json                        # 输出整份矩阵 JSON（供 jq / 其它脚本消费）
-#   harness-matrix.sh install-dirs                # install-skills.sh --harness all 的落点目录（每行一个）
-#   harness-matrix.sh install-dirs-for <h1,h2,…>  # 指定 harness 的落点目录（去重，每行一个）
-#   harness-matrix.sh doorbell <harness>          # 门铃通道名
+#   harness-matrix.sh list                            # 列出全部 harness 名（每行一个）
+#   harness-matrix.sh get <harness> <field>           # 取某字段（点路径，如 skills.dir_project / slash_prefix / start_cmd / max_subagents_conc）
+#   harness-matrix.sh get <runtimes|ades>.<name> <field>  # 取 harness 运行平台成员字段
+#   harness-matrix.sh platform-list                  # 列出运行平台成员（输出 section/name<TAB>kind）
+#   harness-matrix.sh json                           # 输出整份矩阵 JSON（供 jq / 其它脚本消费）
+#   harness-matrix.sh install-dirs                   # install-skills.sh --harness all 的落点目录（每行一个）
+#   harness-matrix.sh install-dirs-for <h1,h2,…>     # 指定 harness 的落点目录（去重，每行一个）
+#   harness-matrix.sh doorbell <harness>             # 门铃通道名
 #
 # 依赖 python3 + PyYAML（矩阵是 YAML）。找不到时 rc=3，调用方应 fail-fast。
-# 本脚本是「harness 差异」的唯一读取口：lib-dmt.sh / install-skills.sh / 机检都经它取，
-# 不再各写一份 case 分支。
+# 本脚本是矩阵的唯一读取口：lib-dmt.sh / install-skills.sh / 机检都经它取，
+# 不再各写一份 case 分支。list / install-dirs* / doorbell 只服务 harnesses:，
+# harness 运行平台 runtimes: / ades: 由 get 的点路径与 platform-list 单独消费，两者不混。
 set -eu
 DIR="$(cd -P "$(dirname "$0")" && pwd -P)"
 MATRIX="${DMT_HARNESS_MATRIX:-$DIR/../harness_matrix.yaml}"
@@ -37,14 +40,20 @@ for h in m.get("harnesses", {}):
 PY
     ;;
   get)
-    H="${1:?usage: harness-matrix.sh get <harness> <field>}"; F="${2:?missing field}"
+    H="${1:?usage: harness-matrix.sh get <harness>|<runtimes|ades>.<name> <field>}"; F="${2:?missing field}"
     H="$H" F="$F" python3 - <<'PY'
 import os, yaml
 m = yaml.safe_load(open(os.environ["DMT_MATRIX_PATH"], encoding="utf-8"))
 h = os.environ["H"]; f = os.environ["F"]
-node = m.get("harnesses", {}).get(h)
+if "." in h and h.split(".", 1)[0] in ("runtimes", "ades"):
+    sec, name = h.split(".", 1)
+    node = (m.get(sec) or {}).get(name)
+    label = "运行平台成员 " + h
+else:
+    node = (m.get("harnesses") or {}).get(h)
+    label = "harness " + h
 if node is None:
-    raise SystemExit(f"harness-matrix: 未知 harness: {h}")
+    raise SystemExit(f"harness-matrix: 未知 {label}")
 for key in f.split("."):
     if not isinstance(node, dict) or key not in node:
         raise SystemExit(f"harness-matrix: {h} 无字段 {f}")
@@ -55,6 +64,15 @@ elif isinstance(node, bool):
     print("true" if node else "false")
 else:
     print(node)
+PY
+    ;;
+  platform-list)
+    python3 - <<'PY'
+import os, yaml
+m = yaml.safe_load(open(os.environ["DMT_MATRIX_PATH"], encoding="utf-8"))
+for sec in ("runtimes", "ades"):
+    for name, node in (m.get(sec) or {}).items():
+        print(f"{sec}/{name}\t{(node or {}).get('kind', '')}")
 PY
     ;;
   json)
@@ -98,7 +116,7 @@ print(n.get("doorbell", os.environ["H"]))
 PY
     ;;
   *)
-    echo "usage: harness-matrix.sh {list|get <h> <field>|json|install-dirs|install-dirs-for <h,…>|doorbell <h>}" >&2
+    echo "usage: harness-matrix.sh {list|get <h> <field>|get <runtimes|ades>.<name> <field>|platform-list|json|install-dirs|install-dirs-for <h,…>|doorbell <h>}" >&2
     exit 2
     ;;
 esac

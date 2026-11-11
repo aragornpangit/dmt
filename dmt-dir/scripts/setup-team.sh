@@ -110,7 +110,7 @@ verify_auto_mode() {
 h dmt_herdr tab rename "$HERDR_TAB_ID" dmt-dir-am
 h dmt_herdr pane rename "$HERDR_PANE_ID" dmt-dir
 
-# 2) dmt-dm tab：dmt-dm 左 30%，dmt-dl1 右上、dmt-dl2 右下（固定两个队长）
+# 2) dmt-dm tab：dmt-dm 左 30%，dmt-dl1 右上、dmt-dl2 右下（可选适配器示例布局）
 dm_pane="$(pane_by_label dmt-dm || true)"
 dmtab="$(tab_id_by_label dmt-dm || true)"
 if [ -z "$dm_pane" ]; then
@@ -145,7 +145,7 @@ else
 fi
 ensure_started "$dm_pane" dmt-dm dmt-dm
 
-# 2b) 固定两个开发队长：dmt-dl1 从 dmt-dm 右侧切出（dmt-dm 保留 30%），dmt-dl2 从 dmt-dl1 下方对半切出
+# 2b) 按需派生的协调者 pane（完成即回收，非默认层级）：dmt-dl1 从 dmt-dm 右侧切出（dmt-dm 保留 30%），dmt-dl2 从 dmt-dl1 下方对半切出
 dl1_pane="$(pane_by_label dmt-dl1 || true)"
 for n in 1 2; do
   label="dmt-dl$n"

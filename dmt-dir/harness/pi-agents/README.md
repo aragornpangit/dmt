@@ -5,6 +5,7 @@
 - `dmt-de`
 - `dmt-ae`
 - `dmt-pde`
+- `dmt-reviewer`
 
 模板只预选角色自身技能，其他工具按任务和环境自行选择。pi 无通用 Skill 工具，需要技能正文时读取对应 `SKILL.md`。
 

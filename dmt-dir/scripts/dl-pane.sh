@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 可选 herdr 适配器：管理 dmt-dm tab 内固定两个开发队长。
+# 可选 herdr 适配器：管理按需派生、完成即回收的协调者 pane（仅显式启用完整团队适配器时使用）。
 # 布局：dmt-dm 左 30%，dmt-dl1 右上、dmt-dl2 右下；三者同处 tab dmt-dm。
 # 用法：bash dl-pane.sh <list|ensure-min|add|remove|rebalance|adopt> [--index N] [--force]
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_WORKSPACE_ID（在 dmt-dm pane 内执行）
@@ -118,7 +118,7 @@ add_one() {
   local cur n base pane label
   cur="$(count_dl)"
   if [ "$DL_MAX" -gt 0 ] 2>/dev/null && [ "$cur" -ge "$DL_MAX" ]; then
-    echo "已达 DL_MAX=$DL_MAX（当前固定两个队长）" >&2; return 1
+    echo "已达 DL_MAX=$DL_MAX（可选适配器容量上限）" >&2; return 1
   fi
   n="$(next_index)"
   label="dmt-dl$n"
@@ -145,7 +145,7 @@ remove_one() {
   label="dmt-dl$idx"
   pane="$(pane_for "$label")"
   [ -n "$pane" ] || { echo "找不到 $label" >&2; return 1; }
-  [ "$(count_dl)" -gt "$DL_MIN" ] || { echo "拒绝：n=$DL_MIN 是下限，当前固定两个队长" >&2; return 1; }
+  [ "$(count_dl)" -gt "$DL_MIN" ] || { echo "拒绝：n=$DL_MIN 是下限；如需回收到 0 请设 DL_MIN=0" >&2; return 1; }
   st="$(dmt_pane_status "$pane")"
   if [ "$st" = "working" ] && [ "$FORCE" != 1 ]; then
     echo "拒绝：$label 仍在 working；先让它收口或加 --force" >&2; return 1

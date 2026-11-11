@@ -22,6 +22,7 @@
 ## 落点与前缀
 
 - 8 个技能的清单与 explicit-only 标记在 [`../dmt_contract.yaml`](../dmt_contract.yaml) 的 `third_party_skills:`；用户级落点由 `harness_matrix.yaml` 的 `skills.dir_user`（opencode 另含 `dir_project_extra`）推导。
+- 8 个技能的上游来源登记在同段 `third_party_skills.source_url`，值为 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库，实际值由本机 `.env` 提供）；派发 `dmt-dir` / `dmt-dm` / `dmt-am` 时用 `dmt_load_env` 展开后按 [`../team/07b-dispatch.md`](../team/07b-dispatch.md) 随 prompt 附带，仅作来源说明，不作为加载或 fetch 地址。
 - 维护仓的 `scripts/install-third-party-skills.sh` 幂等铺设扁平软链并可用 `--check` 复验；各 harness 的调用语法（`/`、`mattpocock-skills:`、`@`、`/skill:`）以矩阵为准。
 - 5 个 explicit-only 技能（`grill-me`、`grill-with-docs`、`to-spec`、`implement`、`to-tickets`）必须指向已剥离 `allow_implicit_invocation: false` 的解锁副本，否则 codex 列得出却不加载、pi 白名单会过滤。
 - 本适配器是可选件：机检对落点缺失只 WARN，硬保证由安装脚本 `--check` 承担。实际技能能否进上下文仍以各 harness 运行时为准；OpenCode v2 的 `@<skill-id>` 已于 5.19.11 在 v2.2.5 收口（判据与证据见维护仓 `dmt-dir/CHANGELOG.md`，`@` 纯引用限制见 [`../harness/opencode.md`](../harness/opencode.md)）。

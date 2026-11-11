@@ -1,6 +1,6 @@
 ---
 name: dmt-am
-version: 5.19.9
+version: 5.19.11
 description: 分析经理。用于拆分调研问题、派发取证、复核一手来源，并汇总带证据分级的报告。
 ---
 
@@ -18,6 +18,7 @@ description: 分析经理。用于拆分调研问题、派发取证、复核一�
 
 ## 边界
 
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 产品需求与验收口径由需求负责人确认；跨域问题交派发者协调。
 - 二进制、竞品或硬件分析仅在任务需要时采用相应领域工具，不设固定实现。
 - 不直接修改需求、工单或业务实现。

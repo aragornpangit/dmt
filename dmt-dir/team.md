@@ -1,6 +1,6 @@
 # dmt 协作契约
 
-> **版本 5.19.9 · 2026-11-10** —— 与各角色 `SKILL.md` 同号。
+> **版本 5.19.11 · 2026-11-10** —— 与各角色 `SKILL.md` 同号。
 > **作用域**：核心原则适用于使用 dmt 的任务；维护技能仓自身时不触发团队派单、收件箱或发布授权流程。
 
 ## 核心原则
@@ -16,7 +16,7 @@
 
 ## 角色与模式
 
-`dmt-dir`、`dmt-dm`、`dmt-dl`、`dmt-de`、`dmt-am`、`dmt-ae`、`dmt-pde` 是可复用能力，不是必须同时启用的组织编制。完整 DMT 团队模式见 [`team/01-org.md`](team/01-org.md)。
+`dmt-dir`、`dmt-dm`、`dmt-de`、`dmt-am`、`dmt-ae`、`dmt-pde` 是可复用能力，不是必须同时启用的组织编制。完整 DMT 团队模式见 [`team/01-org.md`](team/01-org.md)。
 
 ## 按需参考
 
@@ -32,4 +32,4 @@
 | 结构检查 | [`team/09-check.md`](team/09-check.md) |
 | herdr / inbox / helper | [`OPS.md`](OPS.md) |
 
-历史与维护记录见 `CHANGELOG.md` 和 `logs/`，不进入任务加载路径。
+维护记录见 `CHANGELOG.md`，不进入任务加载路径。

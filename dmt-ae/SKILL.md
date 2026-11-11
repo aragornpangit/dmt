@@ -1,6 +1,6 @@
 ---
 name: dmt-ae
-version: 5.19.9
+version: 5.19.11
 description: 分析工程师。用于执行单个调研取证单元，提供可复现来源、命令和证据分级结论。
 ---
 
@@ -18,6 +18,7 @@ description: 分析工程师。用于执行单个调研取证单元，提供可�
 
 ## 边界
 
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 只写任务指定的证据产物，不修改需求、工单或业务实现。
 - 领域工具按任务和当前环境选择；不可用时报告限制并采用可验证的替代方法。
 - 环境检测或平台失败同样回报派发者，不越级上报。

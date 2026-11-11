@@ -55,10 +55,10 @@ done
 [ -n "$DIRS" ] || { echo "no skill dir resolved for --harness '$HARNESS'" >&2; exit 2; }
 
 CORE_ITEMS="SKILL.md team.md OPS.md dmt_contract.yaml harness_matrix.yaml team ops harness scripts hooks"
-SKILLS="dmt-dir dmt-dm dmt-dl dmt-am dmt-pde dmt-de dmt-ae"
+SKILLS="dmt-dir dmt-dm dmt-am dmt-pde dmt-de dmt-ae dmt-reviewer"
 # 历史改名遗留：旧技能名不会自动消失（软链会变断链、副本会变孤儿目录），安装时显式清理。
 # 含 dmt-rve/dmt-pm/dmt-dtl/dmt-atl 等旧名，以及本轮改名前的 dmt-director / dmt-devl。
-LEGACY_SKILLS="dmt-rve dmt-pm dmt-dtl dmt-atl dmt-director dmt-devl"
+LEGACY_SKILLS="dmt-rve dmt-pm dmt-dtl dmt-atl dmt-director dmt-devl dmt-dl"
 for rel in $DIRS; do
   mkdir -p "$TARGET/$rel"
   for s in $LEGACY_SKILLS; do rm -rf "$TARGET/$rel/$s"; done

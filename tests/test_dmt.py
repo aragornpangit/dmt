@@ -63,12 +63,13 @@ class DmtRegressionTests(unittest.TestCase):
     def test_skill_entries_are_small_and_have_no_forced_startup(self):
         entries = sorted(REPO.glob("dmt-*/SKILL.md"))
         self.assertEqual(len(entries), 7)
-        self.assertLessEqual(sum(len(p.read_text().splitlines()) for p in entries), 220)
+        self.assertLessEqual(sum(len(p.read_text().splitlines()) for p in entries), 260)
         self.assertLessEqual(len((REPO / "dmt-dir/SKILL.md").read_text().splitlines()), 25)
         for path in entries:
             text = path.read_text()
             self.assertNotIn("每次加载先做", text)
-            self.assertNotIn("harness-detect.sh", text)
+            self.assertIn("harness-detect.sh", text)
+            self.assertIn("runtime-detect.sh", text)
             self.assertNotRegex(text, r"bash\s+\S*init-project\.sh")
 
     def test_link_install_needs_no_fixed_project_directories(self):
@@ -129,6 +130,55 @@ class DmtRegressionTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertTrue(result.stdout.strip().startswith(expected + "-"))
                     self.assertEqual((box / ".seq").read_text().strip(), str(int(expected)))
+
+    def _runtime_detect(self, env):
+        return subprocess.run(
+            ["bash", str(REPO / "dmt-dir/scripts/runtime-detect.sh")],
+            cwd=REPO,
+            env=env,
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+
+    def test_harness_and_platform_are_separate_axes(self):
+        matrix = REPO / "dmt-dir/scripts/harness-matrix.sh"
+        listed = run("bash", matrix, "list")
+        self.assertEqual(listed.returncode, 0, listed.stderr)
+        names = set(listed.stdout.split())
+        self.assertEqual(names, {"pi", "codebuddy", "claude", "codex", "opencode"})
+        self.assertFalse({"herdr", "orca", "t3code"} & names)
+
+        platforms = run("bash", matrix, "platform-list")
+        self.assertEqual(platforms.returncode, 0, platforms.stderr)
+        kinds = dict(
+            line.split("\t")
+            for line in platforms.stdout.strip().splitlines()
+            if "\t" in line
+        )
+        self.assertEqual(kinds.get("runtimes/herdr"), "pane-runtime")
+        self.assertEqual(kinds.get("ades/orca"), "ade")
+        self.assertEqual(kinds.get("ades/t3code"), "ade")
+
+        got = run("bash", matrix, "get", "runtimes.herdr", "kind")
+        self.assertEqual(got.returncode, 0, got.stderr)
+        self.assertEqual(got.stdout.strip(), "pane-runtime")
+
+    def test_runtime_detect_is_fail_closed(self):
+        base = {"PATH": os.environ.get("PATH", ""), "HOME": "/tmp"}
+        cases = [
+            ({"HERDR_PANE_ID": "1-1"}, "herdr", 0),
+            ({"ORCA_TERMINAL_HANDLE": "t-1"}, "orca", 0),
+            ({"DMT_PLATFORM": "t3code"}, "t3code", 0),
+            ({}, "none", 0),
+            ({"HERDR_PANE_ID": "1-1", "ORCA_TERMINAL_HANDLE": "t-1"}, "unknown", 1),
+            ({"DMT_PLATFORM": "bogus"}, "", 2),
+        ]
+        for extra, want, rc in cases:
+            with self.subTest(extra=extra):
+                result = self._runtime_detect({**base, **extra})
+                self.assertEqual(result.returncode, rc, result.stdout + result.stderr)
+                self.assertEqual(result.stdout.strip(), want)
 
 
 if __name__ == "__main__":

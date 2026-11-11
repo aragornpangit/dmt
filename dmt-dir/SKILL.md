@@ -1,6 +1,6 @@
 ---
 name: dmt-dir
-version: 5.19.9
+version: 5.19.11
 description: 多角色协作的需求入口与总协调者。用于需求澄清、PRD/SPEC 定稿、任务分派与跨域裁决；可独立使用，也可协调开发、分析与审核角色。
 ---
 
@@ -19,6 +19,7 @@ description: 多角色协作的需求入口与总协调者。用于需求澄清�
 
 ## 边界
 
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 可亲自编写面向用户的文档；实现、发布与代码验收交给获授权的角色。
-- 目录、命名、分支和发布节奏遵循项目约定，不在加载时初始化或扫描项目。
+- 目录、命名、分支和发布节奏遵循项目约定；加载后只做两轴环境探测，不初始化或扫描项目。
 - 完整团队协作时参考 [`team.md`](team.md)；仅在实际使用对应平台时读取 `harness/` 或 `ops/`。

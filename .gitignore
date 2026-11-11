@@ -15,4 +15,3 @@ __pycache__/
 .archify/
 
 # 本地按需生成的变更语义摘要（不入库）
-dmt-dir/CHANGELOG-DIGEST.md

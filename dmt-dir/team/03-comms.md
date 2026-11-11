@@ -10,5 +10,5 @@
 
 - 根据任务选择当前环境可用且适合的工具，不强制特定供应商、技能包或版本；项目启用第三方技能适配器时按 [`../ops/optional-skills.md`](../ops/optional-skills.md) 的点名表执行。
 - 工具不可用时说明影响，并采用可验证的替代方法；需要用户授权的能力不能自行放开。
-- 平台特定的调用方式见 [`../harness/README.md`](../harness/README.md)，只在实际使用时读取。
+- 加载技能后先按 [`02-runtime.md`](02-runtime.md) 第 1 步探测两轴环境；平台特定的调用方式见 [`../harness/README.md`](../harness/README.md)，只在实际使用时读取。
 - 多写者共享文件时可启用 [`../ops/file-claim.md`](../ops/file-claim.md) 的占用协调；单写者工作区无需额外仪式。

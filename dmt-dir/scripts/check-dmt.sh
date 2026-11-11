@@ -169,14 +169,66 @@ if [ ! -x "$MATRIX" ]; then bad "缺 harness-matrix.sh"; else
 fi
 
 echo
-echo "== A6) 技能加载无副作用 =="
+echo "== A5b) harness 运行平台矩阵完整性（runtimes: / ades:，成员带 kind） =="
+PLAT="$(bash "$MATRIX" platform-list 2>/dev/null || true)"
+if [ -z "$PLAT" ]; then
+  bad "platform-list 无输出（矩阵缺 runtimes: / ades: 段）"
+else
+  while IFS=$'\t' read -r path kind; do
+    [ -n "$path" ] || continue
+    sec="${path%%/*}"
+    case "$sec:$kind" in
+      runtimes:pane-runtime|ades:ade) ok "运行平台成员 $path（kind=$kind）" ;;
+      *) bad "运行平台成员 $path 的 kind=$kind 与段 $sec 不符" ;;
+    esac
+  done <<< "$PLAT"
+  for sec in runtimes ades; do
+    if printf '%s\n' "$PLAT" | grep -q "^$sec/"; then ok "运行平台段 $sec 非空"; else bad "运行平台段 $sec 缺成员"; fi
+  done
+fi
+# 两轴分离：运行平台成员不得混进 harnesses 的 list
+for p in herdr orca t3code; do
+  if bash "$MATRIX" list | grep -qx "$p"; then bad "运行平台成员 $p 混入 harnesses 列表"; else ok "运行平台成员 $p 未混入 harnesses"; fi
+done
+# 运行平台适配文档（platform_docs）存在性
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  if [ -s "$REPO/dmt-dir/harness/$f" ]; then ok "运行平台适配文档 $f"; else bad "运行平台适配文档缺失或为空：$f"; fi
+done < <(python3 -c 'import os,yaml;[print(x) for x in (yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8")).get("platform_docs") or [])]')
+# runtime-detect.sh 自测：运行平台判定与 harness 判定正交，unknown 必须 fail-closed
+RDETECT="$SCRIPT_DIR/runtime-detect.sh"
+if [ -x "$RDETECT" ]; then ok "runtime-detect.sh 可执行"; else bad "runtime-detect.sh 缺失或不可执行"; fi
+if [ -x "$RDETECT" ]; then
+  rd_case() {
+    local var="$1" val="$2" want="$3" wrc="$4" out rc
+    out="$(env -i PATH="$PATH" HOME="${HOME:-/tmp}" "$var=$val" bash "$RDETECT" 2>/dev/null)"; rc=$?
+    if [ "$out" = "$want" ] && [ "$rc" = "$wrc" ]; then ok "runtime-detect: $var=$val ⇒ $want（rc=$rc）"; else bad "runtime-detect: $var=$val ⇒ [$out] rc=$rc（期望 $want / $wrc）"; fi
+    return 0
+  }
+  rd_case HERDR_PANE_ID      1-1    herdr  0
+  rd_case ORCA_TERMINAL_HANDLE t-1  orca   0
+  rd_case DMT_PLATFORM       t3code t3code 0
+  rd_case DMT_PLATFORM       bogus  ""     2
+  none_out="$(env -i PATH="$PATH" HOME="${HOME:-/tmp}" bash "$RDETECT" 2>/dev/null)"; none_rc=$?
+  if [ "$none_out" = "none" ] && [ "$none_rc" = 0 ]; then ok "runtime-detect: 无运行平台标记 ⇒ none（rc=0）"; else bad "runtime-detect: 无运行平台标记应输出 none 且 rc=0（实得 out=$none_out rc=$none_rc）"; fi
+  conf_out="$(env -i PATH="$PATH" HOME="${HOME:-/tmp}" HERDR_PANE_ID=1-1 ORCA_TERMINAL_HANDLE=t-1 bash "$RDETECT" 2>/dev/null)"; conf_rc=$?
+  if [ "$conf_out" = "unknown" ] && [ "$conf_rc" = 1 ]; then ok "runtime-detect: 双命中 ⇒ unknown（rc=1，fail-closed）"; else bad "runtime-detect: 双命中应输出 unknown 且 rc=1（实得 out=$conf_out rc=$conf_rc）"; fi
+fi
+
+echo
+echo "== A6) 技能加载：两轴环境探测 + 无强制初始化 =="
 while IFS= read -r skill; do
   skill="${skill% }"; [ -n "$skill" ] || continue
   f="$SKILLS_DIR/$skill/SKILL.md"; [ -f "$f" ] || continue
-  if grep -qE '每次加载先做|bash[[:space:]]+.*init-project\.sh|每次加载.*harness-detect\.sh' "$f"; then
-    bad "技能 $skill 含强制初始化或检测步骤"
+  if grep -qE '每次加载先做|bash[[:space:]]+.*init-project\.sh' "$f"; then
+    bad "技能 $skill 含强制初始化步骤"
   else
-    ok "技能 $skill 加载无强制初始化"
+    ok "技能 $skill 无强制初始化"
+  fi
+  if grep -q 'harness-detect\.sh' "$f" && grep -q 'runtime-detect\.sh' "$f"; then
+    ok "技能 $skill 含两轴环境探测要求"
+  else
+    bad "技能 $skill 缺两轴环境探测要求"
   fi
 done < <(python3 -c 'import os,yaml;[print(k) for k in yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8"))["skills"]]')
 
@@ -345,6 +397,56 @@ while IFS=$'\t' read -r st who what extra; do
   esac
 done <<< "$A6C_OUT"
 [ "$a6c_fail" = 0 ] || fail=1
+
+echo
+echo "== A6e) 第三方技能落点（可选适配器，缺失只 WARN） =="
+A6E_OUT="$(python3 - "$REPO" "$CONTRACT_YAML" <<'PYSK'
+import os, sys, yaml, subprocess
+repo, contract = sys.argv[1], sys.argv[2]
+home = os.path.expanduser("~")
+c = yaml.safe_load(open(contract, encoding="utf-8"))
+tp = c.get("third_party_skills") or {}
+names = tp.get("names") or []
+explicit = set(tp.get("explicit_only") or [])
+matrix = os.path.join(repo, "dmt-dir", "scripts", "harness-matrix.sh")
+
+def matrix_get(h, field):
+    try:
+        return subprocess.check_output(["bash", matrix, "get", h, field], text=True).strip()
+    except Exception:
+        return ""
+
+dirs = []
+for h in ("codebuddy", "claude", "codex", "opencode", "pi"):
+    d = matrix_get(h, "skills.dir_user")
+    if d and d not in dirs:
+        dirs.append(d)
+    if h == "opencode":
+        e = matrix_get(h, "skills.dir_project_extra")
+        if e and e not in dirs:
+            dirs.append(e)
+
+for rel in dirs:
+    d = os.path.join(home, rel)
+    for n in names:
+        p = os.path.join(d, n, "SKILL.md")
+        if not os.path.isfile(p):
+            print("WARN\t%s\t%s\tnot linked" % (rel, n))
+            continue
+        oa = os.path.join(os.path.dirname(os.path.realpath(p)), "agents", "openai.yaml")
+        if n in explicit and os.path.isfile(oa) and "allow_implicit_invocation: false" in open(oa, encoding="utf-8", errors="ignore").read():
+            print("WARN\t%s\t%s\tstill explicit-only" % (rel, n))
+        else:
+            print("OK\t%s\t%s" % (rel, n))
+PYSK
+)"
+while IFS=$'\t' read -r st who what extra; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK)   ok "第三方技能 $who/$what 已落点" ;;
+    WARN) ok "第三方技能 $who/$what 跳过（$extra）" ;;
+  esac
+done <<< "$A6E_OUT"
 
 echo "== A6d) 仓级脚本登记（仅维护仓） =="
 if [ -d "$REPO/dmt-dm" ] && [ -d "$REPO/scripts" ]; then
