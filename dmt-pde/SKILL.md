@@ -22,3 +22,4 @@ description: 产品工程师。用于需求取证、PRD/SPEC 起草、边界枚�
 - 只写任务指定的文档或证据产物，路径和命名遵循项目约定。
 - 不修改业务实现，不替派发者批准需求，不执行未经授权的发布。
 - 需要市场或技术取证时请求协调，不假设固定分析角色必须存在。
+- 必用 `to-spec` 落笔 SPEC（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/04-naming.md` / `05-dirs.md` 落盘，不发布到外部 tracker / `.scratch/`、不套用上游 ADR。

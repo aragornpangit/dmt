@@ -71,6 +71,19 @@ class DmtRegressionTests(unittest.TestCase):
             self.assertIn("harness-detect.sh", text)
             self.assertIn("runtime-detect.sh", text)
             self.assertNotRegex(text, r"bash\s+\S*init-project\.sh")
+            # B 增强版：每个角色自带必用技能要求、降级标记与分平台调用引用
+            self.assertIn("[SKILL_UNAVAILABLE]", text)
+            self.assertIn("07b-dispatch.md", text)
+
+    def test_role_skills_from_contract_are_declared_in_each_skill(self):
+        # 与 check-dmt.sh A6f 同源：从契约读映射，不在测试里另写一份角色表
+        import yaml
+        contract = yaml.safe_load((REPO / "dmt-dir/dmt_contract.yaml").read_text())
+        role_skills = contract["third_party_skills"]["role_skills"]
+        for role, names in role_skills.items():
+            text = (REPO / role / "SKILL.md").read_text()
+            for name in names:
+                self.assertIn(name, text, f"{role}/SKILL.md 缺必用技能 {name}")
 
     def test_link_install_needs_no_fixed_project_directories(self):
         with tempfile.TemporaryDirectory() as tmp:

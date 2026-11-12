@@ -22,4 +22,4 @@ description: 独立评审工程师。由 dmt-dm 以子代理加载，按 ticket 
 - 不修改代码、需求或工单；发现实现问题交回派发者处理。
 - 无证据不判 PASS；验收范围以该 ticket 票面判据为准。
 - 不执行 merge、push、发布或回滚（该权只属 dmt-dm）。
-- 不调用固定评审工具，按探测结果选择可复现的验证方式。
+- 必用 `code-review` 做逐项评审（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；这是评审方法而非绑定某个固定评审工具，仍按探测结果选可复现验证方式；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过。

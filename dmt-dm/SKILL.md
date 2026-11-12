@@ -23,3 +23,4 @@ description: 开发经理。用于把定稿需求拆成可验收工单、安排�
 - 工单格式、目录、分支、remote 和发布方式遵循项目约定。
 - 票批大到需要独立上下文隔离时，可按需派生可选协调者 `dmt-dl`，完成即回收；不得把其设为常驻中间层。
 - 运行环境需要编排时，按需读取 `dmt-dir/ops/`。
+- 必用 `to-tickets` 拆 ticket（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/04-naming.md` / `05-dirs.md` 落盘，不发布到外部 tracker / `.scratch/`、不套用上游 ADR。

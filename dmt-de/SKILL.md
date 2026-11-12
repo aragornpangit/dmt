@@ -23,3 +23,4 @@ description: 开发工程师。用于在指定 worktree 功能分支按需求与
 - 共享工作区存在其他写者时先停下协调；不覆盖他人改动。
 - 不执行合并或推送（该权只属 dmt-dm）；共享设备写操作须经授权并记录。
 - 平台子代理方式按探测结果选择；除两轴环境探测外不运行初始化脚本。
+- 必用 `tdd` / `implement` / `code-review`（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；`implement` 与 `grill-*` 转发的 `tdd` / `code-review` / `grilling` 须一并可用；任一不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/05-dirs.md` 落盘。

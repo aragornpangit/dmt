@@ -448,6 +448,44 @@ while IFS=$'\t' read -r st who what extra; do
   esac
 done <<< "$A6E_OUT"
 
+echo
+echo "== A6f) 角色必用第三方技能（B 增强版，硬 FAIL） =="
+# 从契约 role_skills 读映射，逐角色校验 SKILL.md 含：每个必用技能名 + 降级标记 + 分平台调用引用。
+# 与 A6e（落点、只 WARN）互补：A6e 管「技能在不在机器里」，A6f 管「角色有没有被明确要求用」。
+A6F_OUT="$(python3 - "$SKILLS_DIR" "$CONTRACT_YAML" <<'PYSK'
+import os, sys, yaml
+skills_dir, contract = sys.argv[1], sys.argv[2]
+c = yaml.safe_load(open(contract, encoding="utf-8"))
+rs = (c.get("third_party_skills") or {}).get("role_skills")
+if rs is None:
+    print("FAIL\t-\t契约缺 third_party_skills.role_skills")
+else:
+    for role, names in rs.items():
+        f = os.path.join(skills_dir, role, "SKILL.md")
+        if not os.path.isfile(f):
+            print("FAIL\t%s\t缺 SKILL.md" % role); continue
+        t = open(f, encoding="utf-8").read()
+        miss = [n for n in names if n not in t]
+        if miss:
+            print("FAIL\t%s\tSKILL.md 缺必用技能名 %s" % (role, ",".join(miss))); continue
+        if "[SKILL_UNAVAILABLE]" not in t:
+            print("FAIL\t%s\tSKILL.md 缺 [SKILL_UNAVAILABLE] 降级" % role); continue
+        if "07b-dispatch.md" not in t:
+            print("FAIL\t%s\tSKILL.md 缺分平台调用引用 07b-dispatch.md" % role); continue
+        print("OK\t%s\t%s" % (role, ",".join(names) or "(无必用技能，含降级与分平台)"))
+PYSK
+)"
+a6f_fail=0
+while IFS=$'\t' read -r st who what; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK)   ok "角色 $who 必用技能：$what" ;;
+    FAIL) bad "角色 $who：$what"; a6f_fail=1 ;;
+  esac
+done <<< "$A6F_OUT"
+[ "$a6f_fail" = 0 ] || fail=1
+
+echo
 echo "== A6d) 仓级脚本登记（仅维护仓） =="
 if [ -d "$REPO/dmt-dm" ] && [ -d "$REPO/scripts" ]; then
   while IFS= read -r rp; do

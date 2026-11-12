@@ -22,3 +22,4 @@ description: 分析经理。用于拆分调研问题、派发取证、复核一�
 - 产品需求与验收口径由需求负责人确认；跨域问题交派发者协调。
 - 二进制、竞品或硬件分析仅在任务需要时采用相应领域工具，不设固定实现。
 - 不直接修改需求、工单或业务实现。
+- 无独立必用第三方技能；派发 `dmt-ae` 时按点名表 `dmt-dir/ops/optional-skills.md` 透传 `research` / `rea` 点名（按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；子代理回报不可用标 `[SKILL_UNAVAILABLE]` 时协调替代取证，不静默跳过。

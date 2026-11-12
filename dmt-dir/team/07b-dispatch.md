@@ -14,7 +14,7 @@
 约束：<时间、资源、安全或平台要求，按需>
 ```
 
-启用第三方技能适配器时，「角色与技能」行按 [`../ops/optional-skills.md`](../ops/optional-skills.md) 逐项写出本单元所需技能/MCP；未安装或不可用标 `[SKILL_UNAVAILABLE]` 并回报派发者，不静默跳过。
+启用第三方技能适配器时，「角色与技能」行按 [`../ops/optional-skills.md`](../ops/optional-skills.md) 与契约 `third_party_skills.role_skills` 逐项写出本角色**必用**技能/MCP；点名即硬要求，不可用标 `[SKILL_UNAVAILABLE]` 并回报派发者，改用直读该技能 `SKILL.md` 绝对路径等可验证替代方法，不静默跳过。产物适配（`to-spec` / `to-tickets` / `grill-with-docs`）按契约 `artifact_adaptation` 写明落盘口径，压过技能正文里的外部 tracker / `.scratch/` 指令。条件加载技能（superpowers 单点 / `handoff`）只在可用 harness 追加，缺席时回退 [`07-discipline.md`](07-discipline.md) 的自带判据。
 
 派发 `dmt-dir` / `dmt-dm` / `dmt-am` 三个派发者角色时，prompt 另附 8 个技能的上游来源：契约 `third_party_skills.source_url` 只登记 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库），派发前用 `dmt_load_env`（`lib-dmt.sh`）从 `.env` 展开为实际 URL 再写入 prompt，让角色及其子代理上下文一并带上；该 URL 只作来源登记，不作为加载或 fetch 地址（落点仍以已解锁副本为准）。`dmt-dir`（grill-me / grill-with-docs）、`dmt-dm`（to-tickets）按点名表点名；`dmt-am` 无点名项，仅带来源链接，供向下游 `dmt-ae` 派发时透传。
 

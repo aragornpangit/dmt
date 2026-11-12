@@ -22,3 +22,4 @@ description: 分析工程师。用于执行单个调研取证单元，提供可�
 - 只写任务指定的证据产物，不修改需求、工单或业务实现。
 - 领域工具按任务和当前环境选择；不可用时报告限制并采用可验证的替代方法。
 - 环境检测或平台失败同样回报派发者，不越级上报。
+- 必用 `research` 与 `rea`（REA MCP）取证（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用可验证的一手来源替代方法，不静默跳过。

@@ -70,9 +70,53 @@ skill_budgets:
 # 的 skills.dir_user 推导，由 install-third-party-skills.sh 铺设。
 # explicit_only 的 5 个带 allow_implicit_invocation: false，必须指向已解锁副本。
 third_party_skills:
-  names: [grill-me, grill-with-docs, to-spec, tdd, implement, code-review, to-tickets, research]
+  # grilling 是 grill-me / grill-with-docs 的转发目标（两者正文会二次调用它），故一并铺齐 9 个。
+  names: [grill-me, grill-with-docs, grilling, to-spec, tdd, implement, code-review, to-tickets, research]
   explicit_only: [grill-me, grill-with-docs, to-spec, implement, to-tickets]
-  # 8 个技能的上游来源登记：内网地址不入库（工程卫生 §6），这里只登记 .env 变量名。
+
+  # B 增强版「硬保证层」：角色 → 必用技能，单一来源。
+  # A6f 正向机检与 tests/ 从此读，不在脚本里写死角色映射；每个角色 SKILL.md 必须含
+  # 下列技能名 + 分平台调用方式 + [SKILL_UNAVAILABLE] 降级，缺一即 FAIL。
+  role_skills:
+    dmt-dir: [grill-me, grill-with-docs]
+    dmt-pde: [to-spec]
+    dmt-dm: [to-tickets]
+    dmt-de: [tdd, implement, code-review]
+    dmt-reviewer: [code-review]
+    dmt-ae: [research]
+    dmt-am: []
+
+  # 优先级 1「产物适配」（A 方案：约束写进派发 prompt / 角色 SKILL.md，不做 wrapper 副本）。
+  # 这三个上游技能默认把产物发布到外部 issue tracker / .scratch / ADR，与 dmt 目录约定冲突。
+  artifact_adaptation:
+    skills: [to-spec, to-tickets, grill-with-docs]
+    rule: "产物按 team/04-naming.md 与 05-dirs.md 落盘（docs/pd/spec、docs/dev/tickets、docs/handoff），不发布到外部 issue tracker、不写 .scratch/、不套用上游 ADR/triage 约定；技能正文与 dmt 约定冲突时以 dmt 约定为准。"
+
+  # 优先级 3 + 交接「条件加载层」：不进 role_skills、不进 A6f 硬机检。
+  # superpowers 仅 claudecode 官方 plugin 提供（版本化 cache 路径，未铺到 5 harness）；
+  # handoff 是 explicit-only 且 skills-unlocked 无解锁副本。写进「必须加载」会让 4/5 平台必然失败。
+  conditional_skills:
+    # 层 1「纪律同构」：superpowers 的方法论原则已按判据并入 team/07-discipline.md，
+    # dmt 自带、可机检、跨 5 harness 一致，不依赖任何外部 plugin。这是首要结合方式。
+    discipline_alignment: [verification-before-completion, systematic-debugging, using-git-worktrees, dispatching-parallel-agents]
+    # 层 2「条件加载」：仅 claudecode 官方 plugin 可用时按角色点名，其余 harness
+    # 标 [SKILL_UNAVAILABLE] 回退层 1。excluded 因「改编排 / 改写权 / 与 dmt 角色冲突」一律不点名。
+    superpowers:
+      available_on: [claudecode]
+      by_role:
+        dmt-dir: [brainstorming]
+        dmt-dm: [using-git-worktrees, dispatching-parallel-agents]
+        dmt-de: [systematic-debugging, test-driven-development]
+        dmt-reviewer: [verification-before-completion, requesting-code-review]
+      excluded: [using-superpowers, executing-plans, subagent-driven-development, finishing-a-development-branch]
+      note: "仅 claudecode plugin 可用；其他 harness 标 [SKILL_UNAVAILABLE]，改用 07-discipline.md / 05-dirs.md 的 dmt 自带约定；brainstorming 与 grill-me 二选一，不并列"
+    # 层 3：ECC / pstack 整套不引入；superpowers 不进 role_skills / A6f 硬机检。
+    handoff:
+      skill: handoff
+      state: "explicit-only，skills-unlocked 暂无解锁副本"
+      note: "标准交接产物按 05-dirs.md 的 docs/handoff/ 落盘；加载 mattpocock handoff 需先解锁副本，否则标 [SKILL_UNAVAILABLE]"
+
+  # 上游来源登记：内网地址不入库（工程卫生 §6），这里只登记 .env 变量名。
   # 派发者用 dmt_load_env（lib-dmt.sh）展开 $DMT_MATTPOCOCK_SOURCE_URL 后随 prompt 带入
   # 上下文；仅作来源说明，运行时落点仍是 install-third-party-skills.sh 铺设的已解锁副本，
   # 此 URL 不作为 fetch / 加载地址，也不替代 [SKILL_UNAVAILABLE] 降级。
