@@ -3,6 +3,7 @@
 ## 通信
 
 - 直接子代理通过平台原生返回通道只向派发者回报。
+- **回执三步**：发送文本 → 显式提交回车 → 复核输入已被接受，缺一步视为未送达，不凭「写入终端」判断送达。herdr 走 `pane send-text` + `pane send-keys <pane> enter` + `pane read` 核验；Orca 走 `orca terminal send --terminal <id> --text '<msg>' --enter --wait-submit 15`（`terminal send` 默认**不追加回车**，必须显式 `--enter`）。用哪个通道由 [`02-runtime.md`](02-runtime.md) 第 1 步的运行平台判定结果决定，不按 harness 猜。
 - 跨进程角色可使用项目现有消息机制；启用 DMT 收件箱时按 [`../ops/comms.md`](../ops/comms.md) 操作。
 - 回报包含目标、结论、产物、证据和未决项；阻塞与能力缺失也沿同一方向回报。
 
