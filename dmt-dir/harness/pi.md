@@ -14,7 +14,7 @@ pi 没有通用 Skill 工具，子代理默认也不一定继承技能。优先�
 
 - `inheritSkills: false` + `skills:` 可精确注入角色技能。
 - 未安装命名定义时，用内置 `delegate` 并在 prompt 中给出角色技能的绝对路径。
-- 带 `disable-model-invocation: true` 的技能可能从 `skills:` 过滤，需直接读取文件。
+- 带 `disable-model-invocation: true` 的技能可能从 `skills:` 过滤；`skills-unlocked` 解锁副本已剥离该字段，若仍被过滤则直接读取文件。
 - 需要调用另一个技能而平台不支持时，读取其 `SKILL.md`，不要假设调用成功。
 
 `pi-agents/` 提供 DMT 角色模板。具体并发、门铃和启动时序以当前版本实测与矩阵为准；容量上限不是并行目标。

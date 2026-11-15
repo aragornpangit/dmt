@@ -1,6 +1,6 @@
 # ADE 编排适配器：Orca
 
-Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness_matrix.yaml`](../harness_matrix.yaml) `harnesses:` 段里的某个 agent CLI。共性见 [`COMMON.md`](COMMON.md)；机器事实见矩阵 `ades.orca`（`kind: ade`），harness 运行平台衬底见 `runtimes.herdr`（`kind: pane-runtime`）。仅在实际使用 Orca 编排时读取本文；harness 运行平台由 `runtime-detect.sh` 在加载技能后判定，本文不改 `harnesses:` 段或 `per_harness` 清单。
+Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness_matrix.yaml`](../harness_matrix.yaml) `harnesses:` 段里的某个 agent CLI。共性见 [`COMMON.md`](COMMON.md)；机器事实见矩阵 `ades.orca`（`kind: ade`）；`runtimes:` 与 `ades:` 是并列两段，herdr 不是 Orca 的衬底。仅在实际使用 Orca 编排时读取本文；harness 运行平台由 `runtime-detect.sh` 在加载技能后判定，本文不改 `harnesses:` 段或 `per_harness` 清单。
 
 ## 运行时
 
@@ -28,7 +28,7 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
 
 ## 与 herdr 适配器的差异
 
-- `send-msg.sh` / `msg-done.sh` / `setup-team.sh` / `dl-pane.sh` 与 `lib-dmt.sh` 的 `dmt_herdr_*` 绑 herdr，在 Orca 里不可用；用上文的 Orca 原生命令替代，不伪造多代理。
+- `send-msg.sh` / `setup-team.sh` 与 `lib-dmt.sh` 的 `dmt_herdr_*` 绑 herdr，在 Orca 里不可用；`msg-done.sh` 只操作文件，可在 Orca 使用；用上文的 Orca 原生命令替代，不伪造多代理。
 - 门铃由 `orca terminal send --terminal <id> --text '<msg>' --enter --wait-submit 15` + `orchestration inbox` 承担，替代 `herdr agent prompt`；发送后按三步复核提交。[`../ops/runtime.md`](../ops/runtime.md) 的 pane 布局只适用于 herdr 部署。
 - `file-claim.sh` 仍可用于同一 worktree 内多写者协调；跨 worktree 的隔离由 Orca 物理边界保证。
 

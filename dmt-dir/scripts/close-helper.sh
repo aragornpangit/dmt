@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 本体角色用：任务完成后回收 helper pane（只关 pane、不关 tab；helper tab 保留复用；非创建者不得代关）
+# 本体角色用：任务完成后回收 helper pane（只关 helper pane，不影响派生者 pane 与所在 tab；非创建者不得代关）
 # 用法：bash close-helper.sh <dmt-dir|dmt-dm|dmt-am> [--force] [--dry-run]
 #   收件箱安检：只把 ^[0-9]+-{角色}-helper2{角色}- 方向的消息（含 .doing/）算该 helper 的未读/未收口
 set -eu
@@ -11,6 +11,9 @@ for a in "$@"; do
 done
 case "$ROLE" in dmt-dir|dmt-dm|dmt-am) ;; *) echo "role must be dmt-dir|dmt-dm|dmt-am" >&2; exit 2 ;; esac
 LABEL="${ROLE}-helper"
+
+# 公共库必须在第一次用 dmt_herdr 之前 source（此前放在下面，导致本脚本恒报 pane list 失败）
+DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 
 if ! list="$(dmt_herdr pane list --workspace "${HERDR_WORKSPACE_ID:-}" 2>/dev/null)"; then
   echo "ERROR: herdr pane list 失败，无法确认 $LABEL 状态（不按已关闭处理）" >&2
@@ -28,7 +31,6 @@ if [ -z "$pane" ]; then
 fi
 
 # 收件箱定位到主工作树根（与 send-msg / msg-take 同口径；在 worktree 里跑也指回主树）
-DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"
 root="$(dmt_root)"
 inbox="$root/inbox/$ROLE"
 # 未读按方向过滤：只把 ^[0-9]+-{角色}-helper2{角色}- 的消息（含 .doing/）算该 helper 的未读/未收口
@@ -43,5 +45,5 @@ fi
 echo "人工确认清单（关闭 $LABEL 前逐项确认）：① 回报已入账 ② worktree 已 git worktree remove（由关闭者确认）③ 未读自动判（本脚本按 ${LABEL}2${ROLE} 方向查过）"
 if [ "$DRY" = 1 ]; then echo "+ herdr pane close $pane"; else
   dmt_herdr pane close "$pane"
-  echo "closed $LABEL ($pane)（helper tab 保留复用）"
+  echo "closed $LABEL ($pane)（派生者 pane 与所在 tab 保留）"
 fi

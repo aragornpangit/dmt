@@ -159,8 +159,8 @@ class DmtRegressionTests(unittest.TestCase):
         listed = run("bash", matrix, "list")
         self.assertEqual(listed.returncode, 0, listed.stderr)
         names = set(listed.stdout.split())
-        self.assertEqual(names, {"pi", "codebuddy", "claude", "codex", "opencode"})
-        self.assertFalse({"herdr", "orca", "t3code"} & names)
+        self.assertEqual(names, {"pi", "codebuddy", "claude", "codex", "hermes", "opencode"})
+        self.assertFalse({"herdr", "orca"} & names)
 
         platforms = run("bash", matrix, "platform-list")
         self.assertEqual(platforms.returncode, 0, platforms.stderr)
@@ -171,18 +171,24 @@ class DmtRegressionTests(unittest.TestCase):
         )
         self.assertEqual(kinds.get("runtimes/herdr"), "pane-runtime")
         self.assertEqual(kinds.get("ades/orca"), "ade")
-        self.assertEqual(kinds.get("ades/t3code"), "ade")
 
         got = run("bash", matrix, "get", "runtimes.herdr", "kind")
         self.assertEqual(got.returncode, 0, got.stderr)
         self.assertEqual(got.stdout.strip(), "pane-runtime")
+
+        detected = run(
+            "bash",
+            REPO / "dmt-dir/scripts/harness-detect.sh",
+            env={"DMT_HARNESS": "hermes"},
+        )
+        self.assertEqual(detected.returncode, 0, detected.stderr)
+        self.assertEqual(detected.stdout.strip(), "hermes")
 
     def test_runtime_detect_is_fail_closed(self):
         base = {"PATH": os.environ.get("PATH", ""), "HOME": "/tmp"}
         cases = [
             ({"HERDR_PANE_ID": "1-1"}, "herdr", 0),
             ({"ORCA_TERMINAL_HANDLE": "t-1"}, "orca", 0),
-            ({"DMT_PLATFORM": "t3code"}, "t3code", 0),
             ({}, "none", 0),
             ({"HERDR_PANE_ID": "1-1", "ORCA_TERMINAL_HANDLE": "t-1"}, "unknown", 1),
             ({"DMT_PLATFORM": "bogus"}, "", 2),

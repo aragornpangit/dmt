@@ -12,6 +12,8 @@ docs/pd/prd/       产品需求
 docs/pd/spec/      技术规格
 docs/dev/tickets/  开发工单
 docs/analyst/      调研报告与证据索引
+docs/human/human-arch/  人工编写的架构说明
+docs/human/human-plan/  人工编写的计划
 docs/handoff/      交接与验收结论
 inbox/<role>/      启用收件箱适配器后的运行时消息
 ```

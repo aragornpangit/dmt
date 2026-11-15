@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# dmt-dir 用：部署 tab dmt-dir-am（dmt-dir 左 60% / dmt-am 右）与 tab dmt-dm（dmt-dm 左 30% / dmt-dl1 右上 / dmt-dl2 右下），并代启动 harness（幂等）
+# dmt-dir 用：部署 tab dmt-dir-am（dmt-dir 左 60% / dmt-am 右）与 tab dmt-dm（dmt-dm 独占），并代启动 harness（幂等）
 # 用法：bash setup-team.sh [--dry-run] [--no-start] [--force-start] [--reload] [--harness <name>]
 #   --no-start     只建 pane，不启动
 #   --force-start  即使 agent 已在跑也重发启动命令（默认跳过：对运行中的 agent 发启动命令会被当成用户提问）
 #   --reload       对已在跑的 pane 补发技能命令（重载技能，不重发启动命令；codex 在新会话重开）
-#   --harness      harness 名：codebuddy（默认）| pi | opencode | codex | claude（亦可 $DMT_HARNESS；$DMT_HARNESS_CMD 整体覆盖）
+#   --harness      harness 名：codebuddy（默认）| pi | opencode | codex | claude | hermes（亦可 $DMT_HARNESS；$DMT_HARNESS_CMD 整体覆盖）
 #   需要环境变量 HERDR_ENV=1、HERDR_PANE_ID、HERDR_TAB_ID、HERDR_WORKSPACE_ID
 set -eu
 DRY=0; START=1; FORCE=0; RELOAD=0; HARNESS_ARG=""
@@ -110,7 +110,7 @@ verify_auto_mode() {
 h dmt_herdr tab rename "$HERDR_TAB_ID" dmt-dir-am
 h dmt_herdr pane rename "$HERDR_PANE_ID" dmt-dir
 
-# 2) dmt-dm tab：dmt-dm 左 30%，dmt-dl1 右上、dmt-dl2 右下（可选适配器示例布局）
+# 2) dmt-dm tab：dmt-dm 独占
 dm_pane="$(pane_by_label dmt-dm || true)"
 dmtab="$(tab_id_by_label dmt-dm || true)"
 if [ -z "$dm_pane" ]; then
@@ -145,33 +145,6 @@ else
 fi
 ensure_started "$dm_pane" dmt-dm dmt-dm
 
-# 2b) 按需派生的协调者 pane（完成即回收，非默认层级）：dmt-dl1 从 dmt-dm 右侧切出（dmt-dm 保留 30%），dmt-dl2 从 dmt-dl1 下方对半切出
-dl1_pane="$(pane_by_label dmt-dl1 || true)"
-for n in 1 2; do
-  label="dmt-dl$n"
-  p="$(pane_by_label "$label" || true)"
-  if [ -z "$p" ]; then
-    if [ "$DRY" = 1 ]; then
-      echo "+ herdr pane split <base> $( [ "$n" = 1 ] && echo '--direction right --ratio 0.3' || echo '--direction down --ratio 0.5' ) -> $label" >&2
-      p="<$label-pane>"
-    elif [ "$n" = 1 ]; then
-      p="$(dmt_herdr pane split "$dm_pane" --direction right --ratio 0.3 --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
-      [ -n "$p" ] || { echo "ERROR: pane split 失败（$label）" >&2; exit 4; }
-      dmt_herdr pane rename "$p" "$label"
-      mkdir -p "$PWD/inbox/$label"
-      dl1_pane="$p"
-    else
-      [ -n "$dl1_pane" ] || dl1_pane="$(pane_by_label dmt-dl1 || true)"
-      [ -n "$dl1_pane" ] || { echo "ERROR: 找不到 dmt-dl1 pane，无法切出 $label" >&2; exit 4; }
-      p="$(dmt_herdr pane split "$dl1_pane" --direction down --ratio 0.5 --cwd "$PWD" --no-focus | jq -r '.result.pane.pane_id // empty')"
-      [ -n "$p" ] || { echo "ERROR: pane split 失败（$label）" >&2; exit 4; }
-      dmt_herdr pane rename "$p" "$label"
-      mkdir -p "$PWD/inbox/$label"
-    fi
-  fi
-  ensure_started "$p" dmt-dl "$label"
-done
-
 # 3) dmt-am：与 dmt-dir 同处 dmt-dir-am tab，右侧（dmt-dir 保留 60%）
 p="$(pane_by_label dmt-am || true)"
 if [ -z "$p" ]; then
@@ -191,4 +164,4 @@ else
   fi
 fi
 ensure_started "$p" dmt-am dmt-am
-echo "team ready: tab dmt-dir-am[dmt-dir 60% | dmt-am] / tab dmt-dm[dmt-dm 30% | dmt-dl1 | dmt-dl2]"
+echo "team ready: tab dmt-dir-am[dmt-dir 60% | dmt-am] / tab dmt-dm[dmt-dm]"

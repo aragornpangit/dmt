@@ -6,4 +6,4 @@
 
 | # | 项 | 判据 | 状态 |
 |---|---|---|---|
-| X3 | codex `spawn_agent` 载荷不送达（Full Access 下复测同样失败） | 上游修复后才能改判；当前记 `[SUBAGENT_UNAVAILABLE]` 并由本 pane 代行 | **WATCH**（上游缺陷） |
+| X3 | codex `spawn_agent` 载荷不送达（0.166 复测失败；0.167 未复测） | 上游修复后才能改判；当前记 `[SUBAGENT_UNAVAILABLE]` 并由本 pane 代行 | **WATCH**（上游缺陷） |

@@ -3,11 +3,11 @@
 #
 # 与 harness-detect.sh 正交：harness-detect 答「我是哪个 agent CLI」，本脚本答
 # 「harness 跑在哪层运行平台上」。两者不是同一根轴，不得合并成单一枚举。
-# 术语：harness = pi / cbc / claudecode / codex-cli / opencode（矩阵 harnesses:）；
-#       运行平台 = runtimes:(herdr) + ades:(orca / t3code)，矩阵各成员带 kind。
+# 术语：harness = pi / codebuddy(cbc) / claude(claudecode) / codex / opencode（矩阵 harnesses:）；
+#       运行平台 = runtimes:(herdr) + ades:(orca)，矩阵各成员带 kind。
 #
 # 用法：bash runtime-detect.sh [--explain]
-# 输出：stdout 一行 herdr|orca|t3code|none|unknown
+# 输出：stdout 一行 herdr|orca|none|unknown
 # rc：  0 = 已判定（none 也是正常结果，表示裸跑无运行平台）
 #       1 = unknown（同时命中多个不同运行平台，fail-closed 不猜）
 #       2 = 参数错
@@ -18,7 +18,6 @@
 #   ③ none            无任何运行平台标记
 #   ④ unknown         同时命中多个不同运行平台 ⇒ 不猜，交调用方处置
 #
-# t3code 暂无已实测的环境判据，只能由 DMT_PLATFORM 显式指定；不猜变量名。
 set -u
 
 EXPLAIN=0
@@ -35,8 +34,8 @@ note() { [ "$EXPLAIN" = 1 ] && echo "[runtime-detect] $*" >&2; return 0; }
 
 if [ -n "${DMT_PLATFORM:-}" ]; then
   case "$DMT_PLATFORM" in
-    herdr|orca|t3code|none) note "源=DMT_PLATFORM（显式覆盖）"; printf '%s\n' "$DMT_PLATFORM"; exit 0 ;;
-    *) echo "bad DMT_PLATFORM: $DMT_PLATFORM（want herdr|orca|t3code|none）" >&2; exit 2 ;;
+    herdr|orca|none) note "源=DMT_PLATFORM（显式覆盖）"; printf '%s\n' "$DMT_PLATFORM"; exit 0 ;;
+    *) echo "bad DMT_PLATFORM: $DMT_PLATFORM（want herdr|orca|none）" >&2; exit 2 ;;
   esac
 fi
 

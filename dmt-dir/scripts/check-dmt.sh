@@ -187,7 +187,7 @@ else
   done
 fi
 # 两轴分离：运行平台成员不得混进 harnesses 的 list
-for p in herdr orca t3code; do
+for p in herdr orca; do
   if bash "$MATRIX" list | grep -qx "$p"; then bad "运行平台成员 $p 混入 harnesses 列表"; else ok "运行平台成员 $p 未混入 harnesses"; fi
 done
 # 运行平台适配文档（platform_docs）存在性
@@ -207,7 +207,6 @@ if [ -x "$RDETECT" ]; then
   }
   rd_case HERDR_PANE_ID      1-1    herdr  0
   rd_case ORCA_TERMINAL_HANDLE t-1  orca   0
-  rd_case DMT_PLATFORM       t3code t3code 0
   rd_case DMT_PLATFORM       bogus  ""     2
   none_out="$(env -i PATH="$PATH" HOME="${HOME:-/tmp}" bash "$RDETECT" 2>/dev/null)"; none_rc=$?
   if [ "$none_out" = "none" ] && [ "$none_rc" = 0 ]; then ok "runtime-detect: 无运行平台标记 ⇒ none（rc=0）"; else bad "runtime-detect: 无运行平台标记应输出 none 且 rc=0（实得 out=$none_out rc=$none_rc）"; fi
@@ -254,10 +253,10 @@ case "$CODEX_CMD" in
   *) ok "codex 默认启动不含危险沙箱" ;;
 esac
 
-# pi 子代理 agent 定义模板（三份 + README）；install-skills.sh 铺到 <target>/.pi/agents/
+# pi 子代理 agent 定义模板（四份 + README）；install-skills.sh 铺到 <target>/.pi/agents/
 PI_AG="$HARNESS_DIR/pi-agents"
 if [ -d "$PI_AG" ]; then
-  for f in README.md dmt-de.md dmt-ae.md dmt-pde.md; do
+  for f in README.md dmt-de.md dmt-ae.md dmt-pde.md dmt-reviewer.md; do
     if [ -s "$PI_AG/$f" ]; then ok "pi agent 定义 $f"; else bad "pi agent 定义缺失或为空：$f"; fi
   done
   # 每份定义都必须用白名单形态（inheritSkills: false + skills:），否则「精确注入」退化为「全量继承」
@@ -281,7 +280,7 @@ import sys,yaml
 print(" ".join(sorted((yaml.safe_load(open(sys.argv[1],encoding="utf-8")).get("harnesses") or {}).keys())))' "$HARNESS_MATRIX")"
 if [ "$declared" = "$from_matrix" ]; then ok "harness 差异文件与矩阵 key 一致（$declared）"; else bad "harness 差异文件与矩阵 key 不一致：契约=[$declared] 矩阵=[$from_matrix]"; fi
 # 技能加载不要求 harness 检测；仅适配器自身需要自测。
-# 检测脚本自测：五 harness + 未知（未知必须 rc=1，不得沉默默认）
+# 检测脚本自测：六 harness + 未知（未知必须 rc=1，不得沉默默认）
 DETECT="$SCRIPT_DIR/harness-detect.sh"
 if [ -x "$DETECT" ]; then ok "harness-detect.sh 可执行"; else bad "harness-detect.sh 缺失或不可执行"; fi
 detect_case() {
@@ -329,15 +328,11 @@ if [ -f "$SEND" ]; then
   dir_case dmt-am       dmt-dir         0
   dir_case dmt-dir   dmt-dm             0
   dir_case dmt-dir   dmt-am             0
-  dir_case dmt-dl1      dmt-dm             0
-  dir_case dmt-dm       dmt-dl1            0
   dir_case dmt-dm       dmt-dm-helper      0
   dir_case dmt-dir   dmt-dir-helper  0
-  dir_case dmt-dl2      dmt-dl1            2
+  # 退役的 dmt-dl{n} 不得复活：作为收方或发方都应被拒
   dir_case dmt-dl1      dmt-dir         2
-  dir_case dmt-dl1      dmt-am             2
   dir_case dmt-dir   dmt-dl1            2
-  dir_case dmt-am       dmt-dl1            2
   dir_case dmt-am       dmt-dm             2
   dir_case dmt-dm       dmt-am             2
   dir_case dmt-dm       dmt-dm             2
@@ -417,7 +412,7 @@ def matrix_get(h, field):
         return ""
 
 dirs = []
-for h in ("codebuddy", "claude", "codex", "opencode", "pi"):
+for h in ("codebuddy", "claude", "codex", "hermes", "opencode", "pi"):
     d = matrix_get(h, "skills.dir_user")
     if d and d not in dirs:
         dirs.append(d)

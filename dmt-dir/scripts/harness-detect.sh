@@ -5,7 +5,7 @@
 #   无参        = 判定本进程所在会话
 #   --pane      = 判定指定 pane（诊断 / 机检自测用；不进 pane 也能查）
 #   --explain   = 把判定来源打到 stderr（stdout 仍只有一行 harness 名）
-# 输出：stdout 一行 harness 名（pi|codebuddy|claude|codex|opencode|unknown）
+# 输出：stdout 一行 harness 名（pi|codebuddy|claude|codex|hermes|opencode|unknown）
 # rc：0 = 已判定；1 = unknown（**调用方必须显式处理，不得默认成某个 harness**）；2 = 参数错
 #
 # 判据优先级（首个命中为准，越靠前越硬）：
@@ -45,8 +45,9 @@ fi
 
 norm() {
   case "${1:-}" in
-    pi|claude|codex|opencode) printf '%s' "$1" ;;
+    pi|claude|codex|hermes|opencode) printf '%s' "$1" ;;
     codebuddy|cbc)            printf 'codebuddy' ;;
+    hermes-agent)             printf 'hermes' ;;
     claude-code|claudecode)   printf 'claude' ;;
     *)                        printf '' ;;
   esac
@@ -69,7 +70,7 @@ harness_of_cmdline() {
     i=$((i + 1)); [ "$i" -gt 3 ] && break
     n="$(basename "$tok" 2>/dev/null || printf '%s' "$tok")"
     case "$n" in
-      pi|claude|cbc|codebuddy|codex|opencode) norm "$n"; return 0 ;;
+      pi|claude|cbc|codebuddy|codex|hermes|opencode) norm "$n"; return 0 ;;
     esac
   done
   return 1
@@ -80,7 +81,7 @@ h=""
 # ① 显式覆盖
 if [ -n "${DMT_HARNESS:-}" ]; then
   h="$(norm "$DMT_HARNESS")"
-  [ -n "$h" ] || { echo "bad DMT_HARNESS: $DMT_HARNESS（want pi|codebuddy|claude|codex|opencode）" >&2; exit 2; }
+  [ -n "$h" ] || { echo "bad DMT_HARNESS: $DMT_HARNESS（want pi|codebuddy|claude|codex|hermes|opencode）" >&2; exit 2; }
   note "源=$DMT_HARNESS（显式覆盖）"; printf '%s\n' "$h"; exit 0
 fi
 
@@ -102,6 +103,7 @@ if [ -n "${PI_CODING_AGENT:-}" ]; then h=pi
 elif [ "${CLAUDECODE:-}" = "1" ]; then h=claude
 elif [ -n "${CODEBUDDY_SETTINGS:-}" ] || [ -n "${CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS:-}" ]; then h=codebuddy
 elif [ -n "${CODEX_HOME:-}" ] || [ -n "${CODEX_SANDBOX:-}" ] || [ -n "${CODEX_THREAD_ID:-}" ]; then h=codex
+elif [ -n "${HERMES_SESSION_ID:-}" ] || [ -n "${HERMES_HOME:-}" ]; then h=hermes
 elif [ -n "${OPENCODE:-}" ] || [ -n "${OPENCODE_CONFIG:-}" ] || [ -n "${OPENCODE_CONFIG_CONTENT:-}" ]; then h=opencode
 fi
 if [ -n "$h" ]; then note "源=环境标记 ⇒ $h"; printf '%s\n' "$h"; exit 0; fi

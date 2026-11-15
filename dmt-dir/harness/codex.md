@@ -5,7 +5,7 @@
 - 项目技能目录可用 `.agents/skills/`、`.codex/skills/`；避免同一技能重复登记。
 - 角色技能使用 `/<技能名>`；其他技能的限定名由其实际安装方式决定。
 - 支持首轮 prompt 的平台可在启动时传入角色技能与任务。
-- 子代理优先使用原生 `spawn_agent` / `wait_agent`；不可用时报告能力缺口，不用嵌套进程伪造团队。
+- 子代理优先使用原生 `spawn_agent` / `wait_agent`；当前版本载荷不送达时见 [`BACKLOG.md`](BACKLOG.md) X3，报告能力缺口，不用嵌套进程伪造团队。
 
 ## 沙箱与 herdr
 

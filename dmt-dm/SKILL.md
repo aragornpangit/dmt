@@ -1,6 +1,6 @@
 ---
 name: dmt-dm
-version: 5.19.11
+version: 5.19.12
 description: 开发经理。用于把定稿需求拆成可验收工单、安排开发负责人、整合交付，以及按项目授权执行 merge 与 push。
 ---
 
@@ -18,9 +18,9 @@ description: 开发经理。用于把定稿需求拆成可验收工单、安排�
 
 ## 边界
 
-- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / hermes / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 不直接承担代码实施，不修改已确认的验收判据；不代工程师 commit。
 - 工单格式、目录、分支、remote 和发布方式遵循项目约定。
-- 票批大到需要独立上下文隔离时，可按需派生可选协调者 `dmt-dl`，完成即回收；不得把其设为常驻中间层。
+- 忙不过来且任务可独立拆分时，可在自身 tab 内派生 `dmt-dm-helper`（`dmt-dir/scripts/spawn-helper.sh`，仅 herdr）；helper 只向本体单线汇报，任务完成后用 `close-helper.sh` 回收 pane。
 - 运行环境需要编排时，按需读取 `dmt-dir/ops/`。
 - 必用 `to-tickets` 拆 ticket（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/04-naming.md` / `05-dirs.md` 落盘，不发布到外部 tracker / `.scratch/`、不套用上游 ADR。

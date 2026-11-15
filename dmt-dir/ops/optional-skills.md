@@ -12,7 +12,7 @@
 | `dmt-ae` | `research`、`rea`（REA MCP） | 一手取证、竞品逆向 |
 | `dmt-am` | 无点名项 | 汇总调研；派发 `dmt-ae` 时透传 `research` / `rea` |
 
-角色→技能的机器可读映射在契约 `third_party_skills.role_skills`（A6f 正向机检从此读，不写死在脚本里）。技能名与上游 mattpocock/skills 目录名一致；`rea` 是 REA MCP，不在该仓；上游无 `to-prd`，PRD 按项目模板落笔。
+角色→技能的机器可读映射在契约 `third_party_skills.role_skills`（A6f 正向机检从此读，不写死在脚本里）。技能名与上游 mattpocock/skills 目录名一致；`rea` 是 REA MCP，不在该仓；上游无 `to-prd`，PRD 由 `dmt-dir` 起草，不由 `dmt-pde` 起草。
 
 ## 派发写法（B 增强版）
 
@@ -33,23 +33,23 @@
 
 以下技能**不写进** `role_skills`、不受 A6f 硬机检约束；只在可用时按 [`../team/07b-dispatch.md`](../team/07b-dispatch.md) 点名，否则标 `[SKILL_UNAVAILABLE]` 并回退到 dmt 自带约定（`07-discipline.md` / `05-dirs.md`）。契约登记在 `third_party_skills.conditional_skills`。
 
-- **superpowers（三层结合）**：本机仅 claudecode 官方 plugin `superpowers@claude-plugins-official` v7.0.0 提供，技能在版本化 plugin cache 路径，**未铺到 5 个 harness 的技能发现目录**；ECC / pstack 整套不引入。结合方式按三层，契约登记在 `third_party_skills.conditional_skills`：
-  - **层 1 纪律同构（首要）**：`verification-before-completion`（Evidence before claims）、`systematic-debugging`（先找根因）、`using-git-worktrees`（先探测已有隔离）、`dispatching-parallel-agents`（独立上下文、精确构造、不继承会话）已作为判据并入 [`../team/07-discipline.md`](../team/07-discipline.md)，dmt 自带、可机检、跨 5 harness 一致，不依赖 plugin。
+- **superpowers（三层结合）**：本机仅 claudecode 官方 plugin `superpowers@claude-plugins-official` v7.0.0 提供，技能在版本化 plugin cache 路径，**未铺到 6 个 harness 的技能发现目录**；ECC / pstack 整套不引入。结合方式按三层，契约登记在 `third_party_skills.conditional_skills`：
+  - **层 1 纪律同构（首要）**：`verification-before-completion`（Evidence before claims）、`systematic-debugging`（先找根因）、`using-git-worktrees`（先探测已有隔离）、`dispatching-parallel-agents`（独立上下文、精确构造、不继承会话）已作为判据并入 [`../team/07-discipline.md`](../team/07-discipline.md)，dmt 自带、可机检、跨 6 harness 一致，不依赖 plugin。
   - **层 2 条件加载（按角色）**：仅 claudecode 可用时点名 —— `dmt-dir`→`brainstorming`（与 `grill-me` 二选一，不并列）、`dmt-dm`→`using-git-worktrees` / `dispatching-parallel-agents`、`dmt-de`→`systematic-debugging` / `test-driven-development`、`dmt-reviewer`→`verification-before-completion` / `requesting-code-review`；其余 harness 标 `[SKILL_UNAVAILABLE]` 回退层 1。
-  - **层 3 禁入与排除**：`using-superpowers`（自动路由，与「按需加载」冲突）、`executing-plans` / `subagent-driven-development`（自带子代理拓扑，绕过两级开发线）、`finishing-a-development-branch`（含 merge/push，给 de 会越权）一律不点名；superpowers 不进 `role_skills` / A6f 硬机检（只有 1/5 harness 可用，写进硬保证即成假保证）。
+  - **层 3 禁入与排除**：`using-superpowers`（自动路由，与「按需加载」冲突）、`executing-plans` / `subagent-driven-development`（自带子代理拓扑，绕过两级开发线）、`finishing-a-development-branch`（含 merge/push，给 de 会越权）一律不点名；superpowers 不进 `role_skills` / A6f 硬机检（只有 1/6 harness 可用，写进硬保证即成假保证）。
 - **handoff**（交接）：explicit-only 且 `skills-unlocked` 无解锁副本。标准交接产物按 `05-dirs.md` 的 `docs/handoff/` 落盘；要加载 mattpocock `handoff` 技能需先生成解锁副本，否则标 `[SKILL_UNAVAILABLE]`。
 - **herdr / orca**：是 harness 运行平台（pane-runtime / ADE），其 CLI 控制说明与内置 guides 不是可点名的 SKILL.md，走 [`../team/02-runtime.md`](../team/02-runtime.md) 适配器路径，不进点名表。
 
 ## 落点与前缀
 
-- 9 个技能的清单与 explicit-only 标记在 [`../dmt_contract.yaml`](../dmt_contract.yaml) 的 `third_party_skills:`；用户级落点由 `harness_matrix.yaml` 的 `skills.dir_user`（opencode 另含 `dir_project_extra`）推导。`grilling` 是 `grill-me` / `grill-with-docs` 的转发目标（两者正文会二次调用它），必须与两者一起铺齐，否则转发链断。
-- 9 个技能的上游来源登记在同段 `third_party_skills.source_url`，值为 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库，实际值由本机 `.env` 提供）；派发 `dmt-dir` / `dmt-dm` / `dmt-am` 时用 `dmt_load_env` 展开后按 [`../team/07b-dispatch.md`](../team/07b-dispatch.md) 随 prompt 附带，仅作来源说明，不作为加载或 fetch 地址。
+- 10 个技能的清单与 explicit-only 标记在 [`../dmt_contract.yaml`](../dmt_contract.yaml) 的 `third_party_skills:`；用户级落点由 `harness_matrix.yaml` 的 `skills.dir_user`（opencode 另含 `dir_project_extra`）推导。`grilling` 是 `grill-me` / `grill-with-docs` 的转发目标，`domain-modeling` 是 `grill-with-docs` 的第二个转发目标；两者必须与对应技能一起铺齐，否则转发链断。`tdd` 还条件引用 `codebase-design`。
+- 10 个技能的上游来源登记在同段 `third_party_skills.source_url`，值为 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库，实际值由本机 `.env` 提供）；派发 `dmt-dir` / `dmt-dm` / `dmt-am` 时用 `dmt_load_env` 展开后按 [`../team/07b-dispatch.md`](../team/07b-dispatch.md) 随 prompt 附带，仅作来源说明，不作为加载或 fetch 地址。
 - 维护仓的 `scripts/install-third-party-skills.sh` 幂等铺设扁平软链并可用 `--check` 复验；各 harness 的调用语法（`/`、`mattpocock-skills:`、`@`、`/skill:`）以矩阵为准。
 - 5 个 explicit-only 技能（`grill-me`、`grill-with-docs`、`to-spec`、`implement`、`to-tickets`）必须指向已剥离 `allow_implicit_invocation: false` 的解锁副本，否则 codex 列得出却不加载、pi 白名单会过滤。
 - 本适配器是可选件：机检对落点缺失只 WARN，硬保证由安装脚本 `--check` 承担；角色自带要求由 A6f 硬校验。实际技能能否进上下文仍以各 harness 运行时为准；OpenCode v2 的 `@<skill-id>` 已于 5.19.11 在 v2.2.5 收口（判据与证据见维护仓 `dmt-dir/CHANGELOG.md`，`@` 纯引用限制见 [`../harness/opencode.md`](../harness/opencode.md)）。
 
 ## 已知限制（实证）
 
-- `to-spec` / `to-tickets` / `implement` 带 `disable-model-invocation: true`，按 `skills:` 白名单注入的子代理里会被**静默过滤**；pi 上须在 prompt 给出 `SKILL.md` 路径由子代理 `read`，见 [`../harness/pi.md`](../harness/pi.md)「子代理」。
-- Codex 0.166 列得出这些技能但选中时不加载；维护仓 `scripts/sync-mattpocock-codex-compat.sh` 生成剥离 `allow_implicit_invocation: false` 的兼容副本（仓级脚本，不随安装分发）。
+- 上游正本的 5 个 explicit-only 技能带 `disable-model-invocation: true`；`install-third-party-skills.sh` 铺的 `skills-unlocked` 解锁副本已剥离该字段，可被 `skills:` 白名单注入。`sync-mattpocock-codex-compat.sh` 生成的 codex 兼容副本只剥离 `allow_implicit_invocation: false`，仍带 `disable-model-invocation`；若该字段导致选中不加载，按直读 `SKILL.md` 处理。
+- Codex 0.166 列得出这些技能但选中时不加载（本机 0.167 未复测）；维护仓 `scripts/sync-mattpocock-codex-compat.sh` 生成剥离 `allow_implicit_invocation: false` 的兼容副本（仓级脚本，不随安装分发）。
 - 转发式技能（`grill-with-docs` / `grill-me` / `implement` / `tdd`）依赖 Skill 工具二次调用；无 Skill 工具的平台降级为直读子技能文件。

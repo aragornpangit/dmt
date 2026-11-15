@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # 把 dmt 技能装到目标项目（默认软链，--copy 则复制）
-# 用法：bash install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,opencode,pi]
+# 用法：bash install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,hermes,opencode,pi]
 #
 # 技能落点（2026-11-04 逐 harness 探针实测：各 harness 只认自己的目录，**没有"一处通用"**）：
 #   .agents/skills/    ← codex / opencode / pi（pi 的项目级 .agents/skills 需 --approve 才可见）
 #   .claude/skills/    ← claude（opencode 也读它）
 #   .codebuddy/skills/ ← codebuddy
-# 默认 --harness all ⇒ 上面三处全装（五个 harness 全覆盖）；也可只装指定 harness 的落点。
+# 默认 --harness all ⇒ 上面三处全装（六个 harness 全覆盖）；也可只装指定 harness 的落点。
 # 不必另装 codex / pi 的私有目录（.codex/skills、.pi/skills）—— 它们已经读 .agents/skills/。
 #
 # 契约与脚本只落在 <target>/dmt-dir/，不再生成 docs/ 第二副本。
@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$TARGET" ] || { echo "usage: install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,opencode,pi]" >&2; exit 2; }
+[ -n "$TARGET" ] || { echo "usage: install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,hermes,opencode,pi]" >&2; exit 2; }
 
 REPO="$(cd -P "$(dirname "$0")/../.." && pwd -P)"
 # 目标目录不存在时自动创建（2026-11-06：此前直接 `cd` 失败，报错落在 set -e 的 line 33，提示无用）
@@ -110,7 +110,7 @@ rm -rf "$TARGET/docs/ops" "$TARGET/docs/team" "$TARGET/docs/changelog" "$TARGET/
 
 # pi 子代理 agent 定义（.pi/agents/）：只装给 pi（或 all）。
 # 为什么单列：pi 的 delegate 默认 inheritSkills: false ⇒ 子代理无技能清单；
-# 这些定义用 inheritSkills: false + skills: 精确白名单把角色技能注入子代理（见 harness/pi.md §4.1）。
+# 这些定义用 inheritSkills: false + skills: 精确白名单把角色技能注入子代理（见 harness/pi.md「子代理」）。
 case " $HARNESS " in
   *" all "*|*" pi "*)
     mkdir -p "$TARGET/.pi/agents"

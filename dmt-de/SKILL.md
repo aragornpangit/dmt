@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.19.11
+version: 5.19.12
 description: 开发工程师。用于在指定 worktree 功能分支按需求与工单实施、测试、自审并 commit。
 ---
 
@@ -18,7 +18,7 @@ description: 开发工程师。用于在指定 worktree 功能分支按需求与
 
 ## 边界
 
-- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / t3code / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
+- 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / hermes / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 不修改分配范围外的文件，不擅自改变需求或判据。
 - 共享工作区存在其他写者时先停下协调；不覆盖他人改动。
 - 不执行合并或推送（该权只属 dmt-dm）；共享设备写操作须经授权并记录。

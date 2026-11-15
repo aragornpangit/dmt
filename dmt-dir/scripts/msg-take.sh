@@ -4,10 +4,10 @@
 set -eu
 ROLE="${1:?usage: msg-take.sh <role> <file>}"
 FILE="${2:?missing file}"
-# 角色白名单：dmt-dir|dmt-dm|dmt-am|dmt-dl{n}，非法 exit 2（helper 无自己的 inbox，不作收件角色）
+# 角色白名单：dmt-dir|dmt-dm|dmt-am，非法 exit 2（helper 无自己的 inbox，不作收件角色）
 case "$ROLE" in
-  dmt-dir|dmt-dm|dmt-am|dmt-dl[0-9]*) ;;
-  *) echo "bad role: $ROLE (want dmt-dir|dmt-dm|dmt-am|dmt-dl{n})" >&2; exit 2 ;;
+  dmt-dir|dmt-dm|dmt-am) ;;
+  *) echo "bad role: $ROLE (want dmt-dir|dmt-dm|dmt-am)" >&2; exit 2 ;;
 esac
 # 收件箱定位到主工作树根
 DIR="$(cd -P "$(dirname "$0")" && pwd -P)"; . "$DIR/lib-dmt.sh"

@@ -3,7 +3,7 @@
 共性见 [`COMMON.md`](COMMON.md)，机器事实见 [`../harness_matrix.yaml`](../harness_matrix.yaml)。
 
 - 项目技能目录可用 `.agents/skills/`、`.claude/skills/`、`.opencode/skills/`；使用复数目录名。
-- 技能显式引用为 `@<技能名>`，**仅当消息为纯 `@<skill-id>` 时**才注入技能正文（v2.2.5 实测：user message 的 `skills` part 带 `<skill_content>`，`files` / `agents` 为空）。带附加文本或一条消息里多个 `@` 引用时 `skills=[]`，此时改用 `skill({id})` 或直读 `SKILL.md`。
+- 技能显式引用为 `@<技能名>`，**仅当消息为纯 `@<skill-id>` 时**才注入技能正文（v2.2.5 实测，本机 2.2.6 未复测：user message 的 `skills` part 带 `<skill_content>`，`files` / `agents` 为空）。带附加文本或一条消息里多个 `@` 引用时 `skills=[]`，此时改用 `skill({id})` 或直读 `SKILL.md`。
 - 同名文件与技能共存时 `@` 选中 skill 而非文件（v2.2.5 实测：`to-spec` / `to-spec.md` decoy 存在时仍 `skills=[to-spec]`、`files=[]`）。
 - `skill({id})` 按 id 加载仍可用（v2.2.5 实测 `TOOL` part `name="skill"`、`status="completed"`）；不可用时读取 `SKILL.md`。
 - 子代理 prompt 中显式给出技能引用或路径，以及输入、边界、产物和判据。

@@ -1,6 +1,6 @@
 # dmt 协作契约
 
-> **版本 5.19.11 · 2026-11-10** —— 与各角色 `SKILL.md` 同号。
+> **版本 5.19.12 · 2026-11-15** —— 与各角色 `SKILL.md` 同号。
 > **作用域**：核心原则适用于使用 dmt 的任务；维护技能仓自身时不触发团队派单、收件箱或发布授权流程。
 
 ## 核心原则
@@ -16,7 +16,7 @@
 
 ## 角色与模式
 
-`dmt-dir`、`dmt-dm`、`dmt-de`、`dmt-am`、`dmt-ae`、`dmt-pde` 是可复用能力，不是必须同时启用的组织编制。完整 DMT 团队模式见 [`team/01-org.md`](team/01-org.md)。
+`dmt-dir`、`dmt-dm`、`dmt-de`、`dmt-reviewer`、`dmt-am`、`dmt-ae`、`dmt-pde` 是可复用能力，不是必须同时启用的组织编制。完整 DMT 团队模式见 [`team/01-org.md`](team/01-org.md)。
 
 ## 按需参考
 
@@ -29,7 +29,9 @@
 | 项目命名与目录 | [`team/04-naming.md`](team/04-naming.md) · [`team/05-dirs.md`](team/05-dirs.md) |
 | 工作流与派发 | [`team/06-workflow.md`](team/06-workflow.md) · [`team/07b-dispatch.md`](team/07b-dispatch.md) |
 | 工程纪律 | [`team/07-discipline.md`](team/07-discipline.md) |
+| 表达（全角色） | [`team/08-expression.md`](team/08-expression.md) |
 | 结构检查 | [`team/09-check.md`](team/09-check.md) |
+| herdr pane 角色动作 | [`team/10-pane-role.md`](team/10-pane-role.md) |
 | herdr / inbox / helper | [`OPS.md`](OPS.md) |
 
 维护记录见 `CHANGELOG.md`，不进入任务加载路径。

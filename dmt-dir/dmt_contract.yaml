@@ -2,8 +2,8 @@
 # 只放会漂移的结构性事实：技能、版本源、可选目录、操作手册、脚本和预算。
 # 通用协作原则见 team.md；不使用固定措辞作为内容正确性的断言。
 
-version: 5.19.11
-date: "2026-11-10"
+version: 5.19.12
+date: "2026-11-15"
 
 skills:
   dmt-dir: { run_id: dmt-dir,      kind: pane,  pane: true }
@@ -50,6 +50,7 @@ harness_docs:
     - codebuddy.md
     - claude.md
     - codex.md
+    - hermes.md
     - opencode.md
 
 # harness 运行平台适配文档（都不是 harness；机检 A5b 单独校验，不参与 A6b 的一一对应）。
@@ -70,8 +71,8 @@ skill_budgets:
 # 的 skills.dir_user 推导，由 install-third-party-skills.sh 铺设。
 # explicit_only 的 5 个带 allow_implicit_invocation: false，必须指向已解锁副本。
 third_party_skills:
-  # grilling 是 grill-me / grill-with-docs 的转发目标（两者正文会二次调用它），故一并铺齐 9 个。
-  names: [grill-me, grill-with-docs, grilling, to-spec, tdd, implement, code-review, to-tickets, research]
+  # grilling 是 grill-me / grill-with-docs 的转发目标，domain-modeling 是 grill-with-docs 的第二个转发目标，故一并铺齐 10 个。
+  names: [grill-me, grill-with-docs, grilling, domain-modeling, to-spec, tdd, implement, code-review, to-tickets, research]
   explicit_only: [grill-me, grill-with-docs, to-spec, implement, to-tickets]
 
   # B 增强版「硬保证层」：角色 → 必用技能，单一来源。
@@ -83,7 +84,8 @@ third_party_skills:
     dmt-dm: [to-tickets]
     dmt-de: [tdd, implement, code-review]
     dmt-reviewer: [code-review]
-    dmt-ae: [research]
+    # rea 是 REA MCP（不在 names 安装清单）；作为 dmt-ae 的必用取证通道登记。
+    dmt-ae: [research, rea]
     dmt-am: []
 
   # 优先级 1「产物适配」（A 方案：约束写进派发 prompt / 角色 SKILL.md，不做 wrapper 副本）。
@@ -93,11 +95,11 @@ third_party_skills:
     rule: "产物按 team/04-naming.md 与 05-dirs.md 落盘（docs/pd/spec、docs/dev/tickets、docs/handoff），不发布到外部 issue tracker、不写 .scratch/、不套用上游 ADR/triage 约定；技能正文与 dmt 约定冲突时以 dmt 约定为准。"
 
   # 优先级 3 + 交接「条件加载层」：不进 role_skills、不进 A6f 硬机检。
-  # superpowers 仅 claudecode 官方 plugin 提供（版本化 cache 路径，未铺到 5 harness）；
+  # superpowers 仅 claudecode 官方 plugin 提供（版本化 cache 路径，未铺到 6 harness）；
   # handoff 是 explicit-only 且 skills-unlocked 无解锁副本。写进「必须加载」会让 4/5 平台必然失败。
   conditional_skills:
     # 层 1「纪律同构」：superpowers 的方法论原则已按判据并入 team/07-discipline.md，
-    # dmt 自带、可机检、跨 5 harness 一致，不依赖任何外部 plugin。这是首要结合方式。
+    # dmt 自带、可机检、跨 6 harness 一致，不依赖任何外部 plugin。这是首要结合方式。
     discipline_alignment: [verification-before-completion, systematic-debugging, using-git-worktrees, dispatching-parallel-agents]
     # 层 2「条件加载」：仅 claudecode 官方 plugin 可用时按角色点名，其余 harness
     # 标 [SKILL_UNAVAILABLE] 回退层 1。excluded 因「改编排 / 改写权 / 与 dmt 角色冲突」一律不点名。
@@ -128,7 +130,6 @@ scripts:
   - launch.sh
   - init-project.sh
   - setup-team.sh
-  - dl-pane.sh
   - spawn-helper.sh
   - helper-report.sh
   - close-helper.sh
@@ -148,4 +149,4 @@ scripts:
 # 仓级辅助脚本（不随安装分发；只存在于本仓库，供维护 / 一次性工具使用）
 repo_scripts: [scripts/sync-mattpocock-codex-compat.sh, scripts/install-third-party-skills.sh]
 
-forbidden_scripts: [probe-cap.sh, dispatch-ledger.sh, fanout.sh, install-hooks.sh]
+forbidden_scripts: [probe-cap.sh, dispatch-ledger.sh, fanout.sh, install-hooks.sh, dl-pane.sh]

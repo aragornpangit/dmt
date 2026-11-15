@@ -6,15 +6,15 @@
 
 ## 角色
 
-- `dmt-dir`：需求入口、任务协调与跨域裁决。
+- `dmt-dir`：需求入口、PRD 起草、任务协调与跨域裁决。
 - `dmt-dm`：评估输入、工单拆分、开发安排与授权整合。
 - `dmt-de`：指定 worktree 功能分支内的实现、测试与 commit（不 merge / push）。
 - `dmt-reviewer`：以 ticket 为单位的独立评审（子代理，不参与被审实现）。
 - `dmt-am`：调研拆分、取证复核与报告汇总。
 - `dmt-ae`：单个取证单元的一手来源与可复现结论。
-- `dmt-pde`：需求取证与 PRD/SPEC 起草。
+- `dmt-pde`：需求取证与 SPEC 起草。
 
-角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；**默认开发线为两级**：`dmt-dm` 收到 SPEC / 需求 / bug 后评估并用 `to-tickets` 拆成 ticket → 逐一派 `dmt-de`（tdd / implement / code-review）→ 完工后另派加载 `dmt-reviewer` 技能的子代理按 ticket 独立评审 → 通过后 `dmt-dm` merge / push；票批需要独立上下文隔离时由 `dmt-dm` 按需派生临时协调子代理、完成即回收。启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
+角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；**默认开发线为两级**：`dmt-dm` 收到 SPEC / 需求 / bug 后评估并用 `to-tickets` 拆成 ticket → 逐一派 `dmt-de`（tdd / implement / code-review）→ 完工后另派加载 `dmt-reviewer` 技能的子代理按 ticket 独立评审 → 通过后 `dmt-dm` merge / push。启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
 
 ## 安装
 
@@ -32,7 +32,7 @@ bash dmt-dir/scripts/install-skills.sh <项目根> --harness claude,codebuddy
 bash dmt-dir/scripts/init-project.sh <项目根>
 ```
 
-初始化不是技能加载步骤。角色加载后先按 `dmt-dir/team/02-runtime.md` 探测当前 harness 与其运行平台（herdr、Orca、T3 Code；都不是 harness）；差异文档、适配器、收件箱和 helper 只在实际使用时读取 `dmt-dir/harness/` 或 `dmt-dir/OPS.md`。
+初始化不是技能加载步骤。角色加载后先按 `dmt-dir/team/02-runtime.md` 探测当前 harness 与其运行平台（herdr、Orca；都不是 harness）；差异文档、适配器、收件箱和 helper 只在实际使用时读取 `dmt-dir/harness/` 或 `dmt-dir/OPS.md`。
 
 ## 检查
 

@@ -19,7 +19,7 @@ while [ $# -gt 0 ]; do
 done
 
 cd "$REPO"
-[ -d "$HOOKS" ] || { echo "install-hooks: 缺 $HOOKS" >&2; exit 2; }
+[ -d "$HOOKS" ] || { echo "install-git-hooks: 缺 $HOOKS" >&2; exit 2; }
 chmod +x "$HOOKS"/* 2>/dev/null || true
 
 if [ "$UNINSTALL" = 1 ]; then

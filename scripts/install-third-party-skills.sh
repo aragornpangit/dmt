@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 把可选第三方技能铺到 5 个 harness 的用户级技能发现目录（幂等）。
+# 把可选第三方技能铺到 6 个 harness 的用户级技能发现目录（幂等）。
 # 清单来自 dmt_contract.yaml；落点来自 harness_matrix.yaml（经 harness-matrix.sh）。
 # 仓级维护脚本，不随 install-skills.sh 分发到目标项目。
 set -euo pipefail
@@ -77,7 +77,7 @@ done
 [ -n "$TARGETS" ] || { echo "未解析到任何落点" >&2; exit 3; }
 
 # 单一解锁源：5 个 explicit-only 走 skills-unlocked（已剥离 allow_implicit_invocation），
-# 其余 3 个走上游正本；源缺失即报错，不静默跳过。
+# 其余 5 个走上游正本；源缺失即报错，不静默跳过。
 resolve_src() {
   local n="$1" sub
   if [ -f "$UNLOCKED/$n/SKILL.md" ]; then printf '%s' "$UNLOCKED/$n"; return 0; fi

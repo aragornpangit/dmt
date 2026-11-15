@@ -247,6 +247,7 @@ dmt_pane_is_cbc() {
 #   codex      -a never / --ask-for-approval never / --yolo（-y 在 codex 里不是批准开关）
 #   opencode   --auto / --dangerously-skip-permissions
 #   pi         --approve
+#   hermes     --yolo
 # 返回：0 = 自动档；1 = 非自动档；2 = 拿不到 argv（无法判定，调用方决定是告警还是放过）
 dmt_pane_auto_mode() {
   local pane="$1" argv tok prev=""
@@ -387,31 +388,34 @@ dmt_helper_eligible() {
   return 1
 }
 
-# harness 白名单与启动命令（默认 codebuddy；备选 pi / opencode / codex / claude）。
+# harness 白名单与启动命令（默认 codebuddy；备选 pi / opencode / codex / claude / hermes）。
 # 2026-11-03 第六十二次：补齐 claude（Claude Code），并把「技能如何被调起」抽成 dmt_skill_cmd ——
-# 五个 harness 的技能发现目录与斜杠写法并不一致，写死一种会在别的 harness 上静默失效。
+# 六个 harness 的技能发现目录与斜杠写法并不一致，写死一种会在别的 harness 上静默失效。
 # 解析优先级：显式参数 ⇒ $DMT_HARNESS ⇒ codebuddy。非法值 rc=2（错误写 stderr，便于调用方 fail-fast）。
 dmt_harness_name() {
   local h="${1:-}"
   case "$h" in ""|-) h="${DMT_HARNESS:-codebuddy}" ;; esac
   case "$h" in
-    codebuddy|pi|opencode|codex|claude) printf '%s' "$h" ;;
+    codebuddy|pi|opencode|codex|claude|hermes) printf '%s' "$h" ;;
     # 常见别名（herdr 侧 agent 名为 claude，别名 claude-code）
     claudecode|claude-code) printf '%s' 'claude' ;;
-    *) echo "bad harness: $h (want codebuddy|pi|opencode|codex|claude)" >&2; return 2 ;;
+    hermes-agent) printf '%s' 'hermes' ;;
+    *) echo "bad harness: $h (want codebuddy|pi|opencode|codex|claude|hermes)" >&2; return 2 ;;
   esac
 }
 
 # 技能调用命令：按 harness 生成「往 pane 里输入的那一行」。
 # 前缀**不在这里写死**：由 harness_matrix.yaml 的 slash_prefix 提供（单一来源）。
-#   · claude / codebuddy / codex / opencode ⇒ `/dmt-dm`
-#   · pi                                   ⇒ `/skill:dmt-dm`
+#   · claude / codebuddy / codex ⇒ `/dmt-dm`
+#   · opencode                  ⇒ `@dmt-dm`（仅纯引用生效）
+#   · hermes                    ⇒ `/dmt-dm`
+#   · pi                        ⇒ `/skill:dmt-dm`
 # `pi -p /dmt-dm` 不展开；`pi -p /skill:dmt-dm` 正常展开 —— 写错前缀会静默变成普通提问。
 dmt_skill_cmd() {
   local h="${1:-codebuddy}" name="${2:?dmt_skill_cmd <harness> <skill-name>}"
   local prefix
   prefix="$(dmt_harness_field "$h" slash_prefix)"
-  [ -n "$prefix" ] || prefix="/"   # 矩阵不可用时回退（pi 以外全部是 /）
+  [ -n "$prefix" ] || prefix="/"   # 矩阵不可用时回退 /（仅对 / 系 harness 正确；opencode/pi 必须读矩阵）
   printf '%s%s' "$prefix" "$name"
 }
 

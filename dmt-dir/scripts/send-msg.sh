@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 发收件箱消息 + herdr 门铃（文件名与方向自动生成）
 # 用法：bash send-msg.sh <to> <from> <slug> <body-file> [--dry-run|--check-dir]
-#   from ∈ dmt-dir|dmt-dm|dmt-am|dmt-dl{n}|{角色}-helper；to ∈ dmt-dir|dmt-dm|dmt-am|dmt-dl{n}（helper 无自己的 inbox、不接受输入框内容）
+#   from ∈ dmt-dir|dmt-dm|dmt-am|{角色}-helper；to ∈ dmt-dir|dmt-dm|dmt-am（helper 无自己的 inbox、不接受输入框内容）
 #   角色合法之外，方向也必须在白名单内（见 dir_ok）；非法方向 exit 2，不落盘、不按门铃
 #   --check-dir：只跑角色与方向校验，合法即打印 OK 并 rc=0（机检用，无副作用）
 #   helper 发出的单向汇报只写箱、不按门铃（本体扫箱收取）
@@ -13,21 +13,19 @@ SLUG="${3:?missing slug}"
 BODY="${4:?missing body file}"
 DRY=0; [ "${5:-}" = "--dry-run" ] && DRY=1
 CHECK_DIR=0; [ "${5:-}" = "--check-dir" ] && CHECK_DIR=1
-# 发方白名单：dmt-dir|dmt-dm|dmt-am|dmt-dl{n}|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
+# 发方白名单：dmt-dir|dmt-dm|dmt-am|{角色}-helper（helper 成果单向汇报主体）；收方不含 helper
 # helper 是纯分身（用户裁定）：无自己的 inbox、不接受输入框内容 —— 任务随 spawn-helper 一次性下发
 # 角色名归一化：允许 <角色> 或 <角色>-<后缀>（多 harness 同一 workspace，如 dmt-dir-pi / dmt-dm-pi）。
 # 角色名本身含连字符，故用正则锚定基底，不按首个 '-' 截断（否则 dmt-dir-pi 会被截成 dmt）。
 role_base() {
-  if [[ "${1:-}" =~ ^(dmt-dir|dmt-dm|dmt-dl[0-9]+|dmt-am)(-.*)?$ ]]; then
+  if [[ "${1:-}" =~ ^(dmt-dir|dmt-dm|dmt-am)(-.*)?$ ]]; then
     printf '%s' "${BASH_REMATCH[1]}"
   fi
 }
 # 方向白名单 —— 与 `ops/comms.md`「允许方向」表一一对应，本函数是该表的唯一实现。
-#   dmt-dir → dmt-dm / dmt-am          dmt-dm → dmt-dir / dmt-dl{n}
-#   dmt-am → dmt-dir                 dmt-dl{n} → dmt-dm
-#   {角色}-helper → 本体（单向汇报：无门铃、无回程）
-# 拒绝：队长互连（dmt-dl1 ↮ dmt-dl2）、越级（dmt-dir→dmt-dl{n}、dmt-dl{n}→dmt-dir）、
-#       跨部门（dmt-dm↔dmt-am、dmt-dl{n}→dmt-am）、同角色自投。
+#   dmt-dir → dmt-dm / dmt-am          dmt-dm → dmt-dir
+#   dmt-am → dmt-dir                 {角色}-helper → 本体（单向汇报：无门铃、无回程）
+# 拒绝：越级（dmt-dir→子层角色、子层角色→dmt-dir）、跨部门（dmt-dm↔dmt-am）、同角色自投。
 dir_ok() {
   local to="$1" from="$2" tb fb
   tb="$(role_base "$to")"
@@ -42,11 +40,9 @@ dir_ok() {
     dmt-dir)
       case "$tb" in dmt-dm|dmt-am) return 0 ;; esac ;;
     dmt-dm)
-      case "$tb" in dmt-dir|dmt-dl[0-9]*) return 0 ;; esac ;;
+      if [ "$tb" = "dmt-dir" ]; then return 0; fi ;;
     dmt-am)
       if [ "$tb" = "dmt-dir" ]; then return 0; fi ;;
-    dmt-dl[0-9]*)
-      if [ "$tb" = "dmt-dm" ]; then return 0; fi ;;
   esac
   return 1
 }
@@ -55,14 +51,14 @@ case "$TO" in
   *-helper)
     echo "helper 不接受输入框内容、无自己的 inbox（任务随 spawn-helper 一次性下发，成果由 helper 单向汇报主体）：$TO 不能作收方" >&2; exit 2 ;;
 esac
-[ -n "$(role_base "$TO")" ] || { echo "bad role: $TO (want dmt-dir|dmt-dm|dmt-am|dmt-dl{n}，可带 -后缀)" >&2; exit 2; }
+[ -n "$(role_base "$TO")" ] || { echo "bad role: $TO (want dmt-dir|dmt-dm|dmt-am，可带 -后缀)" >&2; exit 2; }
 case "$FROM" in
   *-helper) ;;
-  *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want dmt-dir|dmt-dm|dmt-am|dmt-dl{n}|{角色}-helper)" >&2; exit 2; } ;;
+  *) [ -n "$(role_base "$FROM")" ] || { echo "bad role: $FROM (want dmt-dir|dmt-dm|dmt-am|{角色}-helper)" >&2; exit 2; } ;;
 esac
 # 方向：角色合法还不够 —— 队长互连 / 越级 / 跨部门一律拒绝（ops/comms.md 的允许方向表）
 if ! dir_ok "$TO" "$FROM"; then
-  echo "bad direction: ${FROM} -> ${TO}（允许：dmt-dir→dmt-dm|dmt-am；dmt-dm→dmt-dir|dmt-dl{n}；dmt-am→dmt-dir；dmt-dl{n}→dmt-dm；{角色}-helper→本体）" >&2
+  echo "bad direction: ${FROM} -> ${TO}（允许：dmt-dir→dmt-dm|dmt-am；dmt-dm→dmt-dir；dmt-am→dmt-dir；{角色}-helper→本体）" >&2
   exit 2
 fi
 if [ "$CHECK_DIR" = 1 ]; then echo "OK"; exit 0; fi

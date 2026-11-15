@@ -7,7 +7,7 @@
 #   --skip-hooks    跳过 git hooks 安装（默认安装 core.hooksPath 守卫）
 #   --dry-run       只打印将执行的动作，不实际执行
 # 阶段（顺序固定）：① install-skills → ② init-project → ③ install-git-hooks → ④ setup-team
-# （hooks / 派发账本机制已于 2026-11-02 随「取消 max-subagents」裁定整体删除，不再安装；2026-11-04 裁定改为「无依赖任务一律开满 subagents 并行」，但饱和机制脚本不恢复）
+# （旧的 max-subagents 门禁 hooks / 派发账本机制已于 2026-11-02 整体删除，不再安装；git hooks 仍由阶段 ③ 安装。2026-11-04 裁定改为「无依赖任务一律开满 subagents 并行」，但饱和机制脚本不恢复）
 # 请在目标项目根执行：bash dmt-dir/scripts/launch.sh [项目根目录]（省略参数＝当前目录）。
 set -eu
 ROOT="."
@@ -69,4 +69,4 @@ else
   echo "[launch] 跳过建团队"
 fi
 
-echo "[launch] 完成。机检：bash $SCRIPT_DIR/check-dmt.sh $ROOT ；结构化机检：bash $SCRIPT_DIR/check-dmt.sh $ROOT"
+echo "[launch] 完成。机检：bash $SCRIPT_DIR/check-dmt.sh $ROOT"

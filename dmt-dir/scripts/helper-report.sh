@@ -3,7 +3,7 @@
 #
 # 背景：helper 是本体纯分身，成果「单向汇报给主体」（写 inbox/<主体>/，方向 {角色}-helper2{角色}-）。
 # 此前只有契约文字、没有执行脚本 —— helper 干完活无从回报，close-helper.sh 的方向过滤永远查不到
-# 消息，回收门槛形同虚设（详见 README 的 helper 说明）。本脚本补上这条通道。
+# 消息，回收门槛形同虚设（详见 ops/helper.md）。本脚本补上这条通道。
 #
 # 用法：bash helper-report.sh <主体角色> <正文文件> [--dry-run]
 #   <主体角色> ∈ dmt-dir | dmt-dm | dmt-am（helper 的创建者）

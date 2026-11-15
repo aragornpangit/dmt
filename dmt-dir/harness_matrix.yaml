@@ -70,6 +70,25 @@ harnesses:
     first_prompt: false
     tree_mode: full
     doorbell: opencode
+  hermes:
+    skills:
+      dir_project: .agents/skills
+      dir_user: .hermes/skills
+      dir_project_extra: null
+    # 项目级 .agents/skills / .hermes/skills 只在 skills.trusted_project_dirs 内加载；
+    # 首次使用先 `hermes skills trust` 授权项目根。
+    slash_prefix: "/"
+    # --yolo 为自动批准档；需要更严格权限时用 DMT_HARNESS_CMD 覆盖。
+    start_cmd: "hermes chat --yolo"
+    # delegate_task 子代理并发：delegation.max_concurrent_children，默认 10
+    max_subagents_conc: 10
+    max_subagents_env: null
+    max_subagents_config: "delegation.max_concurrent_children"
+    skill_prefix: null
+    subagent_skill: read
+    first_prompt: false
+    tree_mode: full
+    doorbell: hermes
   pi:
     skills:
       dir_project: .agents/skills
@@ -95,14 +114,14 @@ harnesses:
 #   runtimes: pane / 终端复用衬底        → kind: pane-runtime
 #   ades:     编排层 / 控制面（ADE）      → kind: ade
 # 两段都不进入 harnesses，也不参与 harness_docs.per_harness 的一一对应检查（check-dmt.sh A5/A6b）。
-# 来源：herdr 本机在用；Orca 1.4.237 实测 2026-11-09；t3code 本机未实测，只登记定位、不编造命令。
+# 来源：herdr 本机在用；Orca 1.4.237 实测 2026-11-09。
 runtimes:
   herdr:
     kind: pane-runtime
     status: in-use
     comms: "herdr CLI + unix socket；dmt_herdr_* 经 HERDR_SOCKET_PATH / HERDR_ENV 自愈"
     doorbell: "herdr agent prompt（cbc/codebuddy pane 改走 pane send-text + send-keys enter）"
-    scripts_bound: "send-msg.sh / msg-done.sh / setup-team.sh / dl-pane.sh / lib-dmt.sh dmt_herdr_*"
+    scripts_bound: "send-msg.sh / setup-team.sh / lib-dmt.sh dmt_herdr_*（msg-done.sh 只操作文件，不绑 herdr）"
 
 ades:
   orca:
@@ -121,7 +140,7 @@ ades:
     worktree_create: "orca worktree create --repo path:<path> --name <name> --setup skip --json"
     agent_launch: "orca agent launch --agent <id> --worktree path:<path> --surface terminal --json"
     first_prompt: false
-    terminal_send: "orca terminal send --terminal <handle> --text <text> --enter --wait-submit 8"
+    terminal_send: "orca terminal send --terminal <handle> --text <text> --enter --wait-submit 15"
     terminal_wait: "orca terminal wait --for tui-idle --timeout-ms <ms>"
     terminal_read: "orca terminal read --screen --terminal <handle>"
     terminal_close: "orca terminal close --terminal <handle>"
@@ -133,14 +152,9 @@ ades:
     herdr_scripts: unavailable
     # 并发取 harnesses 上限与 Orca 当前容量的交集，不另设 ADE 独立上限
     max_subagents_conc: null
-  t3code:
-    kind: ade
-    status: unverified
-    # 本机 ~/pxy/tools/t3cmd/ 为空目录，未实测；命令、端口与配对方式待取证后登记，不编造
-    note: "仅登记分层定位，不作为脚本派发依据"
 
 # install-skills.sh --harness all 时铺设的落点（去重后的项目级目录）。
-# 覆盖五个 harness：.agents/skills（codex/opencode/pi）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）。
+# 覆盖六个 harness：.agents/skills（codex/opencode/pi/hermes）+ .claude/skills（claude/opencode）+ .codebuddy/skills（codebuddy）。
 # codex 同时发现 .codex/skills，但安装只用 .agents/skills，避免同一技能登记两次。
 install_all_dirs:
   - .agents/skills
