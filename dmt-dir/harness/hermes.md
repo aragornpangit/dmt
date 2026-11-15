@@ -10,6 +10,7 @@
   for d in ~/.agents/skills/dmt-*; do ln -sfn "$d" ~/.hermes/skills/"$(basename "$d")"; done
   ```
   验证：任意目录执行 `hermes skills list | grep dmt-` 应看到 7 个（`Source=local`）。软链指向 `~/.agents/skills` 的整目录软链，最终解析到技能仓，改仓即生效，不必重装。项目级落点仍按 `install-skills.sh` 铺设，两者不冲突（同名时项目级优先）。
+- **第三方技能同样要铺到 `~/.hermes/skills`**：`~/.hermes/skills` 就是矩阵里 hermes 的 `skills.dir_user`，所以 `bash scripts/install-third-party-skills.sh` 会自动覆盖它（10 个技能，幂等；`--check` 校验可读性与 explicit-only 解锁）。漏铺的后果是 `dmt-de` 在 hermes 里拿不到 `tdd` / `implement` / `code-review`，只能标 `[SKILL_UNAVAILABLE]` 降级。
 - 技能调用为 `/<技能名>`；`hermes skills list` 查看已安装技能，`hermes chat -s <技能名>` 可在启动时预加载。
 - 启动命令 `hermes chat --yolo` 是 yolo（免逐次审批）档，与其余 harness 一致；需要收窄时用 `DMT_HARNESS_CMD` 显式覆盖并说明原因。`--yolo` 不替代 `hermes skills trust`：项目技能仍需先信任才加载。
 - 项目技能被信任后，`.agents/skills` 与 codex/opencode/pi 共用，不需要重复铺设。

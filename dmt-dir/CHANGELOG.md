@@ -1,6 +1,15 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.17`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.18`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.18 · 2026-11-15
+
+- **查 `dmt-de` 能否拿到 `tdd` / `implement` / `code-review`，发现两处落点缺口并补齐**：
+  - `~/.hermes/skills` 原本一个第三方技能都没有（10 个全 MISS）—— hermes 里 `dmt-de` 拿不到这三件，只能降级 `[SKILL_UNAVAILABLE]`。该目录就是矩阵 hermes 的 `skills.dir_user`，跑一次 `bash scripts/install-third-party-skills.sh` 即补齐，`--check` 现无 FAIL/MISS。
+  - `~/.codebuddy/skills` 的 5 个 explicit-only 技能指向上游正本（`allow_implicit_invocation: false`），未走 `skills-unlocked`；重新 link 后 `implement` 等已指向解锁副本。
+- `harness/hermes.md` 补一条：第三方技能同样由 `install-third-party-skills.sh` 铺到 `~/.hermes/skills`，漏铺的后果与症状写明。
+- 验证：`hermes skills list` 可见 `tdd` / `implement` / `code-review`（Source=local）；6 个用户级落点 `--check` 全绿。
+- 版本号升至 `5.19.18`。
 
 ## 5.19.17 · 2026-11-15
 

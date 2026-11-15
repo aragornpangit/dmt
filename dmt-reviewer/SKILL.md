@@ -1,6 +1,6 @@
 ---
 name: dmt-reviewer
-version: 5.19.17
+version: 5.19.18
 description: 独立评审工程师。由 dmt-dm 以子代理加载，按 ticket 为单位对照判据、功能分支 commit 与证据逐项给出 PASS/FAIL，不参与被审实现。
 ---
 
