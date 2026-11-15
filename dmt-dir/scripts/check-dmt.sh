@@ -165,6 +165,12 @@ if [ ! -x "$MATRIX" ]; then bad "缺 harness-matrix.sh"; else
     cmd="$(bash "$MATRIX" get "$h" start_cmd 2>/dev/null || true)"
     dir="$(bash "$MATRIX" get "$h" skills.dir_project 2>/dev/null || true)"
     if [ -n "$pre" ] && [ -n "$cmd" ] && [ -n "$dir" ]; then ok "harness $h（dir=$dir prefix=$pre）"; else bad "harness $h 字段不完整"; fi
+    # 启动档统一 yolo：start_cmd 必须带一个实测过的免批准参数（参数名以 <harness> --help 为准）
+    if printf '%s' "$cmd" | grep -Eq '(^| )(--dangerously-skip-permissions|--dangerously-bypass-approvals-and-sandbox|--yolo|--auto|--approve)( |$)'; then
+      ok "harness $h 启动档 yolo"
+    else
+      bad "harness $h 启动命令未带 yolo 参数：$cmd"
+    fi
   done < <(python3 -c 'import sys,yaml; print("\n".join((yaml.safe_load(open(sys.argv[1],encoding="utf-8")).get("harnesses") or {}).keys()))' "$REPO/dmt-dir/harness_matrix.yaml")
 fi
 
@@ -307,7 +313,7 @@ if [ -f "$LIB" ]; then
     return 0
   }
   cbc_case "node /x/bin/cbc -c"                       0
-  cbc_case "/x/bin/codebuddy --permission-mode auto" 0
+  cbc_case "/x/bin/codebuddy --dangerously-skip-permissions" 0
   cbc_case "node /x/bin/pi --approve"                1
   cbc_case "/usr/bin/vim"                            1
 else

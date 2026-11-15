@@ -1,6 +1,19 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.13`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.14`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.14 · 2026-11-15
+
+- **启动档统一 yolo（免逐次审批）**：dmt 靠 pane 自主跑长任务，default/manual 档会把每次工具调用变成审批等待（表现为脚本超时、命令失败）。各 harness 的参数一律以 `<harness> --help` 实测确定，写进矩阵 `start_cmd`：
+  - codebuddy `--dangerously-skip-permissions` + `--subagent-permission-mode bypassPermissions`（原 `--permission-mode auto`）
+  - claude `--dangerously-skip-permissions`（原 `--permission-mode auto`，启动屏 `bypass permissions on`）
+  - codex `--dangerously-bypass-approvals-and-sandbox`（原 `-a never`；启动屏 `Full Access · never`，沙箱一并放行）
+  - hermes `--yolo`、opencode `--auto`（不变）
+  - pi `--approve`：`pi --help` 无 yolo / 审批开关，工具调用本身不逐次审批，`--approve` 即其最宽松档
+- **机检 A5 增补**：每个 harness 的 `start_cmd` 必须命中一个实测过的 yolo 参数，缺失即 FAIL。
+- **首次信任与审批档分开**：claude / codex / pi 首次进入新目录仍有一次信任确认，hermes 需 `hermes skills trust`；那是信任门槛，不是审批档。
+- **Orca 侧记录**：`orca agent launch` 用 Orca 自己的启动参数（pi 起成裸 `pi`、不带 `--approve`），不受矩阵控制；要 yolo 改用 `orca terminal create --command "<start_cmd>"`。
+- 版本号升至 `5.19.14`。
 
 ## 5.19.13 · 2026-11-15
 

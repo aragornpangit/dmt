@@ -6,7 +6,7 @@
 
 - 用户级技能目录为 `~/.hermes/skills/`；项目级可用 `.hermes/skills/` 与 `.agents/skills/`，但只在 `skills.trusted_project_dirs` 内加载。首次使用项目技能先 `hermes skills trust`（或把项目根写入该配置）。
 - 技能调用为 `/<技能名>`；`hermes skills list` 查看已安装技能，`hermes chat -s <技能名>` 可在启动时预加载。
-- 启动命令 `hermes chat --yolo` 是自动批准档；需要更严格权限时用 `DMT_HARNESS_CMD` 覆盖，不把 `--yolo` 当团队通信的默认前提。
+- 启动命令 `hermes chat --yolo` 是 yolo（免逐次审批）档，与其余 harness 一致；需要收窄时用 `DMT_HARNESS_CMD` 显式覆盖并说明原因。`--yolo` 不替代 `hermes skills trust`：项目技能仍需先信任才加载。
 - 项目技能被信任后，`.agents/skills` 与 codex/opencode/pi 共用，不需要重复铺设。
 - **技能落点必须是整目录软链，不能是「真实目录 + 指向目录外的软链」**：hermes 对每个项目 `SKILL.md` 的父目录跑 `skills_guard` 扫描，目录内任何指向目录外的软链都判 `symlink_escape`（critical/traversal），整个技能被隔离 —— 不进技能索引、不进斜杠命令。症状是启动横幅仍报「N project skill(s)」但 `/<技能>` 补全少一个。`install-skills.sh` 已按此铺设（link 模式整目录软链；copy 模式按 `CORE_ITEMS` 复制实体文件）。
 - 扫描结论按内容摘要缓存在 `~/.hermes/cache/project_skill_scans`（跨项目共享，与路径无关）。同一内容即使换了目录布局也会复用旧结论，排查时先删该缓存再复测。

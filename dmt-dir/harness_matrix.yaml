@@ -7,14 +7,23 @@
 # （null = 不设或运行时探测）；max_subagents_env / max_subagents_config 对应环境变量与配置键；
 # skill_prefix 技能限定名前缀；subagent_skill 子代理加载角色技能方式（invoke / read / unknown）；
 # first_prompt 启动是否接受首轮 prompt；tree_mode 会话树；doorbell 门铃检测名。
+#
+# 启动档统一为 yolo（免逐次审批）：dmt 靠 pane 自主跑长任务，default/manual 档会把每次工具调用
+# 变成审批等待。各 harness 的 yolo 参数一律以 `<harness> --help` 实测为准，逐项写在 start_cmd：
+#   codebuddy  --dangerously-skip-permissions（-y 同义）+ --subagent-permission-mode bypassPermissions
+#   claude     --dangerously-skip-permissions
+#   codex      --dangerously-bypass-approvals-and-sandbox（全放行；-a never 只免审批、仍留沙箱）
+#   hermes     --yolo
+#   opencode   --auto
+#   pi         --approve（pi --help 无 yolo/审批开关，--approve 是其最宽松档）
 harnesses:
   codebuddy:
     skills:
       dir_project: .codebuddy/skills
       dir_user: .codebuddy/skills
     slash_prefix: "/"
-    # --subagent-permission-mode bypassPermissions：否则 teammate/子代理可能回 default 档，逐条撞审批
-    start_cmd: "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto --subagent-permission-mode bypassPermissions"
+    # --dangerously-skip-permissions：免逐次审批；子代理另用 bypassPermissions，否则 teammate 可能回 default 档
+    start_cmd: "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --dangerously-skip-permissions --subagent-permission-mode bypassPermissions"
     max_subagents_conc: 8
     max_subagents_env: CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS
     max_subagents_config: null
@@ -28,7 +37,7 @@ harnesses:
       dir_project: .claude/skills
       dir_user: .claude/skills
     slash_prefix: "/"
-    start_cmd: "claude --permission-mode auto"
+    start_cmd: "claude --dangerously-skip-permissions"
     max_subagents_conc: 10
     max_subagents_env: CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS
     max_subagents_config: null
@@ -43,8 +52,8 @@ harnesses:
       dir_user: .agents/skills
       dir_project_extra: null
     slash_prefix: "/"
-    # 默认保持受限沙箱；跨沙箱访问 herdr 需要用户显式授权，见 harness/codex.md。
-    start_cmd: "codex -a never"
+    # yolo 档：连沙箱一并放行（codex 启动屏显示 Full Access）；只免审批仍留沙箱时用 `-a never`。
+    start_cmd: "codex --dangerously-bypass-approvals-and-sandbox"
     max_subagents_conc: 8
     max_subagents_env: null
     max_subagents_config: "agents.max_concurrent_threads_per_session"
@@ -98,6 +107,7 @@ harnesses:
       dir_project_extra: null
     # pane 角色用 /skill:<name>；子代理 delegate / 自定义 agent 无 Skill 工具，走 skills: 白名单 + read SKILL.md
     slash_prefix: "/skill:"
+    # pi --help 没有 yolo / 审批开关：工具调用本身不逐次审批，--approve 是其最宽松档（信任项目文件）。
     start_cmd: "pi --approve"
     # pi-subagents 默认：workflow maxTasks=8 / concurrency=4（2026-11-06 实测文档）
     max_subagents_conc: 8

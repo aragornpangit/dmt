@@ -241,12 +241,12 @@ dmt_pane_is_cbc() {
 #
 # 判据一律读 **argv**，不信屏幕文字：
 #   屏幕上的 "auto mode on" 只在手动会话首屏出现，之后被输出顶走；而 argv 是恒定事实。
-# 各 harness 的自动档参数（与 dmt_harness_cmd 同源）：
-#   codebuddy  --permission-mode auto      （另有 -y/--dangerously-skip-permissions）
-#   claude     --permission-mode auto      （另有 --dangerously-skip-permissions）
-#   codex      -a never / --ask-for-approval never / --yolo（-y 在 codex 里不是批准开关）
-#   opencode   --auto / --dangerously-skip-permissions
-#   pi         --approve
+# 各 harness 的 yolo（免逐次审批）参数 —— 全部以 `<harness> --help` 实测为准（与矩阵 start_cmd 同源）：
+#   codebuddy  --dangerously-skip-permissions（-y 同义；子代理另配 --subagent-permission-mode bypassPermissions）
+#   claude     --dangerously-skip-permissions
+#   codex      --dangerously-bypass-approvals-and-sandbox（全放行；-a never 只免审批、仍留沙箱）
+#   opencode   --auto
+#   pi         --approve（pi --help 无 yolo/审批开关，--approve 即最宽松档）
 #   hermes     --yolo
 # 返回：0 = 自动档；1 = 非自动档；2 = 拿不到 argv（无法判定，调用方决定是告警还是放过）
 dmt_pane_auto_mode() {

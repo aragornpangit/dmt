@@ -6,7 +6,7 @@
 
 - 项目级技能目录为 `.agents/skills/`；用户级可用 `~/.agents/skills/`、`~/.pi/agent/skills/`。
 - pane 中显式调用为 `/skill:<技能名>`；普通 `/name` 可能只被当作提问。
-- 项目技能可见性和权限由当前 pi 配置决定，启动参数见矩阵。
+- 项目技能可见性和权限由当前 pi 配置决定，启动参数见矩阵。`pi --help` 没有 yolo / 审批开关（只有 `--approve` / `--no-approve` 控制是否信任项目文件），即工具调用本身不逐次审批；启动用 `pi --approve` 免去首次信任提示。
 
 ## 子代理
 

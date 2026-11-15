@@ -20,6 +20,7 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
 
 - 一个实施单元一个 worktree：`orca repo add --path <path>` → `orca worktree create --repo path:<path> --name <name> --setup skip --json`，对应 [`../team/07-discipline.md`](../team/07-discipline.md) 的隔离要求。
 - `orca agent launch --agent <id> --worktree path:<path> --surface terminal --json` 返回 terminal handle；首轮 prompt 用 `orca terminal send` 注入，不假定启动即接受 prompt。
+- **启动档不受矩阵 `start_cmd` 控制**：`agent launch` 用 Orca 自己的参数（实测 1.4.237：claude `bypassPermissions`、codebuddy `--dangerously-skip-permissions`，而 pi 起成裸 `pi`、不带 `--approve`，会停在目录信任提示）。要确保 yolo 档，改用 `orca terminal create --worktree path:<path> --command "<矩阵 start_cmd>"` 显式起命令，或先在 Orca 侧把该 agent 的默认启动参数配成矩阵同款。
 - **投递三步（回执）**：`orca terminal send` 默认**不追加回车**，必须显式 `--enter`；一律用 `orca terminal send --terminal <id> --text '<msg>' --enter --wait-submit 15`，再复核提交回执（send-text → enter → 复核，见 [`../team/03-comms.md`](../team/03-comms.md)，对应 herdr 的 `pane send-text` + `pane send-keys enter` + `pane read`）。`--wait-submit` 只观察已接受的 prompt，超时返回 input-accepted 收据且**不重发**；传输歧义时用返回的 `--retry-request <id>` 原样重发，不要另拼文本。
 - 无依赖单元并行派发用 `orchestration task-create` / `dispatch` / `worker-start`；等待用 `terminal wait --for tui-idle`、`orchestration worker-read` / `ask`，避免无意义轮询。
 - 子代理只向派发者回报：`orchestration reply` / `send` 指向派发者 handle，worker 完成走 `worker_done`；角色间互连仍按 [`../team.md`](../team.md) 禁止。
