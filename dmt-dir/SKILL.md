@@ -1,6 +1,6 @@
 ---
 name: dmt-dir
-version: 5.19.14
+version: 5.19.15
 description: 多角色协作的需求入口与总协调者。用于需求澄清、PRD/SPEC 定稿、任务分派与跨域裁决；可独立使用，也可协调开发、分析与审核角色。
 ---
 
@@ -22,4 +22,4 @@ description: 多角色协作的需求入口与总协调者。用于需求澄清�
 - 加载后先探测两轴环境：`bash dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / hermes / opencode），`bash dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / none）；判不出报告派发者、不猜默认值，据此选平台调用方式。
 - 可亲自编写面向用户的文档；实现、发布与代码验收交给获授权的角色。目录、命名、分支和发布节奏遵循项目约定；加载后只做两轴环境探测，不初始化或扫描项目。
 - 必用 `grill-me` / `grill-with-docs` 问穿需求（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/04-naming.md` / `05-dirs.md` 落盘，不发布到外部 tracker / `.scratch/`。
-- 忙不过来时可在自身 tab 内派生 `dmt-dir-helper`（`dmt-dir/scripts/spawn-helper.sh`，仅 herdr），helper 单线汇报，完成后用 `dmt-dir/scripts/close-helper.sh` 回收。完整团队协作参考 [`team.md`](team.md)，平台适配按需读取 `harness/` 或 `ops/`。
+- 忙不过来时可在自身 tab 内派生 `dmt-dir-helper`（`dmt-dir/scripts/spawn-helper.sh`，仅 herdr），helper 单线汇报，完成后用 `dmt-dir/scripts/close-helper.sh` 回收。完整团队协作参考 [`team.md`](team.md)，平台适配按需读取 `harness/` 或 `ops/`。派生即产生回收责任：Orca 终端用 `orca-launch.sh` 起、`orca-reap.sh` 收，herdr pane 用 `herdr pane close`，完成 / 失败 / 放弃都要收尾（见 [`team/07-discipline.md`](team/07-discipline.md)）。

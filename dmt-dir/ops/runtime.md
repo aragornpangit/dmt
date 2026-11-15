@@ -20,6 +20,14 @@ bash dmt-dir/scripts/setup-team.sh --harness <name>
 
 `setup-team.sh` 部署上述布局。启动命令和就绪方式以 harness 矩阵为准。
 
-权限模式由用户和项目安全策略决定，不能为了门铃或文件访问默认放开危险权限。Codex 沙箱说明见 [`../harness/codex.md`](../harness/codex.md)。
+启动档统一为 yolo（免逐次审批，参数见矩阵 `start_cmd`，逐 harness 以 `<harness> --help` 实测）。首次进入新项目仍有一次目录信任（claude / codex / pi）或 `hermes skills trust`，那是信任门槛。Codex 的 yolo 档会连沙箱一并放行，说明见 [`../harness/codex.md`](../harness/codex.md)。
+
+## 派生资源回收
+
+派生的 pane / terminal / 进程由派生者负责回收（规则见 [`../team/07-discipline.md`](../team/07-discipline.md)「派生资源的生命周期」）：
+
+- herdr：`herdr pane close <id>`；helper pane 用 `close-helper.sh`（带收件箱安检）。
+- Orca：`orca-launch.sh` 起终端并登记 `.dmt/orca-terminals.tsv`，完成后用 `orca-reap.sh` 回收；手工起的终端用 `orca terminal close --terminal <handle>`。
+- 长期角色 pane（`dmt-dir` / `dmt-dm` / `dmt-am`）是部署设施，不在回收范围。
 
 helper 见 [`helper.md`](helper.md)，文件占用见 [`file-claim.md`](file-claim.md)。

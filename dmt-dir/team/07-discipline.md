@@ -18,6 +18,17 @@
 5. 需要等待时使用平台原生通知或等待原语，避免无意义轮询。
 6. 开发线内部（`dmt-dm` ↔ `dmt-de` 及其 `dmt-reviewer` 子代理）的派单、工作安排、进度与结果回报由开发线自行闭环，不需 `dmt-dir` 确认；只有需求 / SPEC 或验收口径变化、以及跨域冲突才上交（见 [`01-org.md`](01-org.md)）。
 
+## 派生资源的生命周期
+
+总监（`dmt-dir`）与经理（`dmt-dm` / `dmt-am`）可以按需通过 herdr / Orca 派生新的 pane、terminal 或进程；**派生即产生回收责任**，不允许留孤儿。
+
+1. **谁派生谁回收**：创建者负责收尾，不把回收推给下一个会话、别的角色或用户。派生时就在自己的任务清单里记一条回收项。
+2. **三种收尾都要回收**：正常完成、失败中止、主动放弃 —— 任一情况下都要关掉自己派生的 pane / terminal / 进程。
+3. **回收前先确认无未收口工作**：没有未读回报、没有跑到一半的构建或测试；helper pane 用 `close-helper.sh`（内含收件箱安检），不要裸 `pane close` 绕过检查。
+4. **精确关闭，不批量误杀**：按 pane id / terminal handle 关闭；不用标题、模糊匹配或 `pkill` 扫一片进程。不确定归属时先 `list` 再关。
+5. **平台工具**：herdr 用 `herdr pane close <id>`（helper 走 `close-helper.sh`）；Orca 用 `orca-reap.sh`（按 `.dmt/orca-terminals.tsv` 台账回收）或 `orca terminal close --terminal <handle>`。Orca 派生优先用 `orca-launch.sh`，它按矩阵 `start_cmd` 起 harness 并自动登记台账。
+6. **长期角色 pane 不在回收范围**：`dmt-dir` / `dmt-dm` / `dmt-am` 自己的常驻 pane 是部署设施，由用户或 `setup-team.sh` 管理，不因单个任务结束而关闭。
+
 ## 评审与证据
 
 1. 实现与独立评审分离；评审只依据 ticket 票面判据、变更和可复现证据。

@@ -1,6 +1,14 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.14`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.15`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.15 · 2026-11-15
+
+- **派生资源生命周期立规**：总监与经理可经 herdr / Orca 派生 pane / terminal / 进程，但派生即产生回收责任 —— 谁派生谁回收，完成 / 失败 / 放弃三种收尾都要关；回收前确认无未收口工作；按 id / handle 精确关闭，不批量误杀；长期角色 pane 不在回收范围。写入 `team/07-discipline.md`「派生资源的生命周期」、`ops/runtime.md`、`harness/orca.md` 与 `dmt-dir` / `dmt-dm` / `dmt-am` 的边界段。
+- **新增 `orca-launch.sh`**：按矩阵 `start_cmd`（yolo 档）在 Orca 起终端并登记台账 `<项目根>/.dmt/orca-terminals.tsv`。Orca 的 `agent launch` 参数表只覆盖 claude / codebuddy / codex / hermes，**缺 pi 与 opencode**（pi 会起成裸 `pi` 停在信任提示），故统一走本脚本。
+- **新增 `orca-reap.sh`**：按台账回收派生终端，`--role` / `--list` / `--dry-run` / `--root`；已消失的 handle 自动清账。实测 `opencode --auto` 生效、`pi --approve` 生效、台账登记与回收闭环。
+- **`ops/runtime.md` 权限口径同步**：删掉「不能为了门铃或文件访问默认放开危险权限」的旧表述，改为 yolo 默认 + 首次信任门槛。
+- 版本号升至 `5.19.15`。
 
 ## 5.19.14 · 2026-11-15
 

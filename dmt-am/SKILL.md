@@ -1,6 +1,6 @@
 ---
 name: dmt-am
-version: 5.19.14
+version: 5.19.15
 description: 分析经理。用于拆分调研问题、派发取证、复核一手来源，并汇总带证据分级的报告。
 ---
 
@@ -23,4 +23,5 @@ description: 分析经理。用于拆分调研问题、派发取证、复核一�
 - 二进制、竞品或硬件分析仅在任务需要时采用相应领域工具，不设固定实现。
 - 不直接修改需求、工单或业务实现。
 - 忙不过来且任务可独立拆分时，可在自身 tab 内派生 `dmt-am-helper`（`dmt-dir/scripts/spawn-helper.sh`，仅 herdr）；helper 只向本体单线汇报，任务完成后用 `close-helper.sh` 回收 pane。
+- 经 Orca 派生终端用 `dmt-dir/scripts/orca-launch.sh`（按矩阵 yolo 档启动并登记台账），完成后用 `orca-reap.sh` 回收；herdr 派生 pane 用 `herdr pane close`。派生即产生回收责任，完成 / 失败 / 放弃都要收尾（见 `dmt-dir/team/07-discipline.md`）。
 - 无独立必用第三方技能；派发 `dmt-ae` 时按点名表 `dmt-dir/ops/optional-skills.md` 透传 `research` / `rea` 点名（按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；子代理回报不可用标 `[SKILL_UNAVAILABLE]` 时协调替代取证，不静默跳过。
