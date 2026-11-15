@@ -92,7 +92,9 @@ class DmtRegressionTests(unittest.TestCase):
             self.assertFalse((target / "docs/pd").exists())
             self.assertFalse((target / "inbox").exists())
             self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
-            self.assertFalse((skills / "dmt-dir/CHANGELOG.md").exists())
+            # link 模式下 dmt-dir 也是整目录软链（与其余角色一致）：hermes 的 skills_guard 把
+            # 「真实目录 + 指向目录外的软链」判 symlink_escape 并隔离整个技能。
+            self.assertTrue((skills / "dmt-dir").is_symlink())
             result = self.installed_check(target, skills)
             self.assert_pass(result)
             self.assertEqual(result.stdout.strip(), "ALL_PASS")
@@ -102,6 +104,8 @@ class DmtRegressionTests(unittest.TestCase):
             target = Path(tmp) / "copy-project"
             skills = self.install(target, copy=True)
             self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
+            # copy 模式仍按 CORE_ITEMS 裁剪：技能落点里也不带维护件
+            self.assertFalse((skills / "dmt-dir/CHANGELOG.md").exists())
             result = self.installed_check(target, skills)
             self.assert_pass(result)
             self.assertEqual(result.stdout.strip(), "ALL_PASS")

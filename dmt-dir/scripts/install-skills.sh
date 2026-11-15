@@ -65,15 +65,15 @@ for rel in $DIRS; do
   for s in $SKILLS; do
     # 目标已存在且是实体目录（旧版复制/旧落点）时必须先删，否则 ln -sfn 会把软链建到目录里面
     rm -rf "$TARGET/$rel/$s"
-    if [ "$s" = "dmt-dir" ]; then
+    # copy 模式仍只复制 CORE_ITEMS（维护件如 CHANGELOG 不进项目）。
+    # link 模式必须整目录软链：hermes 的 skills_guard 把「真实技能目录 + 指向目录外的软链」
+    # 判 symlink_escape（critical/traversal）并隔离整个技能 —— 不进技能索引、不进斜杠命令，
+    # 实测 /dmt 补全只有 6/7。整目录软链后目录内全是实体文件，扫描判 safe。
+    if [ "$s" = "dmt-dir" ] && [ "$MODE" = "copy" ]; then
       mkdir -p "$TARGET/$rel/$s"
       for item in $CORE_ITEMS; do
         [ -e "$REPO/$s/$item" ] || continue
-        if [ "$MODE" = "copy" ]; then
-          cp -r "$REPO/$s/$item" "$TARGET/$rel/$s/$item"
-        else
-          ln -sfn "$REPO/$s/$item" "$TARGET/$rel/$s/$item"
-        fi
+        cp -r "$REPO/$s/$item" "$TARGET/$rel/$s/$item"
       done
     elif [ "$MODE" = "copy" ]; then
       cp -r "$REPO/$s" "$TARGET/$rel/$s"

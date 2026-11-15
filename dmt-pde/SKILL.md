@@ -1,6 +1,6 @@
 ---
 name: dmt-pde
-version: 5.19.12
+version: 5.19.13
 description: 产品工程师。用于需求取证、SPEC 起草、边界枚举、需求一致性和验收标准核对。
 ---
 
