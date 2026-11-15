@@ -1,6 +1,11 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.16`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.17`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.17 · 2026-11-15
+
+- **hermes 用户级落点铺法写入 `harness/hermes.md`**：`for d in ~/.agents/skills/dmt-*; do ln -sfn "$d" ~/.hermes/skills/"$(basename "$d")"; done`。软链最终解析到技能仓，改仓即生效；任意目录 `hermes skills list | grep dmt-` 应为 7 个（`Source=local`），免去逐项目 `hermes skills trust`。本机已按此铺好并验证。
+- 版本号升至 `5.19.17`。
 
 ## 5.19.16 · 2026-11-15
 
