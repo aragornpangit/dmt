@@ -28,6 +28,7 @@
 4. **精确关闭，不批量误杀**：按 pane id / terminal handle 关闭；不用标题、模糊匹配或 `pkill` 扫一片进程。不确定归属时先 `list` 再关。
 5. **平台工具**：herdr 用 `herdr pane close <id>`（helper 走 `close-helper.sh`）；Orca 用 `orca-reap.sh`（按 `.dmt/orca-terminals.tsv` 台账回收）或 `orca terminal close --terminal <handle>`。Orca 派生优先用 `orca-launch.sh`，它按矩阵 `start_cmd` 起 harness 并自动登记台账。
 6. **长期角色 pane 不在回收范围**：`dmt-dir` / `dmt-dm` / `dmt-am` 自己的常驻 pane 是部署设施，由用户或 `setup-team.sh` 管理，不因单个任务结束而关闭。
+7. **句柄只向下持有，不向上转交**：pane id / terminal handle 归派生者的直接上级，`dmt-dm` 手里的 `dmt-de` 句柄不得上报给 `dmt-dir`，`dmt-dir` 也不得索取。越级拿到句柄等于开了一条绕过汇报线的观测通道（能直接读下级屏幕），与「角色间互连、越级一律禁止」冲突。上级核验走产物：commit SHA、`git show --stat`、测试输出、报告路径。
 
 ## 评审与证据
 

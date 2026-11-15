@@ -10,9 +10,11 @@
 产物：<位置与格式>
 判据：<逐项可测>
 验证：<命令、来源或证据要求>
-回报：<结果、证据、未决项；只报派发者>
+回报：<结果、证据、未决项；只报派发者；不带下级 pane / terminal 句柄>
 约束：<时间、资源、安全或平台要求，按需>
 ```
+
+回报里给**产物**，不给**观测通道**：commit SHA、diff、测试输出、报告路径可以逐级上送，下级的 pane id / terminal handle 不行 —— 拿到句柄就能读下级屏幕，等于绕过汇报线。上级若要「看到进展」，正确的产物是可复核证据，不是实时屏幕。
 
 启用第三方技能适配器时，「角色与技能」行按 [`../ops/optional-skills.md`](../ops/optional-skills.md) 与契约 `third_party_skills.role_skills` 逐项写出本角色**必用**技能/MCP；点名即硬要求，不可用标 `[SKILL_UNAVAILABLE]` 并回报派发者，改用直读该技能 `SKILL.md` 绝对路径等可验证替代方法，不静默跳过。产物适配（`to-spec` / `to-tickets` / `grill-with-docs`）按契约 `artifact_adaptation` 写明落盘口径，压过技能正文里的外部 tracker / `.scratch/` 指令。条件加载技能（superpowers 单点 / `handoff`）只在可用 harness 追加，缺席时回退 [`07-discipline.md`](07-discipline.md) 的自带判据。
 

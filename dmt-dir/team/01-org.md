@@ -16,6 +16,7 @@
 - `dmt-am` 负责调研收口；`dmt-de` 是所分配 worktree 功能分支的唯一实现写者与 committer。
 - 开发线 Git 权限按**两级 ＋ 独立评审 gate**：`dmt-de` 在功能分支 commit、`dmt-dm` 另派与实现者不同且加载 `dmt-reviewer` 技能的临时子代理基于该 commit 按 ticket 独立评审、评审通过后由 `dmt-dm` merge / push；一个实施单元一个隔离 worktree（独立 index）+ 独立分支，详见 [`07-discipline.md`](07-discipline.md)。
 - 代码验收只在开发线内完成；`dmt-dir` 核对需求、文档与调研结论，不抽检开发团队的代码。
+- **观测通道沿汇报线单向向下持有**：`dmt-dm` 持有 `dmt-de` / `dmt-reviewer` 的 pane / terminal 句柄，`dmt-am` 持有 `dmt-ae` 的；`dmt-dir` 不得索取、接收或读取这些下级的句柄与屏幕。`dmt-dir` 想核验开发或调研进展，只用上级可见的可复核产物（commit SHA、diff、测试输出、报告与证据路径），不看下级实时屏幕。
 - `dmt-pde`、`dmt-de`、`dmt-ae` 通常作为子代理，只向派发者回报；回报含一手证据路径，汇总不得只留摘要而丢证据。
 - 独立评审由 `dmt-dm` 派未参与实现的临时子代理承担，**加载 `dmt-reviewer` 技能**、以 ticket 为单位审查；跨组共享资源由共同协调者串行化，评审者不能与被审实现者相同。
 - 用户可直接调用任意角色。独立使用时服从任务指定的派发关系，不补建其余角色。

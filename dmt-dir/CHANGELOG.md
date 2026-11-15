@@ -1,6 +1,16 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.15`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.16`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.16 · 2026-11-15
+
+- **补上「观测通道」边界（运行时暴露的真问题）**：`dmt-dir` 向 `dmt-dm` 索要 `dmt-de` 的 Orca terminal 句柄去读屏幕 —— 消息方向表本来就禁止 dir↔de，但只约束了「消息」，没约束「句柄与屏幕」，于是句柄成了一条绕过汇报线的观测通道。现补四条：
+  - `team.md` 原则 7：观测通道同受单线回报约束，下级 pane / terminal 句柄与实时屏幕只归其派发者，不得索取、转交或越级读取。
+  - `01-org.md`：dm 持有 de / reviewer 句柄、am 持有 ae 句柄；dir 只收产物（commit SHA、diff、测试输出、报告路径）。
+  - `07-discipline.md` 新增第 7 条：句柄只向下持有，不向上转交。
+  - `ops/comms.md`、`07b-dispatch.md`、`harness/orca.md`：方向表与回报模板同步写明「给产物，不给观测通道」。
+- **Orca 本地补丁**：`agent launch` 的 yolo 参数表补 `pi:"--approve"`、`opencode:"--auto"`（`out/cli/index.js` 的 `YW` 与 `orcad-server.js` 的 `yA`），原文件留 `.bak-dmt-yolo`，`node --check` 通过；生效需重启运行时，升级会覆盖需重打（已写入 `harness/orca.md`）。
+- 版本号升至 `5.19.16`。
 
 ## 5.19.15 · 2026-11-15
 
