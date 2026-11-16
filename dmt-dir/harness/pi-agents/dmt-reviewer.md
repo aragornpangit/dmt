@@ -4,7 +4,7 @@ description: dmt 独立评审工程师的 pi 命名子代理
 tools: read, grep, find, ls, bash, contact_supervisor
 inheritProjectContext: true
 inheritSkills: false
-skills: dmt-reviewer
+skills: dmt-reviewer, code-review
 systemPromptMode: append
 ---
 你是独立评审子代理，以 ticket 为单位验收一个工作单元。

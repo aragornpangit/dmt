@@ -487,6 +487,53 @@ done <<< "$A6F_OUT"
 [ "$a6f_fail" = 0 ] || fail=1
 
 echo
+echo "== A6g) pi 子代理模板 skills 白名单覆盖 role_skills（硬 FAIL） =="
+# inheritSkills: false 时子代理以 --no-skills 启动，skills: 是白名单而非附加项；
+# 漏列等于子代理不知道该技能存在（如 dmt-de 缺 tdd/implement/code-review）。
+A6G_OUT="$(python3 - "$SKILLS_DIR" "$CONTRACT_YAML" <<'PYAG'
+import os, sys, re, yaml
+skills_dir, contract = sys.argv[1], sys.argv[2]
+c = yaml.safe_load(open(contract, encoding="utf-8"))
+tp = c.get("third_party_skills") or {}
+rs = tp.get("role_skills") or {}
+names = set(tp.get("names") or [])
+tdir = os.path.join(skills_dir, "dmt-dir", "harness", "pi-agents")
+if not os.path.isdir(tdir):
+    print("WARN\t-\t无 pi-agents 目录（copy 安装可能未带），跳过")
+    sys.exit(0)
+for fn in sorted(os.listdir(tdir)):
+    if not fn.endswith(".md") or fn == "README.md":
+        continue
+    role = fn[:-3]
+    if role not in rs:
+        print("WARN\t%s\t契约无该角色 role_skills，跳过" % role); continue
+    text = open(os.path.join(tdir, fn), encoding="utf-8").read()
+    m = re.search(r"^---\n(.*?)\n---", text, re.S)
+    if not m:
+        print("FAIL\t%s\t缺 frontmatter" % role); continue
+    line = next((l for l in m.group(1).splitlines() if l.strip().startswith("skills:")), "")
+    listed = [x.strip() for x in line.split(":", 1)[1].split(",") if x.strip()] if line else []
+    # 只校验契约 names 里的技能：rea 之类未纳入安装清单的条目不在白名单要求内。
+    want = [role] + [n for n in rs.get(role, []) if n in names]
+    miss = [n for n in want if n not in listed]
+    if miss:
+        print("FAIL\t%s\t白名单缺 %s（现有 %s）" % (role, ",".join(miss), ",".join(listed) or "空"))
+    else:
+        print("OK\t%s\t%s" % (role, ",".join(listed)))
+PYAG
+)"
+a6g_fail=0
+while IFS=$'\t' read -r st who what; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK)   ok "pi 模板 $who 白名单：$what" ;;
+    WARN) echo "WARN pi 模板 $who：$what" ;;
+    FAIL) bad "pi 模板 $who：$what"; a6g_fail=1 ;;
+  esac
+done <<< "$A6G_OUT"
+[ "$a6g_fail" = 0 ] || fail=1
+
+echo
 echo "== A6d) 仓级脚本登记（仅维护仓） =="
 if [ -d "$REPO/dmt-dm" ] && [ -d "$REPO/scripts" ]; then
   while IFS= read -r rp; do

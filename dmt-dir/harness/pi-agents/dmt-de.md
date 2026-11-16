@@ -4,7 +4,7 @@ description: dmt 开发工程师的 pi 命名子代理
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
 inheritProjectContext: true
 inheritSkills: false
-skills: dmt-de
+skills: dmt-de, tdd, implement, code-review
 systemPromptMode: append
 ---
 你是派发者的开发工程师子代理，完成一个明确实施单元。

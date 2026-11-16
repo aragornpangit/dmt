@@ -1,6 +1,15 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.20`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.21`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.21 · 2026-11-16
+
+- **修 pi 命名子代理的技能白名单漏列**：`pi-subagents` 在 `inheritSkills: false` 时以 `--no-skills` 启动子代理，`skills:` 是白名单而非附加项；原模板只写角色技能本身，`dmt-de` 因此拿不到 `tdd` / `implement` / `code-review`（`dmt-reviewer` 缺 `code-review`、`dmt-pde` 缺 `to-spec`、`dmt-ae` 缺 `research`）。实测 `resolveSkills(['dmt-de'])` 注入目录只有 1 项，补齐后 4 项。
+- 模板改为：`dmt-de` → `dmt-de, tdd, implement, code-review`；`dmt-reviewer` → `dmt-reviewer, code-review`；`dmt-pde` → `dmt-pde, to-spec`；`dmt-ae` → `dmt-ae, research`（契约里的 `rea` 本机未安装，列了只会恒报 missing）。
+- 机检新增 **A6g**：逐模板校验 `skills:` 覆盖 `role_skills` ∪ 角色技能本身，漏列即硬 FAIL；既有 A6c 只校验「列出的名字能解析且未被隐藏」，查不出漏列。
+- 文档：`harness/pi.md`、`harness/pi-agents/README.md` 写明白名单语义、注入环节会硬过滤 `disable-model-invocation: true`（指向上游正本得到空目录，不报错）。
+- 实测：pi 主会话（`dmt-dm` 场景）系统提示的技能目录含 `to-tickets` / `tdd` / `implement` / `code-review`，`to-tickets` 可用；子代理侧按新白名单注入。
+- 版本号升至 `5.19.21`。
 
 ## 5.19.20 · 2026-11-16
 
