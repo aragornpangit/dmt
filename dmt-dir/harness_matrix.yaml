@@ -8,9 +8,9 @@
 # skill_prefix 技能限定名前缀；subagent_skill 子代理加载角色技能方式（invoke / read / unknown）；
 # first_prompt 启动是否接受首轮 prompt；tree_mode 会话树；doorbell 门铃检测名。
 #
-# 启动档统一为 yolo（免逐次审批）：dmt 靠 pane 自主跑长任务，default/manual 档会把每次工具调用
-# 变成审批等待。各 harness 的 yolo 参数一律以 `<harness> --help` 实测为准，逐项写在 start_cmd：
-#   codebuddy  --dangerously-skip-permissions（-y 同义）+ --subagent-permission-mode bypassPermissions
+# 启动档使用各 harness 的自动模式，减少逐次审批阻塞；仍是显式权限选择，不等于无限权限。
+# 参数一律以 `<harness> --help` 实测为准，逐项写在 start_cmd：
+#   codebuddy  --permission-mode auto + --subagent-permission-mode auto
 #   claude     --dangerously-skip-permissions
 #   codex      --dangerously-bypass-approvals-and-sandbox（全放行；-a never 只免审批、仍留沙箱）
 #   hermes     --yolo
@@ -22,8 +22,8 @@ harnesses:
       dir_project: .codebuddy/skills
       dir_user: .codebuddy/skills
     slash_prefix: "/"
-    # --dangerously-skip-permissions：免逐次审批；子代理另用 bypassPermissions，否则 teammate 可能回 default 档
-    start_cmd: "bash '$DMT_SCRIPTS_DIR/auto-review-model.sh' --quiet; CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --dangerously-skip-permissions --subagent-permission-mode bypassPermissions"
+    # 用户 2026-11-16 裁定：主会话和子代理统一 auto 档，不再默认全放行
+    start_cmd: "CODEBUDDY_AUTO_REVIEW_TIMEOUT_MS=300000 codebuddy --permission-mode auto --subagent-permission-mode auto"
     max_subagents_conc: 8
     max_subagents_env: CODEBUDDY_CODE_MAX_CONCURRENT_SUBAGENTS
     max_subagents_config: null
@@ -170,3 +170,11 @@ install_all_dirs:
   - .agents/skills
   - .claude/skills
   - .codebuddy/skills
+
+# 被服务项目默认创建的产物目录。收件箱与 locks 属可选运行适配器，不在此强制。
+artifact_dirs:
+  - docs/pd/prd
+  - docs/pd/spec
+  - docs/dev/tickets
+  - docs/analyst
+  - docs/handoff

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 把 dmt 技能装到目标项目（默认软链，--copy 则复制）
-# 用法：bash install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,hermes,opencode,pi]
+# 用法：bash install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,hermes,opencode,pi] [--require-artifacts]
 #
 # 技能落点（2026-11-04 逐 harness 探针实测：各 harness 只认自己的目录，**没有"一处通用"**）：
 #   .agents/skills/    ← codex / opencode / pi（pi 的项目级 .agents/skills 需 --approve 才可见）
@@ -16,17 +16,20 @@ set -eu
 TARGET=""
 MODE=link
 HARNESS="all"
+CHECK_ARTIFACTS="${DMT_CHECK_ARTIFACTS:-auto}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --copy|copy) MODE=copy ;;
     link) MODE=link ;;
     --harness) HARNESS="${2:?missing harness list}"; shift ;;
-    -*) echo "unknown arg: $1（只认 --copy 与 --harness）" >&2; exit 2 ;;
+    --require-artifacts) CHECK_ARTIFACTS=1 ;;
+    --no-artifact-check) CHECK_ARTIFACTS=0 ;;
+    -*) echo "unknown arg: $1（只认 --copy、--harness 与 --require-artifacts）" >&2; exit 2 ;;
     *) TARGET="$1" ;;
   esac
   shift
 done
-[ -n "$TARGET" ] || { echo "usage: install-skills.sh <project-root> [--copy] [--harness all|claude,codebuddy,codex,hermes,opencode,pi]" >&2; exit 2; }
+[ -n "$TARGET" ] || { echo "usage: install-skills.sh <project-root> [--require-artifacts]" >&2; exit 2; }
 
 REPO="$(cd -P "$(dirname "$0")/../.." && pwd -P)"
 # 目标目录不存在时自动创建（2026-11-06：此前直接 `cd` 失败，报错落在 set -e 的 line 33，提示无用）
@@ -149,8 +152,12 @@ case " $HARNESS " in
     ;;
 esac
 
-# 安装只分发并检查技能；目录与收件箱由用户显式运行 init-project.sh 建立。
+# 默认仅检查技能落点；init-project.sh 建立目录后使用 --require-artifacts 校验产物目录。
 # DMT_SKILLS_DIR 指向本次实际装的第一个落点，避免平台目录不同时误判。
 FIRST_DIR="$(printf '%s' "$DIRS" | awk '{print $1}')"
-DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-dir/scripts/check-dmt.sh" "$TARGET"
+if [ "$CHECK_ARTIFACTS" = 0 ]; then
+  DMT_CHECK_ARTIFACTS=0 DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-dir/scripts/check-dmt.sh" "$TARGET"
+else
+  DMT_SKILLS_DIR="$TARGET/$FIRST_DIR" bash "$REPO/dmt-dir/scripts/check-dmt.sh" "$TARGET"
+fi
 echo "installed ($MODE, --harness $HARNESS) into $TARGET"

@@ -10,11 +10,17 @@
 - `dmt-dm`：评估输入、工单拆分、开发安排与授权整合。
 - `dmt-de`：指定 worktree 功能分支内的实现、测试与 commit（不 merge / push）。
 - `dmt-reviewer`：以 ticket 为单位的独立评审（子代理，不参与被审实现）；静态门为 `dmt-dir/scripts/review-gate.sh`，规范基线在 `dmt-reviewer/references/`（Python / Java / JavaScript / TypeScript / C++，离线可读）。
-- `dmt-am`：调研拆分、取证复核与报告汇总。
-- `dmt-ae`：单个取证单元的一手来源与可复现结论。
-- `dmt-pde`：需求取证与 SPEC 起草。
+- `dmt-am`：拆调研、并行派多个 AE、复核证据，并把含 Proposal 的报告写入 `docs/analyst/`。
+- `dmt-ae`：单个取证单元的一手来源、可复现结论和证据产物。
+- `dmt-pde`：根据已批准 PRD 与调研报告使用 `to-spec` 起草 SPEC。
 
-角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具；**默认开发线为两级**：`dmt-dm` 收到 SPEC / 需求 / bug 后评估并用 `to-tickets` 拆成 ticket → 逐一派 `dmt-de`（tdd / implement / code-review）→ 完工后另派加载 `dmt-reviewer` 技能的子代理按 ticket 独立评审 → 通过后 `dmt-dm` merge / push。启用完整团队适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 的默认布局部署，可按需裁剪。开发线的 Git 权限分层见 [`dmt-dir/team/07-discipline.md`](dmt-dir/team/07-discipline.md)。
+角色数量和组合由任务决定，不要求固定组织、pane、目录或第三方工具。默认产品线是 DIR 按需派 AM 调研 → AM 汇总含 Proposal 的 `docs/analyst/` 报告 → DIR 写 PRD → PDE 写 SPEC → DIR 批准；默认开发线是 `dmt-dm` 收到已批准 SPEC 后用 `to-tickets` 拆 ticket 并创建 worktree → `dmt-de` 按 tdd/implement/code-review 实现和 commit → 独立 `dmt-reviewer` 审核 commit/diff → `dmt-dm` merge、push 并标记 ticket 完成。启用多 pane 适配器时按 [`dmt-dir/ops/runtime.md`](dmt-dir/ops/runtime.md) 部署，可按需裁剪。
+
+## 脚本分层
+
+- 主流程保留：`install-skills.sh`、`check-dmt.sh`、`harness-matrix.sh`、`review-gate.sh`、`worktree.sh`、`init-project.sh`、`publish.sh`。
+- 精简保留：`harness-detect.sh`、`runtime-detect.sh`、`install-third-party-skills.sh`、`fetch-style-baselines.sh`。
+- 可选运行适配器：收件箱、helper、herdr/Orca 启动与回收、CodeBuddy 复核健康门、特定二进制兼容补丁；不作为角色开工前置，详见 [`dmt-dir/OPS.md`](dmt-dir/OPS.md)。
 
 ## 安装
 
@@ -24,15 +30,15 @@ bash dmt-dir/scripts/install-skills.sh <项目根> --copy
 bash dmt-dir/scripts/install-skills.sh <项目根> --harness claude,codebuddy
 ```
 
-默认使用软链，`--copy` 创建独立副本；`--harness` 只安装指定平台需要的落点。安装器只分发运行所需文件，维护日志和变更历史不进入核心安装。
+默认使用软链，`--copy` 创建独立副本；`--harness` 只安装指定平台需要的落点。安装器负责技能落点与结构检查，不创建产品目录；维护日志和变更历史不进入核心安装。
 
-显式建立可选 DMT 目录与收件箱：
+显式安装项目技能并建立核心产物目录与可选收件箱：
 
 ```bash
 bash dmt-dir/scripts/init-project.sh <项目根>
 ```
 
-初始化不是技能加载步骤。角色加载后先按 `dmt-dir/team/02-runtime.md` 探测当前 harness 与其运行平台（herdr、Orca；都不是 harness）；差异文档、适配器、收件箱和 helper 只在实际使用时读取 `dmt-dir/harness/` 或 `dmt-dir/OPS.md`。
+初始化不是技能加载步骤；它会安装项目技能、创建核心产物目录，并建立可接收件箱。角色加载后先按 `dmt-dir/team/02-runtime.md` 探测当前 harness 与其运行平台（herdr、Orca；都不是 harness）；默认使用 harness 原生 subagent，差异文档、收件箱、helper 和 herdr/Orca 适配器只在实际使用时读取 `dmt-dir/harness/` 或 `dmt-dir/OPS.md`。
 
 ## 检查
 

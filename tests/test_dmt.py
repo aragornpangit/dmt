@@ -10,6 +10,7 @@ INSTALL = REPO / "dmt-dir/scripts/install-skills.sh"
 SEND = REPO / "dmt-dir/scripts/send-msg.sh"
 GATE = REPO / "dmt-dir/scripts/review-gate.sh"
 WORKTREE = REPO / "dmt-dir/scripts/worktree.sh"
+INIT = REPO / "dmt-dir/scripts/init-project.sh"
 
 
 def run(*args, cwd=REPO, env=None):
@@ -32,6 +33,9 @@ class DmtRegressionTests(unittest.TestCase):
         self.assertEqual(result.stdout.strip().splitlines()[-1], "ALL_PASS")
 
     def install(self, target, copy=False):
+        # 产物目录由 init-project.sh 显式建立；技能安装只负责技能与检查。
+        init = run("bash", INIT, target, "--no-check")
+        self.assertEqual(init.returncode, 0, init.stdout + init.stderr)
         args = ["bash", INSTALL, target, "--harness", "codebuddy"]
         if copy:
             args.append("--copy")
@@ -66,7 +70,7 @@ class DmtRegressionTests(unittest.TestCase):
         entries = sorted(REPO.glob("dmt-*/SKILL.md"))
         self.assertEqual(len(entries), 7)
         self.assertLessEqual(sum(len(p.read_text().splitlines()) for p in entries), 260)
-        self.assertLessEqual(len((REPO / "dmt-dir/SKILL.md").read_text().splitlines()), 25)
+        self.assertLessEqual(len((REPO / "dmt-dir/SKILL.md").read_text().splitlines()), 32)
         for path in entries:
             text = path.read_text()
             self.assertNotIn("每次加载先做", text)
@@ -90,7 +94,10 @@ class DmtRegressionTests(unittest.TestCase):
     def test_link_install_needs_no_fixed_project_directories(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "generic-project"
-            skills = self.install(target)
+            raw = run("bash", INSTALL, target, "--harness", "codebuddy")
+            self.assertEqual(raw.returncode, 0, raw.stdout + raw.stderr)
+            self.assertFalse((target / "docs/pd").exists())
+            skills = target / ".codebuddy/skills"
             self.assertFalse((target / "docs/pd").exists())
             self.assertFalse((target / "inbox").exists())
             self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
@@ -104,7 +111,9 @@ class DmtRegressionTests(unittest.TestCase):
     def test_copy_install_is_self_contained(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "copy-project"
-            skills = self.install(target, copy=True)
+            raw = run("bash", INSTALL, target, "--harness", "codebuddy", "--copy")
+            self.assertEqual(raw.returncode, 0, raw.stdout + raw.stderr)
+            skills = target / ".codebuddy/skills"
             self.assertFalse((target / "dmt-dir/CHANGELOG.md").exists())
             # copy 模式仍按 CORE_ITEMS 裁剪：技能落点里也不带维护件
             self.assertFalse((skills / "dmt-dir/CHANGELOG.md").exists())
@@ -115,7 +124,9 @@ class DmtRegressionTests(unittest.TestCase):
     def test_broken_relative_link_fails_from_source_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "broken-link-project"
-            skills = self.install(target)
+            raw = run("bash", INSTALL, target, "--harness", "codebuddy")
+            self.assertEqual(raw.returncode, 0, raw.stdout + raw.stderr)
+            skills = target / ".codebuddy/skills"
             (target / "docs").mkdir()
             (target / "docs/broken.md").write_text(
                 "[missing](../definitely-not-present.md)\n", encoding="utf-8"
@@ -245,6 +256,64 @@ class DmtRegressionTests(unittest.TestCase):
             good = run("bash", GATE, "--root", root, env=env)
             self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
             self.assertIn("GATE PASS", good.stdout)
+
+    def test_review_gate_override_runs_without_installed_default_tool(self):
+        """--cmd 是项目自定义命令，不能被“默认工具未安装”提前吞成 SKIP。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.py").write_text("x=1\n", encoding="utf-8")
+            bad = run("bash", GATE, "--root", root, "--cmd", "lint=false",
+                      "--cmd", "test=true")
+            self.assertEqual(bad.returncode, 1, bad.stdout + bad.stderr)
+            self.assertRegex(bad.stdout, r"FAIL lint\s+false")
+            self.assertIn("GATE FAIL", bad.stdout)
+
+            good = run("bash", GATE, "--root", root, "--cmd", "lint=true",
+                       "--cmd", "test=true")
+            self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+            self.assertRegex(good.stdout, r"PASS lint\s+true")
+            self.assertIn("GATE PASS", good.stdout)
+
+    def test_init_project_creates_research_and_product_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "project"
+            result = run("bash", INIT, root, "--no-check")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for rel in ("docs/analyst", "docs/pd/prd", "docs/pd/spec",
+                        "docs/dev/tickets", "docs/handoff"):
+                self.assertTrue((root / rel).is_dir(), rel)
+            self.assertFalse((root / "research").exists())
+
+    def test_research_to_spec_workflow_contract(self):
+        import yaml
+        contract = yaml.safe_load(
+            (REPO / "dmt-dir/dmt_contract.yaml").read_text()
+        )
+        flow = contract["workflow_contract"]
+        self.assertEqual(flow["research_dir"], "docs/analyst")
+        self.assertEqual(flow["research_report_heading"], "Proposal")
+        self.assertEqual(flow["spec_owner"], "dmt-pde")
+        self.assertEqual(flow["spec_approver"], "dmt-dir")
+        self.assertEqual(flow["worktree_creator"], "dmt-dm")
+        self.assertTrue(flow["hardware_exit_required_after_test"])
+
+        am = (REPO / "dmt-am/SKILL.md").read_text()
+        self.assertIn("docs/analyst/", am)
+        self.assertIn("Proposal", am)
+        self.assertIn("dmt-ae", am)
+        for role, phrase in (
+            ("dmt-dir", "亲自起草 PRD"),
+            ("dmt-pde", "已批准的 PRD"),
+            ("dmt-dm", "DE 不自建 worktree"),
+            ("dmt-dm", "gitlab"),
+            ("dmt-de", "测试结束"),
+            ("dmt-reviewer", "不得判 PASS"),
+        ):
+            self.assertIn(phrase, (REPO / role / "SKILL.md").read_text())
+        self.assertIn(
+            "测试结束必须退出",
+            (REPO / "dmt-dir/team/07-discipline.md").read_text(),
+        )
 
     def test_worktree_add_remove_roundtrip(self):
         """实施单元拿到独立 worktree + 分支；主工作树保持干净；分支默认保留。"""

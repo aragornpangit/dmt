@@ -20,7 +20,7 @@
 
 ## 可选 harness 运行平台适配器
 
-运行平台成员不是 harness：其中运行的仍是上面某个 agent。使用时另读对应适配器，机器事实分别在矩阵 `runtimes:` / `ades:` 段，`harnesses:` 段与 `per_harness` 不变：
+运行平台成员不是 harness：其中运行的仍是上面某个 agent。默认协作不依赖它们；只有实际需要多 pane、终端编排或对应运行平台能力时，才另读适配器。机器事实分别在矩阵 `runtimes:` / `ades:` 段，`harnesses:` 段与 `per_harness` 不变：
 
 - [`orca.md`](orca.md) —— Orca worktree、编排派发与终端消息映射（`ades.orca`）。
 - herdr 侧（`runtimes.herdr`）见 [`../ops/runtime.md`](../ops/runtime.md)，归 `ops_docs`。

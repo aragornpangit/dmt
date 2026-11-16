@@ -20,7 +20,7 @@ bash dmt-dir/scripts/setup-team.sh --harness <name>
 
 `setup-team.sh` 部署上述布局。启动命令和就绪方式以 harness 矩阵为准。
 
-启动档统一为 yolo（免逐次审批，参数见矩阵 `start_cmd`，逐 harness 以 `<harness> --help` 实测）。首次进入新项目仍有一次目录信任（claude / codex / pi）或 `hermes skills trust`，那是信任门槛。Codex 的 yolo 档会连沙箱一并放行，说明见 [`../harness/codex.md`](../harness/codex.md)。
+启动档使用各 harness 的自动模式（参数见矩阵 `start_cmd`，以 `<harness> --help` 实测）。首次进入新项目仍有一次目录信任或 `hermes skills trust`，那是信任门槛。CodeBuddy 使用 `--permission-mode auto`，不默认全放行；Codex 当前矩阵的自动档会连沙箱一并放行，说明见 [`../harness/codex.md`](../harness/codex.md)。
 
 ## 派生资源回收
 

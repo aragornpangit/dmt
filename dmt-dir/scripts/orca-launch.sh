@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 在 Orca 里按矩阵 start_cmd（yolo 档）起一个 harness 终端，并登记到派生台账供回收。
+# 在 Orca 里按矩阵 start_cmd（自动档）起一个 harness 终端，并登记到派生台账供回收。
 # 用法：bash orca-launch.sh <harness> [--worktree <selector>] [--role <name>] [--dry-run]
 #   harness     pi / codebuddy / claude / codex / hermes / opencode（矩阵 harnesses: 段）
 #   --worktree  缺省 path:$PWD；也可传 id: / name: / branch: 等 orca 选择器

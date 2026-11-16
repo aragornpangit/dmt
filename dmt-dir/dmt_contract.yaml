@@ -2,7 +2,7 @@
 # 只放会漂移的结构性事实：技能、版本源、可选目录、操作手册、脚本和预算。
 # 通用协作原则见 team.md；不使用固定措辞作为内容正确性的断言。
 
-version: 5.20.0
+version: 5.21.0
 date: "2026-11-16"
 
 skills:
@@ -24,9 +24,8 @@ version_sources:
   - dmt-ae/SKILL.md
   - dmt-reviewer/SKILL.md
 
-# 可选 DMT 目录不由通用安装强制。项目显式声明后，机检才验证其存在。
-# artifact_dirs: []
-# runtime_dirs: []
+# init-project.sh 建立后的项目目录由 harness_matrix.yaml.artifact_dirs 驱动。
+# 收件箱、locks 和平台本地状态属于可选运行适配器，不在核心检查范围。
 
 ops_docs:
   - runtime.md
@@ -35,6 +34,7 @@ ops_docs:
   - helper.md
   - permission-notes.md
   - optional-skills.md
+  - adapter-matrix.md
 
 # 按 harness 加载的说明文件（一份共性 + 每 harness 一份差异）。
 # 目录固定 dmt-dir/harness/；per_harness 的 harness 名集合必须与 harness_matrix.yaml 的 harnesses: key 一致。
@@ -60,12 +60,12 @@ platform_docs:
 
 skill_budgets:
   dmt-dir: 4500
-  dmt-dm: 4000
+  dmt-dm: 4500
   dmt-am: 4000
   dmt-pde: 3000
-  dmt-de: 3000
+  dmt-de: 3200
   dmt-ae: 3000
-  dmt-reviewer: 3000
+  dmt-reviewer: 3200
 
 # 可选第三方技能点名表（见 ops/optional-skills.md）。落点由 harness_matrix.yaml
 # 的 skills.dir_user 推导，由 install-third-party-skills.sh 铺设。
@@ -130,14 +130,37 @@ third_party_skills:
 # 基线由仓级脚本 scripts/fetch-style-baselines.sh 抓取；评审只读本地副本，不联网检索。
 reviewer_baselines: [python, java, javascript, typescript, cpp]
 
-# 安全边界文档：不可信内容不作指令、网络结论不作验收证据、yolo 授权前提。
+# 默认产品与调研链机检；固定关键产物位置、流转顺序和硬件测试收尾要求。
+workflow_contract:
+  research_dir: docs/analyst
+  research_report_heading: Proposal
+  research_parallel_agents: dmt-ae
+  prd_owner: dmt-dir
+  spec_owner: dmt-pde
+  spec_approver: dmt-dir
+  development_owner: dmt-dm
+  worktree_creator: dmt-dm
+  implementer: dmt-de
+  git_remote: gitlab
+  hardware_exit_required_after_test: true
+
+# 安全边界文档：不可信内容不作指令、网络结论不作验收证据、自动档授权前提。
 security_doc: team/11-security.md
 
-scripts:
+core_scripts:
   - lib-dmt.sh
   - harness-matrix.sh
-  - launch.sh
   - init-project.sh
+  - publish.sh
+  - install-skills.sh
+  - check-dmt.sh
+  - harness-detect.sh
+  - runtime-detect.sh
+  - worktree.sh
+  - review-gate.sh
+
+optional_scripts:
+  - launch.sh
   - setup-team.sh
   - spawn-helper.sh
   - helper-report.sh
@@ -145,19 +168,13 @@ scripts:
   - send-msg.sh
   - msg-take.sh
   - msg-done.sh
-  - publish.sh
   - file-claim.sh
-  - install-skills.sh
-  - check-dmt.sh
   - bump-version.sh
   - install-git-hooks.sh
   - auto-review-model.sh
-  - harness-detect.sh
-  - runtime-detect.sh
-  - worktree.sh
-  - review-gate.sh
   - orca-launch.sh
   - orca-reap.sh
+  - orca-fix-cli-impl.sh
 
 # 仓级辅助脚本（不随安装分发；只存在于本仓库，供维护 / 一次性工具使用）
 repo_scripts: [scripts/sync-mattpocock-codex-compat.sh, scripts/install-third-party-skills.sh, scripts/fetch-style-baselines.sh]

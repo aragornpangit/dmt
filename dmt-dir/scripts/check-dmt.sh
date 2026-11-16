@@ -30,6 +30,7 @@ else
 fi
 CONTRACT_YAML="${DMT_CONTRACT_YAML:-$REPO/dmt-dir/dmt_contract.yaml}"
 export DMT_CONTRACT_YAML="$CONTRACT_YAML"
+MATRIX_YAML="$REPO/dmt-dir/harness_matrix.yaml"
 
 if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import yaml' >/dev/null 2>&1; then
   echo "FAIL 需要 python3 + PyYAML"; exit 3
@@ -113,11 +114,13 @@ echo
 echo "== A3) 产物目录 / 运行时目录 =="
 if [ "$ROOT" = "$REPO" ]; then
   echo "SKIP 维护仓自身 —— 不要求装产物目录"
+elif [ "${DMT_CHECK_ARTIFACTS:-0}" = 0 ]; then
+  echo "SKIP 仅安装技能 —— 项目目录由 init-project.sh 显式建立"
 else
   while IFS= read -r d; do
     [ -n "$d" ] || continue
     if [ -d "$ROOT/$d" ]; then ok "目录 $d"; else bad "目录缺失 $d"; fi
-  done < <(python3 -c 'import os,yaml;[print(x) for x in yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8")).get("artifact_dirs",[])]')
+  done < <(python3 -c 'import sys,yaml;print("\n".join((yaml.safe_load(open(sys.argv[1],encoding="utf-8")).get("artifact_dirs") or [])))' "$MATRIX_YAML")
   while IFS= read -r d; do
     [ -n "$d" ] || continue
     if [ -d "$ROOT/$d" ]; then ok "运行时目录 $d"; else bad "运行时目录缺失 $d"; fi
@@ -144,12 +147,19 @@ while IFS=$'\t' read -r skill budget; do
 done < <(python3 -c 'import os,yaml;[print(k+"\t"+str(v)) for k,v in yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8")).get("skill_budgets",{}).items()]')
 
 echo
-echo "== A4) 脚本齐备且可执行 + 已废止脚本不得回潮 =="
+echo "== A4) 主流程 / 可选适配器脚本齐备且可执行 + 已废止脚本不得回潮 =="
+while IFS=$'\t' read -r layer s; do
+  [ -n "$s" ] || continue
+  f="$SCRIPT_DIR/$s"
+  if [ -x "$f" ]; then ok "$layer 脚本可执行 $s"; else bad "$layer 脚本缺失或不可执行 $s"; fi
+done < <(python3 -c 'import os,yaml;c=yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8"));[print(k+"\t"+x) for k in ("core_scripts","optional_scripts") for x in (c.get(k) or [])]')
 while IFS= read -r s; do
   [ -n "$s" ] || continue
   f="$SCRIPT_DIR/$s"
-  if [ -x "$f" ]; then ok "脚本可执行 $s"; else bad "脚本缺失或不可执行 $s"; fi
-done < <(python3 -c 'import os,yaml;[print(x) for x in yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8"))["scripts"]]')
+  if [ -e "$f" ] && ! grep -qxF "  - $s" <(python3 -c 'import os,yaml;c=yaml.safe_load(open(os.environ["DMT_CONTRACT_YAML"],encoding="utf-8"));[print("  - "+x) for k in ("core_scripts","optional_scripts") for x in (c.get(k) or [])]'); then
+    bad "脚本未登记分层 $s"
+  fi
+done < <(find "$SCRIPT_DIR" -maxdepth 1 -type f -name '*.sh' -printf '%f\n' | sort)
 while IFS= read -r s; do
   [ -n "$s" ] || continue
   if [ -e "$SCRIPT_DIR/$s" ]; then bad "已废止脚本回潮 $s"; else ok "已废止脚本未回潮 $s"; fi
@@ -165,11 +175,11 @@ if [ ! -x "$MATRIX" ]; then bad "缺 harness-matrix.sh"; else
     cmd="$(bash "$MATRIX" get "$h" start_cmd 2>/dev/null || true)"
     dir="$(bash "$MATRIX" get "$h" skills.dir_project 2>/dev/null || true)"
     if [ -n "$pre" ] && [ -n "$cmd" ] && [ -n "$dir" ]; then ok "harness $h（dir=$dir prefix=$pre）"; else bad "harness $h 字段不完整"; fi
-    # 启动档统一 yolo：start_cmd 必须带一个实测过的免批准参数（参数名以 <harness> --help 为准）
-    if printf '%s' "$cmd" | grep -Eq '(^| )(--dangerously-skip-permissions|--dangerously-bypass-approvals-and-sandbox|--yolo|--auto|--approve)( |$)'; then
-      ok "harness $h 启动档 yolo"
+    # 启动档必须是自动模式；CodeBuddy 按用户裁定使用 --permission-mode auto。
+    if printf '%s' "$cmd" | grep -Eq '(^|[ ;])(--dangerously-skip-permissions|--dangerously-bypass-approvals-and-sandbox|--yolo|--auto|--approve|--permission-mode[ =]auto)( |;|$)'; then
+      ok "harness $h 启动档 auto"
     else
-      bad "harness $h 启动命令未带 yolo 参数：$cmd"
+      bad "harness $h 启动命令未带自动档参数：$cmd"
     fi
   done < <(python3 -c 'import sys,yaml; print("\n".join((yaml.safe_load(open(sys.argv[1],encoding="utf-8")).get("harnesses") or {}).keys()))' "$REPO/dmt-dir/harness_matrix.yaml")
 fi
@@ -240,7 +250,7 @@ done < <(python3 -c 'import os,yaml;[print(k) for k in yaml.safe_load(open(os.en
 echo
 echo "== A6b) 按 harness 加载（一份共性 + 每 harness 一份差异） =="
 HARNESS_DIR="$REPO/dmt-dir/harness"
-HARNESS_MATRIX="$REPO/dmt-dir/harness_matrix.yaml"
+HARNESS_MATRIX="$MATRIX_YAML"
 if [ -d "$HARNESS_DIR" ]; then
   for f in $(python3 -c '
 import os,yaml
@@ -313,7 +323,7 @@ if [ -f "$LIB" ]; then
     return 0
   }
   cbc_case "node /x/bin/cbc -c"                       0
-  cbc_case "/x/bin/codebuddy --dangerously-skip-permissions" 0
+  cbc_case "/x/bin/codebuddy --permission-mode auto" 0
   cbc_case "node /x/bin/pi --approve"                1
   cbc_case "/usr/bin/vim"                            1
 else
@@ -601,6 +611,75 @@ while IFS=$'\t' read -r st who what; do
   esac
 done <<< "$A6H_OUT"
 [ "$a6h_fail" = 0 ] || fail=1
+
+echo
+echo "== A6i) 产品 / 调研链与工作区职责 =="
+A6I_OUT="$(python3 - "$SKILLS_DIR" "$CONTRACT_YAML" "$MATRIX_YAML" <<'PYFLOW'
+import os, sys, yaml
+skills_dir, contract_path, matrix_path = sys.argv[1:4]
+contract = yaml.safe_load(open(contract_path, encoding="utf-8"))
+matrix = yaml.safe_load(open(matrix_path, encoding="utf-8"))
+flow = contract.get("workflow_contract") or {}
+
+def text(role):
+    path = os.path.join(skills_dir, role, "SKILL.md")
+    try:
+        return open(path, encoding="utf-8").read()
+    except OSError:
+        return ""
+
+am = text("dmt-am")
+ae = text("dmt-ae")
+director = text("dmt-dir")
+pde = text("dmt-pde")
+dm = text("dmt-dm")
+research_dir = flow.get("research_dir", "")
+proposal = flow.get("research_report_heading", "")
+
+checks = [
+    ("研究目录", research_dir == "docs/analyst" and research_dir in am and research_dir in director),
+    ("AE 并行", flow.get("research_parallel_agents") == "dmt-ae" and "dmt-ae" in am and "并行" in am),
+    ("Proposal", proposal == "Proposal" and proposal in am and proposal in pde),
+    ("AE 职责", "不撰写最终调研报告" in ae and "不代替 AM 写 Proposal" in ae),
+    ("PRD 责任", "PRD" in director and "起草 PRD" in director),
+    ("SPEC 输入", "已批准的 PRD" in pde and "to-spec" in pde and "Proposal" in pde),
+    ("SPEC 审批", "批准" in director and "dmt-dm" in director),
+    ("DM 输入", "已批准" in dm and "SPEC" in dm),
+    ("Worktree 归 DM", "由 `dmt-dm`" in dm and "DE 不自建 worktree" in dm),
+    ("GitLab 完成", "gitlab" in dm.lower() and "`DONE`" in dm and "merge_commit" in dm),
+]
+artifact_dirs = matrix.get("artifact_dirs") or []
+checks.append(("默认产物目录", all(
+    path in artifact_dirs
+    for path in (research_dir, "docs/pd/prd", "docs/pd/spec", "docs/dev/tickets")
+)))
+if flow.get("hardware_exit_required_after_test"):
+    discipline = open(os.path.join(os.path.dirname(contract_path), "team", "07-discipline.md"), encoding="utf-8").read()
+    implementer = text("dmt-de")
+    reviewer = text("dmt-reviewer")
+    checks.append(("硬件测试退出", all(
+        phrase in combined
+        for combined, phrase in (
+            (discipline, "测试结束必须退出"),
+            (implementer, "测试结束"),
+            (dm, "退出验证"),
+            (reviewer, "不得判 PASS"),
+        )
+    )))
+
+for name, passed in checks:
+    print(("OK" if passed else "FAIL") + "\t" + name)
+PYFLOW
+)"
+a6i_fail=0
+while IFS=$'\t' read -r st what; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK) ok "流程 $what" ;;
+    FAIL) bad "流程 $what"; a6i_fail=1 ;;
+  esac
+done <<< "$A6I_OUT"
+[ "$a6i_fail" = 0 ] || fail=1
 
 echo
 echo "== A6d) 仓级脚本登记（仅维护仓） =="

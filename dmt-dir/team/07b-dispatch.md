@@ -20,11 +20,15 @@
 
 派发 `dmt-dir` / `dmt-dm` / `dmt-am` 三个派发者角色时，prompt 另附 10 个技能的上游来源：契约 `third_party_skills.source_url` 只登记 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库），派发前用 `dmt_load_env`（`lib-dmt.sh`）从 `.env` 展开为实际 URL 再写入 prompt，让角色及其子代理上下文一并带上；该 URL 只作来源登记，不作为加载或 fetch 地址（落点仍以已解锁副本为准）。`dmt-dir`（grill-me / grill-with-docs）、`dmt-dm`（to-tickets）按点名表点名；`dmt-am` 无点名项，仅带来源链接，供向下游 `dmt-ae` 派发时透传。
 
+调研线派发必须写清来源分工与汇合规则：AM 按来源或问题拆成多个独立 AE 单元并并行派发，每单元写允许来源、时间/版本限制、证据产物和回报格式；AE 只向 AM 回报，报告唯一写者是 AM，最终报告必须落盘 `docs/analyst/` 并包含 Proposal。
+
+产品线派发必须保持上游链：DIR 根据用户需求与调研报告（含 Proposal）起草 PRD，PDE 只据已批准 PRD 用 `to-spec` 起草 SPEC，必须记录 Proposal 采纳或拒绝理由。DIR 审核批准 SPEC 后才把路径和版本交 DM；DM 不越过 SPEC 直接解释用户需求。
+
 独立评审额外写明（由 `dmt-dm` 派未参与该 ticket 实现的临时子代理承担，**加载 `dmt-reviewer` 技能**、以 ticket 为单位审查）：
 
 ```text
-你未参与本单元实现，只依据 ticket 票面判据、功能分支 commit 和可复现证据逐项验收。
-先按项目主语言联网核对编码规范并记来源，再依次跑类型检查、lint、功能检查；静态门不过直接 FAIL。
+你未参与本单元实现，只依据 ticket 票面判据、功能分支 commit/diff 和可复现证据逐项验收。
+先读本地规范基线，再依次跑类型检查、lint、功能检查；静态门不过直接 FAIL。
 按 ticket 为单位给出 PASS / FAIL 并挂证据；无证据不得判 PASS。
 不得修改实现或判据；不执行 merge / push / 发布，只向派发者回报。
 ```

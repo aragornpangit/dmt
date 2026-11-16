@@ -13,7 +13,7 @@ bash dmt-dir/scripts/check-dmt.sh --verbose <项目根>  # 显示每个 OK 项
 DMT_SKILLS_DIR="$PWD" bash dmt-dir/scripts/check-dmt.sh "$PWD"
 ```
 
-检查内容由 `dmt_contract.yaml` 与 `harness_matrix.yaml` 驱动，包括 frontmatter、版本、声明文件、脚本、技能预算、harness 键集合、评审基线与安全边界（A6h）和严格相对链接。A6h 校验五份规范基线齐备且带来源/日期/许可证、reviewer 调用 `review-gate.sh`、安全边界文档存在并被 `team.md` 引用。通用项目不强制 DMT 专属目录；显式声明的目录或适配器才检查。
+检查内容由 `dmt_contract.yaml` 与 `harness_matrix.yaml` 驱动，包括 frontmatter、版本、脚本分层、技能预算、harness 键集合、产品与调研流程、评审基线与安全边界（A6h）和严格相对链接。A6i 校验 AM→多个 AE→含 Proposal 的 `docs/analyst/` 报告→DIR 写 PRD→PDE 写 SPEC→DIR 批准→DM 开发的链路；A6h 校验五份规范基线齐备且带来源/日期/许可证。通用项目不强制 DMT 专属目录；显式声明的目录或适配器才检查。
 
 默认只输出失败与最终摘要，避免把机检结果大量注入模型上下文。相对链接必须从源文件目录解析，不通过删除 `../` 或猜测其他根目录兜底。
 

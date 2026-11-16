@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.20.0
+version: 5.21.0
 description: 开发工程师。用于在指定 worktree 功能分支按需求与工单实施、测试、自审并 commit。
 ---
 
@@ -22,5 +22,6 @@ description: 开发工程师。用于在指定 worktree 功能分支按需求与
 - 不修改分配范围外的文件，不擅自改变需求或判据。
 - 共享工作区存在其他写者时先停下协调；不覆盖他人改动。
 - 不执行合并或推送（该权只属 dmt-dm）；共享设备写操作须经授权并记录。
+- 若在手机、开发板等硬件或模拟器上部署或运行程序，测试结束（含失败、超时、放弃）必须退出本单元启动的实例，并回报退出命令、结果和设备状态；只关闭自己启动的应用或进程。
 - 平台子代理方式按探测结果选择；除两轴环境探测外不运行初始化脚本。
 - 必用 `tdd` / `implement` / `code-review`（点名表 `dmt-dir/ops/optional-skills.md`，按 `dmt-dir/team/07b-dispatch.md` 分 harness 调用）；`implement` 与 `grill-*` 转发的 `tdd` / `code-review` / `grilling` 须一并可用；任一不可用标 `[SKILL_UNAVAILABLE]` 回报派发者，改用直读该技能 `SKILL.md` 绝对路径，不静默跳过；产物按 `dmt-dir/team/05-dirs.md` 落盘。

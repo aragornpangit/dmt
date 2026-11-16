@@ -1,6 +1,6 @@
 # 可选：harness 运行平台适配
 
-角色技能不绑定运行平台。加载后先完成第 1 步的两轴环境探测；只有任务需要平台特定的技能调用、子代理或多 pane 编排时，才加载对应适配器。
+角色技能不绑定运行平台，默认协作通道是 harness 原生 subagent。加载后先完成第 1 步的两轴环境探测；只有任务需要平台特定的技能调用、子代理或多 pane 编排时，才加载对应适配器。
 
 1. 加载后探测两轴：`dmt-dir/scripts/harness-detect.sh` 判定当前 harness（pi / codebuddy / claudecode / codex / hermes / opencode 之一），`dmt-dir/scripts/runtime-detect.sh` 判定 harness 运行平台（herdr / orca / none）；无法识别时报告派发者，不猜默认值。
 2. 读取 [`../harness/COMMON.md`](../harness/COMMON.md) 和当前平台的一份差异文档。

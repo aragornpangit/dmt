@@ -78,7 +78,6 @@ emit() { # stage status cmd rc note
 
 run_stage() { # stage cmd...
   local stage="$1"; shift
-  if [ -n "${OVERRIDE[$stage]:-}" ]; then set -- "${OVERRIDE[$stage]}"; fi
   local cmd="$*"
   local log; log="$(mktemp)"
   ( cd "$ROOT" && ${TIMEOUT_CMD[@]+"${TIMEOUT_CMD[@]}"} bash -lc "$cmd" ) >"$log" 2>&1
@@ -99,6 +98,15 @@ run_stage() { # stage cmd...
   return 1
 }
 
+override_stage() {
+  local stage="$1" hint="$2"
+  if [ -n "${OVERRIDE[$stage]+set}" ]; then
+    run_stage "$stage" "${OVERRIDE[$stage]}"
+  else
+    skip_stage "$stage" - "$hint"
+  fi
+}
+
 skip_stage() { emit "$1" SKIP "${2:--}" 0 "$3"; }
 
 # ---------- 0) 规范基线（本地副本） ----------
@@ -114,58 +122,70 @@ has() { command -v "$1" >/dev/null 2>&1; }
 
 case "$LANG_SEL" in
   python)
-    if has mypy; then run_stage typecheck mypy . || true
+    if [ -n "${OVERRIDE[typecheck]+set}" ]; then run_stage typecheck "${OVERRIDE[typecheck]}" || true
+    elif has mypy; then run_stage typecheck mypy . || true
     elif has pyright; then run_stage typecheck pyright || true
     else skip_stage typecheck - "mypy/pyright 未安装"; fi
-    if has ruff; then run_stage lint ruff check . || true
+    if [ -n "${OVERRIDE[lint]+set}" ]; then run_stage lint "${OVERRIDE[lint]}" || true
+    elif has ruff; then run_stage lint ruff check . || true
     elif has flake8; then run_stage lint flake8 . || true
     else skip_stage lint - "ruff/flake8 未安装"; fi
-    if has pytest; then ALLOW_SKIP_RC=5 run_stage test python3 -m pytest -q || true
+    if [ -n "${OVERRIDE[test]+set}" ]; then run_stage test "${OVERRIDE[test]}" || true
+    elif has pytest; then ALLOW_SKIP_RC=5 run_stage test python3 -m pytest -q || true
     else skip_stage test - "pytest 未安装"; fi
     ;;
   typescript)
-    if [ -f "$ROOT/tsconfig.json" ] && [ -x "$ROOT/node_modules/.bin/tsc" ]; then run_stage typecheck ./node_modules/.bin/tsc --noEmit || true
+    if [ -n "${OVERRIDE[typecheck]+set}" ]; then run_stage typecheck "${OVERRIDE[typecheck]}" || true
+    elif [ -f "$ROOT/tsconfig.json" ] && [ -x "$ROOT/node_modules/.bin/tsc" ]; then run_stage typecheck ./node_modules/.bin/tsc --noEmit || true
     elif [ -f "$ROOT/tsconfig.json" ] && has tsc; then run_stage typecheck tsc --noEmit || true
     else skip_stage typecheck - "无 tsconfig.json 或 tsc 未安装"; fi
-    if [ -x "$ROOT/node_modules/.bin/eslint" ]; then run_stage lint ./node_modules/.bin/eslint . || true
+    if [ -n "${OVERRIDE[lint]+set}" ]; then run_stage lint "${OVERRIDE[lint]}" || true
+    elif [ -x "$ROOT/node_modules/.bin/eslint" ]; then run_stage lint ./node_modules/.bin/eslint . || true
     elif has eslint; then run_stage lint eslint . || true
     else skip_stage lint - "eslint 未安装"; fi
-    if has node && [ -f "$ROOT/package.json" ] && grep -q '"test"[[:space:]]*:' "$ROOT/package.json"; then run_stage test npm test --silent || true
+    if [ -n "${OVERRIDE[test]+set}" ]; then run_stage test "${OVERRIDE[test]}" || true
+    elif has node && [ -f "$ROOT/package.json" ] && grep -q '"test"[[:space:]]*:' "$ROOT/package.json"; then run_stage test npm test --silent || true
     else skip_stage test - "package.json 无 test 脚本"; fi
     ;;
   javascript)
-    skip_stage typecheck - "JS 无独立类型检查（需 TS 或 JSDoc + checkJs）"
-    if [ -x "$ROOT/node_modules/.bin/eslint" ]; then run_stage lint ./node_modules/.bin/eslint . || true
+    override_stage typecheck "JS 无独立类型检查（需 TS 或 JSDoc + checkJs）"
+    if [ -n "${OVERRIDE[lint]+set}" ]; then run_stage lint "${OVERRIDE[lint]}" || true
+    elif [ -x "$ROOT/node_modules/.bin/eslint" ]; then run_stage lint ./node_modules/.bin/eslint . || true
     elif has eslint; then run_stage lint eslint . || true
     else skip_stage lint - "eslint 未安装"; fi
-    if has node && [ -f "$ROOT/package.json" ] && grep -q '"test"[[:space:]]*:' "$ROOT/package.json"; then run_stage test npm test --silent || true
+    if [ -n "${OVERRIDE[test]+set}" ]; then run_stage test "${OVERRIDE[test]}" || true
+    elif has node && [ -f "$ROOT/package.json" ] && grep -q '"test"[[:space:]]*:' "$ROOT/package.json"; then run_stage test npm test --silent || true
     else skip_stage test - "package.json 无 test 脚本"; fi
     ;;
   java)
-    if [ -f "$ROOT/pom.xml" ] && has mvn; then run_stage typecheck mvn -q -DskipTests compile || true
+    if [ -n "${OVERRIDE[typecheck]+set}" ]; then run_stage typecheck "${OVERRIDE[typecheck]}" || true
+    elif [ -f "$ROOT/pom.xml" ] && has mvn; then run_stage typecheck mvn -q -DskipTests compile || true
     elif [ -f "$ROOT/build.gradle" ] && has gradle; then run_stage typecheck gradle compileJava -q || true
     elif [ -f "$ROOT/build.gradle.kts" ] && has gradle; then run_stage typecheck gradle compileJava -q || true
     else skip_stage typecheck - "无 pom.xml/build.gradle 或构建工具未安装"; fi
-    skip_stage lint - "checkstyle 配置因项目而异，按项目命令用 --cmd lint=... 指定"
-    if [ -f "$ROOT/pom.xml" ] && has mvn; then run_stage test mvn -q test || true
+    override_stage lint "checkstyle 配置因项目而异，按项目命令用 --cmd lint=... 指定"
+    if [ -n "${OVERRIDE[test]+set}" ]; then run_stage test "${OVERRIDE[test]}" || true
+    elif [ -f "$ROOT/pom.xml" ] && has mvn; then run_stage test mvn -q test || true
     elif has gradle; then run_stage test gradle test -q || true
     else skip_stage test - "构建工具未安装"; fi
     ;;
   cpp)
-    skip_stage typecheck - "C++ 编译入口因项目而异，按项目命令用 --cmd typecheck=... 指定"
+    override_stage typecheck "C++ 编译入口因项目而异，按项目命令用 --cmd typecheck=... 指定"
     cpp_files="$(git -C "$ROOT" ls-files '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' 2>/dev/null | head -200 || true)"
-    if [ -f "$ROOT/.clang-format" ] && has clang-format && [ -n "$cpp_files" ]; then
+    if [ -n "${OVERRIDE[lint]+set}" ]; then run_stage lint "${OVERRIDE[lint]}" || true
+    elif [ -f "$ROOT/.clang-format" ] && has clang-format && [ -n "$cpp_files" ]; then
       run_stage lint clang-format --dry-run --Werror $cpp_files || true
     else
       skip_stage lint - "无 .clang-format、无源文件或 clang-format 未安装"
     fi
-    if [ -d "$ROOT/build" ] && has ctest; then run_stage test ctest --test-dir build --output-on-failure || true
+    if [ -n "${OVERRIDE[test]+set}" ]; then run_stage test "${OVERRIDE[test]}" || true
+    elif [ -d "$ROOT/build" ] && has ctest; then run_stage test ctest --test-dir build --output-on-failure || true
     else skip_stage test - "无 build 目录或 ctest 未安装"; fi
     ;;
   unknown)
-    skip_stage typecheck - "语言未识别"
-    skip_stage lint - "语言未识别"
-    skip_stage test - "语言未识别"
+    override_stage typecheck "语言未识别"
+    override_stage lint "语言未识别"
+    override_stage test "语言未识别"
     ;;
 esac
 
