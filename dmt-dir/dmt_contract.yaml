@@ -2,8 +2,8 @@
 # 只放会漂移的结构性事实：技能、版本源、可选目录、操作手册、脚本和预算。
 # 通用协作原则见 team.md；不使用固定措辞作为内容正确性的断言。
 
-version: 5.19.22
-date: "2026-11-15"
+version: 5.20.0
+date: "2026-11-16"
 
 skills:
   dmt-dir: { run_id: dmt-dir,      kind: pane,  pane: true }
@@ -126,6 +126,13 @@ third_party_skills:
   # 此 URL 不作为 fetch / 加载地址，也不替代 [SKILL_UNAVAILABLE] 降级。
   source_url: "${DMT_MATTPOCOCK_SOURCE_URL}"
 
+# 评审规范基线：dmt-reviewer/references/<name>.md 必须齐备，且带来源 / 日期 / 许可证。
+# 基线由仓级脚本 scripts/fetch-style-baselines.sh 抓取；评审只读本地副本，不联网检索。
+reviewer_baselines: [python, java, javascript, typescript, cpp]
+
+# 安全边界文档：不可信内容不作指令、网络结论不作验收证据、yolo 授权前提。
+security_doc: team/11-security.md
+
 scripts:
   - lib-dmt.sh
   - harness-matrix.sh
@@ -147,10 +154,12 @@ scripts:
   - auto-review-model.sh
   - harness-detect.sh
   - runtime-detect.sh
+  - worktree.sh
+  - review-gate.sh
   - orca-launch.sh
   - orca-reap.sh
 
 # 仓级辅助脚本（不随安装分发；只存在于本仓库，供维护 / 一次性工具使用）
-repo_scripts: [scripts/sync-mattpocock-codex-compat.sh, scripts/install-third-party-skills.sh]
+repo_scripts: [scripts/sync-mattpocock-codex-compat.sh, scripts/install-third-party-skills.sh, scripts/fetch-style-baselines.sh]
 
 forbidden_scripts: [probe-cap.sh, dispatch-ledger.sh, fanout.sh, install-hooks.sh, dl-pane.sh]

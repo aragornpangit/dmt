@@ -9,7 +9,7 @@
 - `dmt-dir`：需求入口、PRD 起草、任务协调与跨域裁决。
 - `dmt-dm`：评估输入、工单拆分、开发安排与授权整合。
 - `dmt-de`：指定 worktree 功能分支内的实现、测试与 commit（不 merge / push）。
-- `dmt-reviewer`：以 ticket 为单位的独立评审（子代理，不参与被审实现）。
+- `dmt-reviewer`：以 ticket 为单位的独立评审（子代理，不参与被审实现）；静态门为 `dmt-dir/scripts/review-gate.sh`，规范基线在 `dmt-reviewer/references/`（Python / Java / JavaScript / TypeScript / C++，离线可读）。
 - `dmt-am`：调研拆分、取证复核与报告汇总。
 - `dmt-ae`：单个取证单元的一手来源与可复现结论。
 - `dmt-pde`：需求取证与 SPEC 起草。
@@ -56,6 +56,7 @@ Codex 默认保持受限沙箱。任何危险权限都需要用户显式选择�
 - 平台机器事实只改 `harness_matrix.yaml`；操作适配器只在对应任务中加载。
 - 修改公开技能、脚本接口、契约、矩阵或链接后运行结构检查和相关测试。
 - 回归测试：`python3 -m unittest discover -s tests -v`。
+- 刷新评审规范基线：`bash scripts/fetch-style-baselines.sh`（五语言原文，带来源/日期/许可证），`--check` 只校验。
 - CHANGELOG 仅用于维护，不属于运行时阅读清单。
 
 ## 许可证

@@ -8,6 +8,8 @@ REPO = Path(__file__).resolve().parents[1]
 CHECK = REPO / "dmt-dir/scripts/check-dmt.sh"
 INSTALL = REPO / "dmt-dir/scripts/install-skills.sh"
 SEND = REPO / "dmt-dir/scripts/send-msg.sh"
+GATE = REPO / "dmt-dir/scripts/review-gate.sh"
+WORKTREE = REPO / "dmt-dir/scripts/worktree.sh"
 
 
 def run(*args, cwd=REPO, env=None):
@@ -202,6 +204,68 @@ class DmtRegressionTests(unittest.TestCase):
                 result = self._runtime_detect({**base, **extra})
                 self.assertEqual(result.returncode, rc, result.stdout + result.stderr)
                 self.assertEqual(result.stdout.strip(), want)
+
+    def test_reviewer_has_local_style_baselines(self):
+        """规范基线必须离线可读、带来源与许可证；评审不再联网检索规范。"""
+        refs = REPO / "dmt-reviewer/references"
+        for name in ("python", "java", "javascript", "typescript", "cpp"):
+            with self.subTest(lang=name):
+                f = refs / f"{name}.md"
+                self.assertTrue(f.is_file(), f"缺基线 {f}")
+                self.assertGreater(f.stat().st_size, 8000, f"基线过小：{f}")
+                head = f.read_text(encoding="utf-8")[:1200]
+                self.assertIn("来源: http", head)
+                self.assertRegex(head, r"获取日期: \d{4}-\d{2}-\d{2}")
+                self.assertIn("许可证:", head)
+        self.assertTrue((refs / "CHECKLIST.md").is_file())
+        reviewer = (REPO / "dmt-reviewer/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("review-gate.sh", reviewer)
+        self.assertIn("references/", reviewer)
+        self.assertNotIn("联网核对编码规范", reviewer)
+
+    def test_review_gate_blocks_lint_failure(self):
+        """静态门是真实退出码：lint 失败必须判 FAIL，修好后必须判 PASS。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.py").write_text("x=1\n", encoding="utf-8")
+            bindir = root / "bin"
+            bindir.mkdir()
+            for name, body in (("mypy", "exit 0"), ("pytest", "exit 0"),
+                               ("ruff", "echo 'E501 line too long'; exit 1")):
+                p = bindir / name
+                p.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
+                p.chmod(0o755)
+            env = {"PATH": f"{bindir}:{os.environ.get('PATH', '')}"}
+            bad = run("bash", GATE, "--root", root, env=env)
+            self.assertEqual(bad.returncode, 1, bad.stdout + bad.stderr)
+            self.assertIn("FAIL lint", bad.stdout)
+            self.assertIn("GATE FAIL", bad.stdout)
+
+            (bindir / "ruff").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            good = run("bash", GATE, "--root", root, env=env)
+            self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+            self.assertIn("GATE PASS", good.stdout)
+
+    def test_worktree_add_remove_roundtrip(self):
+        """实施单元拿到独立 worktree + 分支；主工作树保持干净；分支默认保留。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            run("git", "init", "-q", ".", cwd=root)
+            run("git", "-c", "user.email=t@t", "-c", "user.name=t",
+                "commit", "--allow-empty", "-q", "-m", "init", cwd=root)
+            added = run("bash", WORKTREE, "add", "089.01", "--root", root)
+            self.assertEqual(added.returncode, 0, added.stdout + added.stderr)
+            self.assertIn("WORKTREE=", added.stdout)
+            self.assertIn("BRANCH=dmt/089.01", added.stdout)
+            wt = root / ".worktrees/089.01"
+            self.assertTrue(wt.exists())
+            self.assertEqual(run("git", "status", "--porcelain", cwd=root).stdout.strip(), "")
+            self.assertIn("089.01", run("bash", WORKTREE, "list", "--root", root).stdout)
+
+            removed = run("bash", WORKTREE, "remove", "089.01", "--root", root)
+            self.assertEqual(removed.returncode, 0, removed.stdout + removed.stderr)
+            self.assertFalse(wt.exists())
+            self.assertIn("dmt/089.01", run("git", "branch", "--list", "dmt/089.01", cwd=root).stdout)
 
 
 if __name__ == "__main__":

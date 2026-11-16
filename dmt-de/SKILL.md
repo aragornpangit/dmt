@@ -1,6 +1,6 @@
 ---
 name: dmt-de
-version: 5.19.22
+version: 5.20.0
 description: 开发工程师。用于在指定 worktree 功能分支按需求与工单实施、测试、自审并 commit。
 ---
 
@@ -10,10 +10,10 @@ description: 开发工程师。用于在指定 worktree 功能分支按需求与
 
 ## 工作流
 
-1. 阅读需求、ticket、文件边界和验收判据；缺口先回问。
+1. 先确认工作区：`git rev-parse --show-toplevel` 必须等于派发给你的 worktree 绝对路径、当前分支等于派发分支；不一致立即停止并回报，不在调用者工作区改任何文件。再阅读需求、ticket、文件边界和验收判据；缺口先回问。
 2. 按 `tdd` 与 `implement` 落地：先写测试再以最小充分改动实现，遵守项目现有架构、风格和测试方式。
 3. 按 `code-review` 自审，运行相关测试，记录真实命令、结果和未覆盖风险。
-4. 在本工作区功能分支上 commit，复核变更范围并显式列出自己修改的路径；不 merge、不 push、不改共享分支。
+4. 在派发指定的 `dmt/<ticket>` 分支上 commit，复核变更范围并显式列出自己修改的路径；不 merge、不 push、不改共享分支、不自建或切换 worktree。
 5. 回报功能分支与 commit、改动文件、判据读数、测试证据和未决项；完工后交由 `dmt-dm` 安排的 `dmt-reviewer` 按 ticket 独立评审。
 
 ## 边界

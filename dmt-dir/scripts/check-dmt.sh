@@ -534,6 +534,75 @@ done <<< "$A6G_OUT"
 [ "$a6g_fail" = 0 ] || fail=1
 
 echo
+echo "== A6h) 评审基线 / 可执行静态门 / 安全边界 =="
+# 三条结构断言，都是「产物存在且带必需字段」，不是固定措辞：
+#   1) references/<lang>.md 齐备，且文件头有来源 URL、获取日期、许可证（离线可审计）
+#   2) reviewer 技能必须调用 review-gate.sh（静态门是可执行命令，不是描述）
+#   3) 安全边界文档存在且被 team.md 引用
+A6H_OUT="$(python3 - "$SKILLS_DIR" "$REPO" "$CONTRACT_YAML" <<'PYBASE'
+import os, re, sys, yaml
+skills_dir, repo, contract = sys.argv[1:4]
+c = yaml.safe_load(open(contract, encoding="utf-8"))
+names = c.get("reviewer_baselines") or []
+sec = c.get("security_doc") or ""
+base_roots = [os.path.join(skills_dir, "dmt-reviewer", "references"),
+              os.path.join(repo, "dmt-reviewer", "references")]
+
+for n in names:
+    p = next((os.path.join(r, n + ".md") for r in base_roots
+              if os.path.isfile(os.path.join(r, n + ".md"))), None)
+    if not p:
+        print("FAIL\t基线缺失\t%s.md" % n); continue
+    size = os.path.getsize(p)
+    if size < 8000:
+        print("FAIL\t基线过小\t%s.md（%d B，疑似抓取失败）" % (n, size)); continue
+    head = open(p, encoding="utf-8").read()[:1200]
+    miss = []
+    if not re.search(r"^> 来源: https?://", head, re.M): miss.append("来源 URL")
+    if not re.search(r"^> 获取日期: \d{4}-\d{2}-\d{2}$", head, re.M): miss.append("获取日期")
+    if not re.search(r"^> 许可证: \S", head, re.M): miss.append("许可证")
+    if miss:
+        print("FAIL\t基线缺字段\t%s.md 缺 %s" % (n, "、".join(miss)))
+    else:
+        print("OK\t基线\t%s.md（%d B）" % (n, size))
+
+checklist = next((os.path.join(r, "CHECKLIST.md") for r in base_roots
+                  if os.path.isfile(os.path.join(r, "CHECKLIST.md"))), None)
+print(("OK\t清单\tCHECKLIST.md" if checklist else "FAIL\t清单缺失\tCHECKLIST.md"))
+
+rv = os.path.join(skills_dir, "dmt-reviewer", "SKILL.md")
+if not os.path.isfile(rv):
+    print("FAIL\treviewer 技能缺失\t%s" % rv)
+else:
+    t = open(rv, encoding="utf-8").read()
+    miss = [k for k in ("review-gate.sh", "references/") if k not in t]
+    if miss:
+        print("FAIL\treviewer 未接可执行门\t缺 %s" % "、".join(miss))
+    else:
+        print("OK\t可执行门\treviewer 调用 review-gate.sh + 本地 references/")
+
+if sec:
+    sp = os.path.join(repo, "dmt-dir", sec)
+    if not os.path.isfile(sp):
+        print("FAIL\t安全边界缺失\t%s" % sec)
+    else:
+        team = os.path.join(repo, "dmt-dir", "team.md")
+        linked = os.path.isfile(team) and "11-security.md" in open(team, encoding="utf-8").read()
+        print(("OK\t安全边界\t%s" % sec) if linked else
+              "FAIL\t安全边界未被引用\tteam.md 未链接 11-security.md")
+PYBASE
+)"
+a6h_fail=0
+while IFS=$'\t' read -r st who what; do
+  [ -n "${st:-}" ] || continue
+  case "$st" in
+    OK)   ok "$who：$what" ;;
+    FAIL) bad "$who：$what"; a6h_fail=1 ;;
+  esac
+done <<< "$A6H_OUT"
+[ "$a6h_fail" = 0 ] || fail=1
+
+echo
 echo "== A6d) 仓级脚本登记（仅维护仓） =="
 if [ -d "$REPO/dmt-dm" ] && [ -d "$REPO/scripts" ]; then
   while IFS= read -r rp; do
