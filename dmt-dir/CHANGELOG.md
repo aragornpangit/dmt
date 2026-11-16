@@ -1,6 +1,14 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.19`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.20`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.20 · 2026-11-16
+
+- **评审增加规范基线与静态门**：`dmt-reviewer` 工作流改为四段 —— ①按项目主语言联网核对编码规范（官方或事实标准，记来源与访问日期）→ ②类型检查 → ③lint → ④功能检查。静态门不过直接 FAIL 退回，不进入功能验收。常见语言与工具映射写进技能（mypy/pyright、tsc、go vet/staticcheck、cargo check/clippy、javac/spotbugs、clang-tidy、dotnet analyzers 等），并要求不自造命令、不放宽规则、不用 `# type: ignore` / `eslint-disable` 过门。
+- 同步落点：`team/06-workflow.md` 评审步骤、`team/07-discipline.md`「评审与证据」新增第 3 条、`team/07b-dispatch.md` reviewer 派发模板、`dmt-dm` 派评审时的四段证据要求。
+- **修正 5.19.19 的措辞**：`disable-model-invocation: true` 的实际效果是「不进入模型可见列表，模型不会主动选它」；显式点名（`/handoff` 或 Skill 工具 `skill_name=handoff`）仍能加载。实测 `handoff`（带标记）与 `implement`（无标记）都能被 Skill 工具按名加载，差别只在是否被广告。
+- 契约注释同步两道隐藏标记的口径。
+- 版本号升至 `5.19.20`。
 
 ## 5.19.19 · 2026-11-16
 
