@@ -117,9 +117,31 @@ dmt_herdr_env_fix "$TO" || true
 
 # 寻址复用 lib-dmt.sh 的 dmt_pane_by_label（精确优先，唯一前缀回退；多命中给空 ⇒ 不猜）
 pane="$(dmt_pane_by_label "$TO")"
-[ -n "$pane" ] || { echo "WARN: pane label '$TO' not found; message written, doorbell skipped" >&2; echo "$NAME"; exit 0; }
-
 MSG="你有新消息 ${NAME}，在 inbox/${TO}/"
+
+# Orca 运行时回退（2026-11-17）：Orca 的 list --json 没有 label 字段、title 又会被对话摘要覆盖
+# （同一 pi 会话 idle/working 两态 title 为 `π - bcr-nh` / `⠋ π - bcr-nh`）⇒ herdr 寻址在 orca 下必然落空。
+# 顺序：显式覆盖 DMT_ORCA_TERMINAL → 角色台账 .dmt/orca-terminals.tsv → title 精确 → 去前导字形精确；多命中不猜。
+if [ -z "$pane" ]; then
+  oh="${DMT_ORCA_TERMINAL:-}"
+  [ -n "$oh" ] || oh="$(dmt_orca_handle_by_role "$TO")"
+  if [ -n "$oh" ]; then
+    if orca terminal send --terminal "$oh" --text "$MSG" --enter --wait-submit 5 >/dev/null 2>&1; then
+      echo "doorbell(orca) -> $oh" >&2
+    else
+      echo "WARN: orca 门铃发送失败 handle=$oh；消息已落盘 $NAME" >&2
+    fi
+    echo "$NAME"; exit 0
+  fi
+  if dmt_orca_available; then
+    echo "WARN: 门铃未按——运行时=orca，'$TO' 既无台账条目也无唯一 title 命中（Orca 无 label，title 会被摘要覆盖）；消息已落盘 $NAME" >&2
+    dmt_orca_candidates | sed 's/^/  候选: /' >&2
+    echo "  提示: 已知 handle 时用 DMT_ORCA_TERMINAL=<handle> 重发，或直接 orca terminal send --terminal <handle> --text ... --enter" >&2
+  else
+    echo "WARN: pane label '$TO' not found; message written, doorbell skipped" >&2
+  fi
+  echo "$NAME"; exit 0
+fi
 # 用 dmt_herdr（认 $DMT_HERDR_SOCKET_PATH）—— dmt_pane_by_label 跨 session 命中时已把该变量修正
 # cbc / codebuddy pane：`agent prompt` 报 agent_not_ready，直接把门铃文本送进输入框并回车，
 # 跳过这次必然失败的尝试（判据只读目标 pane 的 argv，不读发方会话的 harness 标记）。

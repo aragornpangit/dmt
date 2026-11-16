@@ -49,6 +49,8 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
    - `ORCA_TERMINAL_HANDLE` 随 pane 重启（incarnation）失效；发令前用 `orca terminal list --json` 反查当前 handle。
    - `title` 会被对话摘要覆盖（实测本 pane 被写成「执行 dmt-dir 命令」），`agentIdentity` 会滞后 ⇒ 二者只作线索，不作寻址键。
    - 派生台账 `.dmt/orca-terminals.tsv` 已增第 6 列 `pane_key`（`scripts/orca-launch.sh` 写入、`orca-reap.sh` 消费；旧 5 列行按 `-` 补齐）。
+   - **Orca 没有 `label` 概念**：`terminal list --json` 只有 `title`，且 title 会被摘要覆盖（同一 pi 会话 idle/working 两态为 `π - bcr-nh` / `⠋ π - bcr-nh`）⇒ 任何按 label 找 pane 的门铃在 Orca 下**必然落空**。
+     `send-msg.sh` 已加 Orca 回退：`DMT_ORCA_TERMINAL` → 台账 `.dmt/orca-terminals.tsv`（角色→handle，校验 handle 仍 live）→ title 精确 → 去前导字形后精确；多命中不猜，改打印候选清单。
 3. **改标题用 `rename`，不用 `set-pane-title`**：实测同一 handle 下
    `orca terminal rename --terminal "$ORCA_TERMINAL_HANDLE" --title dmt-dir` ⇒ `ok:true`；
    `orca terminal set-pane-title` 同 handle ⇒ `terminal_handle_stale`。标题仍会被摘要覆盖，覆盖后重跑 `rename`（幂等）。

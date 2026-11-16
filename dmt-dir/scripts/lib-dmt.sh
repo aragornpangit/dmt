@@ -200,6 +200,47 @@ dmt_pane_by_label() {
   return 0
 }
 
+# ---- Orca 运行时的门铃寻址（2026-11-17 修）------------------------------------
+# 为什么需要：Orca 的 `terminal list --json` **没有 label 字段**（只有 title），且 title 会被
+# 对话摘要覆盖（实测同一 pi 会话在 idle/working 两态下 title 为 `π - bcr-nh` / `⠋ π - bcr-nh`）。
+# 故 herdr 的 `dmt_pane_by_label` 在 orca 下**必然落空**，门铃被静默跳过（2026-11-16 实证：
+# dmt-dm pane 存在、connected=true，却被判「label not found」）。
+# 寻址顺序：① 角色台账 `.dmt/orca-terminals.tsv`（orca-launch.sh 写入，角色→handle）
+#          ② title 精确相等  ③ 去掉前导状态字形/空白后相等
+# 多命中一律给空（不猜）——宁可让调用方显式 `--terminal` 指定，也不打错 pane。
+dmt_orca_available() { command -v orca >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; }
+
+dmt_orca_terminals_json() { orca terminal list --json 2>/dev/null || true; }
+
+dmt_orca_handle_by_role() {
+  local want="$1" led root h
+  [ -n "$want" ] || return 0
+  dmt_orca_available || return 0
+  # ① 台账：取该角色最后一条，且 handle 仍在 live 列表里（避免拿死 handle）
+  root="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | sed 's#/\.git$##')"
+  led="${root:-$PWD}/.dmt/orca-terminals.tsv"
+  if [ -r "$led" ]; then
+    h="$(awk -F'\t' -v r="$want" '$2==r {last=$1} END{print last}' "$led" 2>/dev/null)"
+    if [ -n "$h" ] && dmt_orca_terminals_json | jq -e --arg h "$h" '[.result.terminals[]? | select(.handle==$h)] | length > 0' >/dev/null 2>&1; then
+      printf '%s' "$h"; return 0
+    fi
+  fi
+  # ②③ title 精确 → 去前导字形后精确；仅唯一命中才返回
+  dmt_orca_terminals_json | jq -r --arg w "$want" '
+    def norm: gsub("^[^A-Za-z0-9_.:\\-]+"; "") | sub("\\s+$"; "");
+    ([.result.terminals[]? | select(.title==$w) | .handle] | unique) as $exact
+    | if ($exact|length)==1 then $exact[0]
+      else ([.result.terminals[]? | select((.title|norm)==$w) | .handle] | unique) as $n
+           | if ($n|length)==1 then $n[0] else empty end
+      end' 2>/dev/null
+}
+
+# 诊断用：列出候选（handle / title / identity），供 WARN 时打印，避免「不知道为什么没找到」
+dmt_orca_candidates() {
+  dmt_orca_available || return 0
+  dmt_orca_terminals_json | jq -r '.result.terminals[]? | "\(.handle)\t\(.title // "")\t\(.agentIdentity // "none")"' 2>/dev/null
+}
+
 # pane 的 agent_status（unknown = 该 pane 没有 agent 在跑）
 dmt_pane_status() {
   dmt_herdr pane get "$1" 2>/dev/null \
