@@ -39,3 +39,24 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
 ## 实测记录
 
 2026-11-09，Orca 1.4.237：`serve` → `repo add` → `worktree create` → `agent launch --agent pi`。pi 启动屏 `[Skill warnings]` 登记全部 7 个 dmt 技能（项目级优先）；随后读取 `dmt-dir/SKILL.md` 回报 `version 5.19.7` 与工作流第 1 条原文，并明确结论「可用」。
+
+## 运行时稳态：寻址、实例隔离、回收（2026-11-16 实测）
+
+> 本节只写 Orca 运行时纪律，不改 `harnesses:` 段与任何判据。逐条对应本机一手实测。
+
+1. **一角色一 harness，中途不换**：换 harness ＝ 换进程，上下文只能靠自述延续，且 `agentIdentity` 会滞后（曾报 `None`）。要换档就新起 pane 派新角色，不在原 pane 里重启换 CLI。
+2. **寻址用 `ORCA_PANE_KEY`（`<tabId>:<leafId>`），不用 handle／title／identity**：
+   - `ORCA_TERMINAL_HANDLE` 随 pane 重启（incarnation）失效；发令前用 `orca terminal list --json` 反查当前 handle。
+   - `title` 会被对话摘要覆盖（实测本 pane 被写成「执行 dmt-dir 命令」），`agentIdentity` 会滞后 ⇒ 二者只作线索，不作寻址键。
+3. **改标题用 `rename`，不用 `set-pane-title`**：实测同一 handle 下
+   `orca terminal rename --terminal "$ORCA_TERMINAL_HANDLE" --title dmt-dir` ⇒ `ok:true`；
+   `orca terminal set-pane-title` 同 handle ⇒ `terminal_handle_stale`。标题仍会被摘要覆盖，覆盖后重跑 `rename`（幂等）。
+4. **`orca agent hooks status` 当前不可用**：本机 artifact `0.1.0+033018f7660d.repair-1` 报
+   `Cannot find module './impl/format'`。修好前不得用 hooks 判活，改用 `terminal list --json` 的 `connected`／`agentIdentity`。
+5. **Hermes 实例隔离**：本机 gateway 与 agent 共用默认 `~/.hermes`（含 `memory/`、`skills/`、`state.db`），已发生互相覆盖。
+   多实例必须各设 `HERMES_HOME`，技能用副本而非共享软链。
+6. **裸 shell 及时回收**：`identity=None` 且无前台进程的 pane 属残留，用 `orca terminal close --terminal <handle>` 关；
+   关前先 `orca terminal read` 看前台，避免误杀正在跑的命令。
+7. **一个证据目录同时只允许一个写者**：同桶并发写会互相覆盖（2026-11-16 135 实测：两路同时跑同一 `raw/`，
+   窗口时刻非单调、读数不可采信）。跨角色共桶时按路分桶或先取锁。
+8. **长回执落盘、终端只回指针**：回执超一屏必写 `<role>-reply-<ts>.md`，终端回路径＋三行结论；关键结论回写仓内证据桶，`/tmp` 件会丢。
