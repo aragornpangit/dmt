@@ -45,11 +45,14 @@
 - 10 个技能的清单与 explicit-only 标记在 [`../dmt_contract.yaml`](../dmt_contract.yaml) 的 `third_party_skills:`；用户级落点由 `harness_matrix.yaml` 的 `skills.dir_user`（opencode 另含 `dir_project_extra`）推导。`grilling` 是 `grill-me` / `grill-with-docs` 的转发目标，`domain-modeling` 是 `grill-with-docs` 的第二个转发目标；两者必须与对应技能一起铺齐，否则转发链断。`tdd` 还条件引用 `codebase-design`。
 - 10 个技能的上游来源登记在同段 `third_party_skills.source_url`，值为 `.env` 变量占位符 `${DMT_MATTPOCOCK_SOURCE_URL}`（内网地址不入库，实际值由本机 `.env` 提供）；派发 `dmt-dir` / `dmt-dm` / `dmt-am` 时用 `dmt_load_env` 展开后按 [`../team/07b-dispatch.md`](../team/07b-dispatch.md) 随 prompt 附带，仅作来源说明，不作为加载或 fetch 地址。
 - 维护仓的 `scripts/install-third-party-skills.sh` 幂等铺设扁平软链并可用 `--check` 复验；各 harness 的调用语法（`/`、`mattpocock-skills:`、`@`、`/skill:`）以矩阵为准。
-- 5 个 explicit-only 技能（`grill-me`、`grill-with-docs`、`to-spec`、`implement`、`to-tickets`）必须指向已剥离 `allow_implicit_invocation: false` 的解锁副本，否则 codex 列得出却不加载、pi 白名单会过滤。
+- 5 个 explicit-only 技能（`grill-me`、`grill-with-docs`、`to-spec`、`implement`、`to-tickets`）必须指向解锁副本 `~/.agents/skills-unlocked/<name>`，因为上游正本带两道不同的隐藏标记：
+  - **`SKILL.md` 的 `disable-model-invocation: true`** —— codebuddy / claude / hermes / pi 据此把技能移出模型可见列表，只剩手敲 `/<name>` 一条路。`install-third-party-skills.sh --check` 逐落点硬校验这条。
+  - **`agents/openai.yaml` 的 `policy.allow_implicit_invocation: false`** —— 只有 codex 读这个文件（codebuddy 完全不读 `agents/openai.yaml`），表现为列得出却不加载。
+  解锁副本同时剥离两者；explicit-only 缺解锁副本时脚本直接报错，不再静默回退上游正本。
 - 本适配器是可选件：机检对落点缺失只 WARN，硬保证由安装脚本 `--check` 承担；角色自带要求由 A6f 硬校验。实际技能能否进上下文仍以各 harness 运行时为准；OpenCode v2 的 `@<skill-id>` 已于 5.19.11 在 v2.2.5 收口（判据与证据见维护仓 `dmt-dir/CHANGELOG.md`，`@` 纯引用限制见 [`../harness/opencode.md`](../harness/opencode.md)）。
 
 ## 已知限制（实证）
 
-- 上游正本的 5 个 explicit-only 技能带 `disable-model-invocation: true`；`install-third-party-skills.sh` 铺的 `skills-unlocked` 解锁副本已剥离该字段，可被 `skills:` 白名单注入。`sync-mattpocock-codex-compat.sh` 生成的 codex 兼容副本只剥离 `allow_implicit_invocation: false`，仍带 `disable-model-invocation`；若该字段导致选中不加载，按直读 `SKILL.md` 处理。
+- 上游正本的 5 个 explicit-only 技能带 `disable-model-invocation: true`；`install-third-party-skills.sh` 铺的 `skills-unlocked` 解锁副本已剥离该字段，可被模型自动调用、也可被 `skills:` 白名单注入。`sync-mattpocock-codex-compat.sh` 生成的 codex 兼容副本只剥离 `allow_implicit_invocation: false`，仍带 `disable-model-invocation`；若该字段导致选中不加载，按直读 `SKILL.md` 处理。
 - Codex 0.166 列得出这些技能但选中时不加载（本机 0.167 未复测）；维护仓 `scripts/sync-mattpocock-codex-compat.sh` 生成剥离 `allow_implicit_invocation: false` 的兼容副本（仓级脚本，不随安装分发）。
 - 转发式技能（`grill-with-docs` / `grill-me` / `implement` / `tdd`）依赖 Skill 工具二次调用；无 Skill 工具的平台降级为直读子技能文件。

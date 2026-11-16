@@ -76,21 +76,35 @@ for d in $DIRS; do
 done
 [ -n "$TARGETS" ] || { echo "未解析到任何落点" >&2; exit 3; }
 
-# 单一解锁源：5 个 explicit-only 走 skills-unlocked（已剥离 allow_implicit_invocation），
-# 其余 5 个走上游正本；源缺失即报错，不静默跳过。
+is_explicit() {
+  local n="$1" x
+  for x in $EXPLICIT; do [ "$x" = "$n" ] && return 0; done
+  return 1
+}
+
+# 单一解锁源：5 个 explicit-only 走 skills-unlocked（已剥离两种标记），其余 5 个走上游正本。
+# 上游正本带 disable-model-invocation: true：codebuddy / claude / hermes / pi 会据此把技能
+# 从模型可见列表移除（只剩手敲 /<name>），codex 会列得出却不加载。explicit-only 缺解锁副本
+# 必须报错，不能静默回退正本 —— 静默回退正是 dmt-de 在 codebuddy 里拿不到 implement 的成因。
 resolve_src() {
   local n="$1" sub
   if [ -f "$UNLOCKED/$n/SKILL.md" ]; then printf '%s' "$UNLOCKED/$n"; return 0; fi
+  if is_explicit "$n"; then
+    echo "install-third-party-skills: explicit-only 技能 $n 缺解锁副本 $UNLOCKED/$n，拒绝链接上游正本" >&2
+    return 1
+  fi
   for sub in engineering productivity misc in-progress deprecated; do
     if [ -f "$CANONICAL/$sub/$n/SKILL.md" ]; then printf '%s' "$CANONICAL/$sub/$n"; return 0; fi
   done
   return 1
 }
 
-is_explicit() {
-  local n="$1" x
-  for x in $EXPLICIT; do [ "$x" = "$n" ] && return 0; done
-  return 1
+# SKILL.md frontmatter 里 disable-model-invocation / disable 为 true 时，codebuddy / claude /
+# hermes / pi 会把该技能移出模型可见列表，只能手敲斜杠命令。这是 codebuddy 侧真正的门。
+skill_hidden() {
+  local f="$1/SKILL.md"
+  [ -f "$f" ] || return 1
+  grep -qE '^[[:space:]]*(disable-model-invocation|disable)[[:space:]]*:[[:space:]]*true[[:space:]]*$' "$f"
 }
 
 bad=0
@@ -108,10 +122,12 @@ for rel in $TARGETS; do
         real="$(readlink -f "$dst")"
         oa="$real/agents/openai.yaml"
         if is_explicit "$n" && [ -f "$oa" ] && grep -q 'allow_implicit_invocation: false' "$oa"; then
-          echo "  FAIL $n 仍带 explicit-only 标记：$real"; bad=1
-        else
-          echo "  OK   $n"
+          echo "  FAIL $n codex 仍带 allow_implicit_invocation: false：$real"; bad=1; continue
         fi
+        if skill_hidden "$real"; then
+          echo "  FAIL $n SKILL.md 带 disable-model-invocation: true（codebuddy/claude/hermes/pi 不可自动调用）：$real"; bad=1; continue
+        fi
+        echo "  OK   $n"
         ;;
       dry)
         echo "  would link $n -> $src"

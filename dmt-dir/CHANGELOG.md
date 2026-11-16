@@ -1,6 +1,16 @@
 # dmt 团队契约 · 变更记录
 
-> 当前版本 `5.19.18`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+> 当前版本 `5.19.19`。历史明细已随维护件清理，不随安装分发；收口项按版本追加于下。
+
+## 5.19.19 · 2026-11-16
+
+- **修「codebuddy 里 de 拿得到技能但模型不能自动调用」**：查清 codebuddy 只读 `SKILL.md` frontmatter 的 `disable-model-invocation: true`（置 true 即移出模型可见列表，只剩手敲 `/<name>`），完全不读 `agents/openai.yaml` 的 `allow_implicit_invocation`（那是 codex 专有）。5.19.18 把这条成因记成 `allow_implicit_invocation`，口径错了，已改。
+- `scripts/install-third-party-skills.sh`：
+  - `--check` 增硬校验：逐落点检查 `SKILL.md` 是否带 `disable-model-invocation: true` / `disable: true`，命中即 FAIL（此前只查 codex 的 `openai.yaml`，codebuddy 侧的隐藏完全查不出来）。
+  - `resolve_src` 不再静默回退：explicit-only 技能缺 `~/.agents/skills-unlocked/<name>` 时直接报错退出，避免把带隐藏标记的上游正本链进落点。
+- `harness/codebuddy.md`、`ops/optional-skills.md` 把两道门分开写清：`SKILL.md` 的 `disable-model-invocation`（codebuddy / claude / hermes / pi）与 `agents/openai.yaml` 的 `allow_implicit_invocation`（仅 codex）。
+- 实测：6 个用户级落点的 5 个 explicit-only 均指向解锁副本，`--check` 全绿；codebuddy 技能列表含 `tdd` / `implement` / `code-review`。
+- 版本号升至 `5.19.19`。
 
 ## 5.19.18 · 2026-11-15
 
