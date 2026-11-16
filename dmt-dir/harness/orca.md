@@ -67,3 +67,23 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
 7. **一个证据目录同时只允许一个写者**：同桶并发写会互相覆盖（2026-11-16 135 实测：两路同时跑同一 `raw/`，
    窗口时刻非单调、读数不可采信）。跨角色共桶时按路分桶或先取锁。
 8. **长回执落盘、终端只回指针**：回执超一屏必写 `<role>-reply-<ts>.md`，终端回路径＋三行结论；关键结论回写仓内证据桶，`/tmp` 件会丢。
+
+## 工具件（2026-11-17 落地，逐条可跑）
+
+| 脚本 | 干什么 | 用法 | 何时跑 |
+|---|---|---|---|
+| `scripts/orca-yolo-check.sh` | 查两侧 artifact 的本地补丁是否还在（CLI 需 `impl/*`；daemon 需 `pi:"--approve"`） | `bash orca-yolo-check.sh [--fix]` | **每次 `orca --version` 变化后**；rc≠0 即补丁被升级覆盖 |
+| `scripts/orca-fix-cli-impl.sh` | 补 `out/cli/impl/*`（幂等） | `--check` 只判定 | hooks 报 `Cannot find module './impl/format'` 时 |
+| `scripts/orca-pane-snapshot.sh` | 落 `handle / pane_key / identity / connected / title` 快照到 `.dmt/` | `--print` 只看不落 | **派单前后各一次**（事后回答"当时那个 pane 是谁"） |
+| `scripts/ctx-budget.sh` | 上下文预算预警 | `--json`／`--quiet`（可挂 hook） | 长会话每完成一个交付单元后 |
+| `scripts/hermes-isolated.sh` | 每实例独立 `HERMES_HOME`（技能用副本） | `<名> --dry-run` 先看 | 起 hermes agent 实例时 |
+
+**两条实测口径（别按直觉读）**：
+
+1. **本机有两个 artifact，各有各的消费者**：`orca` 启动器指向 `<artifact>/out/cli/index.js`（CLI 侧，需要 `impl/*`），
+   daemon 进程的 `--app-version`／`--entry-path` 指向**另一个** artifact（daemon 侧，需要 `pi:"--approve"`）。
+   实测 CLI→`…repair-1`（有 impl、无 yolo）、daemon→`0.1.0+033018f7660d`（有 yolo、无 impl）。
+   ⇒ **只查"最新那个 artifact"会漏判**，必须按角色分别查（`orca-yolo-check.sh` 已按此实现）。
+2. **上下文预算不能量整份 jsonl**：日志保留全部历史（含已被压缩掉的部分），实测整文件 9.4 MB 而当前窗口仅 0.45 MB
+   ⇒ 用整文件会把 110K 读成 3M。`ctx-budget.sh` 以最近一次 `"type":"session-meta"` 压缩点为界只量其后字节，
+   并在输出里标明基准；token 仍是区间估算（bytes/4 … bytes/2.5），**不是精确值**。

@@ -13,3 +13,6 @@ __pycache__/
 
 # archify 生成的图表（本地产物，不入库）
 .archify/
+
+# Orca 终端巡检快照（运行时产物）
+.dmt/
