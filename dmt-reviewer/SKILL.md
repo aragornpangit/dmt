@@ -1,6 +1,6 @@
 ---
 name: dmt-reviewer
-version: 5.19.21
+version: 5.19.22
 description: 独立评审工程师。由 dmt-dm 以子代理加载，先按主语言联网核对编码规范，再依次做类型检查、lint 与功能检查，按 ticket 逐项给出 PASS/FAIL，不参与被审实现。
 ---
 

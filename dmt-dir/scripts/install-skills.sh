@@ -86,27 +86,46 @@ done
 
 # 只分发运行所需文件；CHANGELOG、维护日志与仓级事故记录不进入目标项目。
 # 脚本目录固定为 <target>/dmt-dir/scripts/，与契约命令一致。
-if [ "$MODE" = "link" ] && [ -e "$TARGET/dmt-dir" ] && [ ! -L "$TARGET/dmt-dir" ]; then
-  echo "WARN: $TARGET/dmt-dir 已存在且不是软链，沿用现有目录" >&2
+# link 模式下 dmt-dir 是「真实目录 + 逐项软链」的布局，复跑时逐项刷新即可；
+# 不要整体 rm -rf，也不要因目录存在就跳过（否则新增条目永远铺不进去）。
+if [ "$MODE" = "link" ]; then
+  mkdir -p "$TARGET/dmt-dir"
+  for item in $CORE_ITEMS; do
+    [ -e "$REPO/dmt-dir/$item" ] || continue
+    rm -rf "$TARGET/dmt-dir/$item"
+    ln -sfn "$REPO/dmt-dir/$item" "$TARGET/dmt-dir/$item"
+  done
 else
   rm -rf "$TARGET/dmt-dir"
   mkdir -p "$TARGET/dmt-dir"
   for item in $CORE_ITEMS; do
     [ -e "$REPO/dmt-dir/$item" ] || continue
-    if [ "$MODE" = "copy" ]; then
-      cp -r "$REPO/dmt-dir/$item" "$TARGET/dmt-dir/$item"
-    else
-      ln -sfn "$REPO/dmt-dir/$item" "$TARGET/dmt-dir/$item"
-    fi
+    cp -r "$REPO/dmt-dir/$item" "$TARGET/dmt-dir/$item"
   done
 fi
 chmod +x "$TARGET/dmt-dir/scripts/"*.sh 2>/dev/null || true
 
 # 清理旧版 DMT 文档镜像；项目自己的其他 docs 内容不动。
 # 唯一入口为 <target>/dmt-dir/team.md 与 OPS.md，避免双源和重复上下文。
-rm -f "$TARGET/docs/team.md" "$TARGET/docs/OPS.md" \
-      "$TARGET/docs/CHANGELOG.md"
-rm -rf "$TARGET/docs/ops" "$TARGET/docs/team" "$TARGET/docs/changelog" "$TARGET/docs/harness"
+# 只删 dmt 自己铺过且未被 git 跟踪的：软链（旧布局）或标题确为 dmt 契约的文件。
+# 其他工具链的同名文件（如 pda-team）与已被 git 跟踪的旧 dmt 副本一律保留并告警 ——
+# 无条件 rm 会删掉别人的受跟踪文件，或替用户制造未预期的删除改动。
+for f in "$TARGET/docs/team.md" "$TARGET/docs/OPS.md" "$TARGET/docs/CHANGELOG.md"; do
+  [ -e "$f" ] || [ -L "$f" ] || continue
+  if [ -L "$f" ]; then rm -f "$f"; continue; fi
+  if ! head -3 "$f" 2>/dev/null | grep -qE "^# dmt "; then
+    echo "WARN: $f 不是 dmt 副本，保留（可能是其他工具链的契约）" >&2
+    continue
+  fi
+  if git -C "$TARGET" ls-files --error-unmatch "${f#"$TARGET"/}" >/dev/null 2>&1; then
+    echo "WARN: $f 是 dmt 旧副本但已被 git 跟踪，保留（需要时自行 git rm）" >&2
+    continue
+  fi
+  rm -f "$f"
+done
+for d in ops team changelog harness; do
+  [ -L "$TARGET/docs/$d" ] && rm -f "$TARGET/docs/$d"
+done
 
 # pi 子代理 agent 定义（.pi/agents/）：只装给 pi（或 all）。
 # 为什么单列：pi 的 delegate 默认 inheritSkills: false ⇒ 子代理无技能清单；
