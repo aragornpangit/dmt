@@ -48,11 +48,16 @@ Orca 是编排层（ADE），不是 harness：其中运行的仍是 [`../harness
 2. **寻址用 `ORCA_PANE_KEY`（`<tabId>:<leafId>`），不用 handle／title／identity**：
    - `ORCA_TERMINAL_HANDLE` 随 pane 重启（incarnation）失效；发令前用 `orca terminal list --json` 反查当前 handle。
    - `title` 会被对话摘要覆盖（实测本 pane 被写成「执行 dmt-dir 命令」），`agentIdentity` 会滞后 ⇒ 二者只作线索，不作寻址键。
+   - 派生台账 `.dmt/orca-terminals.tsv` 已增第 6 列 `pane_key`（`scripts/orca-launch.sh` 写入、`orca-reap.sh` 消费；旧 5 列行按 `-` 补齐）。
 3. **改标题用 `rename`，不用 `set-pane-title`**：实测同一 handle 下
    `orca terminal rename --terminal "$ORCA_TERMINAL_HANDLE" --title dmt-dir` ⇒ `ok:true`；
    `orca terminal set-pane-title` 同 handle ⇒ `terminal_handle_stale`。标题仍会被摘要覆盖，覆盖后重跑 `rename`（幂等）。
-4. **`orca agent hooks status` 当前不可用**：本机 artifact `0.1.0+033018f7660d.repair-1` 报
-   `Cannot find module './impl/format'`。修好前不得用 hooks 判活，改用 `terminal list --json` 的 `connected`／`agentIdentity`。
+4. **`orca agent hooks status` 的 `Cannot find module './impl/format'` 已修，升级后会复发**：
+   根因是 orca 1.4.237 的 `out/cli/index.js` 内联了 jsonc-parser 主模块，但 UMD 分支仍 `require("./impl/format")`，
+   而 bundle 未含 `impl/*` 四个子模块。修法＝把本机 `jsonc-parser`（3.x，UMD 版）的
+   `impl/{format,edit,scanner,parser,string-intern}.js` 复制到 `<artifact>/out/cli/impl/`。
+   脚本：`scripts/orca-fix-cli-impl.sh`（幂等；`--check` 只判定）。**每次 orca 升级后跑一次**，
+   否则 hooks 子系统静默不可用。未修前不得用 hooks 判活，改用 `terminal list --json` 的 `connected`／`agentIdentity`。
 5. **Hermes 实例隔离**：本机 gateway 与 agent 共用默认 `~/.hermes`（含 `memory/`、`skills/`、`state.db`），已发生互相覆盖。
    多实例必须各设 `HERMES_HOME`，技能用副本而非共享软链。
 6. **裸 shell 及时回收**：`identity=None` 且无前台进程的 pane 属残留，用 `orca terminal close --terminal <handle>` 关；

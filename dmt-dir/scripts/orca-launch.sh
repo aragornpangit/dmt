@@ -7,6 +7,9 @@
 #   --dry-run   只打印将执行的命令，不创建终端
 # 为什么不用终端标题认领：harness 起来后会自己改标题（实测 pi 把标签改成「π - proj」），
 # 所以所有权记在台账 <项目根>/.dmt/orca-terminals.tsv，由 orca-reap.sh 消费。
+# 台账列：handle / role / harness / worktree / created_ts / pane_key
+#   pane_key = "<tabId>:<leafId>"（同 pane 生命周期内稳定），用于 handle 因 pane 重启失效后反查。
+#   取不到时写 "-"，不阻塞创建。
 # 生命周期：谁派生谁回收；工作完成（或失败、放弃）后跑 orca-reap.sh。
 set -eu
 HARNESS="${1:?usage: orca-launch.sh <harness> [--worktree <sel>] [--role <name>] [--dry-run]}"
@@ -52,11 +55,30 @@ if [ -z "$handle" ]; then
   exit 5
 fi
 
+# 解析 pane_key（tabId:leafId）。create 回执未必带，回落到 terminal list 按 handle 反查。
+pane_key="$(printf '%s' "$out" | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+r=d.get("result",{}); t=r.get("terminal") or r
+tab=t.get("tabId"); leaf=t.get("leafId")
+print(tab+":"+leaf if tab and leaf else "")' 2>/dev/null || true)"
+if [ -z "$pane_key" ]; then
+  pane_key="$(orca terminal list --json 2>/dev/null | python3 -c 'import json,sys
+h=sys.argv[1]
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+for t in (d.get("result",d).get("terminals") or []):
+    if t.get("handle")==h and t.get("tabId") and t.get("leafId"):
+        print(t["tabId"]+":"+t["leafId"]); break' "$handle" 2>/dev/null || true)"
+fi
+[ -n "$pane_key" ] || pane_key="-"
+
 # 台账落在项目根，便于跨会话回收；不是 git 产物，建议加入项目 .gitignore
 ROOT="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | sed 's#/\.git$##' || pwd)"
 [ -n "$ROOT" ] || ROOT="$PWD"
 mkdir -p "$ROOT/.dmt"
-printf '%s\t%s\t%s\t%s\t%s\n' "$handle" "$ROLE" "$HARNESS" "$WT" "$(date +%s)" >> "$ROOT/.dmt/orca-terminals.tsv"
+printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$handle" "$ROLE" "$HARNESS" "$WT" "$(date +%s)" "$pane_key" >> "$ROOT/.dmt/orca-terminals.tsv"
 
 echo "$handle"
+echo "pane_key=$pane_key"
 echo "已登记 $ROOT/.dmt/orca-terminals.tsv —— 完成后由你回收：bash $DIR/orca-reap.sh --role $ROLE" >&2

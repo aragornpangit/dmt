@@ -4,7 +4,9 @@
 #   --role   只回收该角色派生的终端
 #   --root   台账所在项目根（缺省取当前目录所在仓库的主工作树根）
 #   --dry-run / --list  只列出，不关闭
-# 台账：<项目根>/.dmt/orca-terminals.tsv（handle / role / harness / worktree / 创建时间）
+# 台账：<项目根>/.dmt/orca-terminals.tsv
+#   （handle / role / harness / worktree / 创建时间 / pane_key）
+#   pane_key = "<tabId>:<leafId>"；旧台账只有前 5 列，读取时按 "-" 补齐，不丢行。
 # 已经不在运行的 handle 会从台账静默清掉（终端被手动关掉或进程已退）。
 # 退出码：0 全部回收或无事可做；4 有终端关闭失败。
 set -eu
@@ -36,27 +38,28 @@ print("\n".join(t.get("handle","") for t in (r.get("terminals") or [])))
 
 tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
 n=0; fail=0; kept=0
-while IFS=$'\t' read -r handle role harness wt ts; do
+while IFS=$'\t' read -r handle role harness wt ts pane_key; do
   [ -n "$handle" ] || continue
+  pane_key="${pane_key:--}"
   if ! printf '%s\n' "$live_handles" | grep -qx "$handle"; then
     continue   # 终端已不存在：从台账清掉，不计数
   fi
   if [ -n "$ROLE" ] && [ "$role" != "$ROLE" ]; then
-    printf '%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" >> "$tmp"; kept=$((kept+1))
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" "$pane_key" >> "$tmp"; kept=$((kept+1))
     continue
   fi
   n=$((n+1))
   if [ "$LIST" = 1 ] || [ "$DRY" = 1 ]; then
-    echo "would close $handle  ${role}/${harness}  $wt"
-    printf '%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" >> "$tmp"; kept=$((kept+1))
+    echo "would close $handle  ${role}/${harness}  $wt  pane_key=$pane_key"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" "$pane_key" >> "$tmp"; kept=$((kept+1))
     continue
   fi
   if orca terminal close --terminal "$handle" >/dev/null 2>&1; then
-    echo "closed $handle  ${role}/${harness}"
+    echo "closed $handle  ${role}/${harness}  pane_key=$pane_key"
   else
     echo "FAILED to close $handle  ${role}/${harness}" >&2
     fail=$((fail+1))
-    printf '%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" >> "$tmp"; kept=$((kept+1))
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$handle" "$role" "$harness" "$wt" "$ts" "$pane_key" >> "$tmp"; kept=$((kept+1))
   fi
 done < "$LEDGER"
 mv "$tmp" "$LEDGER"
